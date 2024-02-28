@@ -1,0 +1,138 @@
+package music
+
+import (
+	"bytes"
+	"database/sql"
+	"fmt"
+	"io"
+	"os"
+	"sync"
+
+	"github.com/efarrer/iothrottler"
+	"github.com/pitr/gig"
+)
+
+func handleRadioService(g *gig.Gig, conn *sql.DB, throttlePool_no_buffer *iothrottler.IOThrottlerPool) {
+	var file_buffer_mutex sync.RWMutex
+
+	throttlePool := iothrottler.NewIOThrottlerPool(iothrottler.BytesPerSecond * (1024.0 * 40.0 * 1.05)) // (320 Kbps = 40 KB/s) * 1 seconds = 320 Kbps
+	var file_buffer bytes.Buffer
+	var currentFileLocation int64 = 0
+	var fileIndex int64 = 0
+	var cond = sync.NewCond(file_buffer_mutex.RLocker())
+
+	go radioService(conn, &file_buffer, &file_buffer_mutex, throttlePool, &currentFileLocation, &fileIndex, cond)
+
+	// radioData := make(chan []byte, 40*1024) // 40 KB buffered channel
+	//go radio_nullReceiver(conn, &writers)
+
+	g.Handle("/music/radiotest", func(c gig.Context) error {
+		// Seek to current location in file, then start playing the file
+		//var i int64 = 0
+		file_buffer_mutex.RLock()
+		//for {
+		//i = fileIndex
+		file_reader := bytes.NewReader(file_buffer.Bytes())
+		file_reader.Seek(currentFileLocation, io.SeekStart)
+
+		file_reader_throttled, _ := throttlePool.AddReader(io.NopCloser(file_reader))
+		err := c.Stream("audio/mpeg", file_reader_throttled)
+		if err != nil {
+			return err
+		}
+		return nil
+		/*for fileIndex == i {
+			cond.Wait()
+		}*/
+		//}
+
+		/*
+			var i int64 = 0
+			for {
+				file_buffer_mutex.RLock()
+				err := c.Stream("audio/mpeg")
+				if err != nil {
+					file_buffer_mutex.RUnlock()
+					return err
+				}
+				i += 1
+				file_buffer_mutex.RUnlock()
+				//time.Sleep(1 * time.Second)
+			}*/
+
+	})
+}
+
+func radioService(conn *sql.DB, file_buffer *bytes.Buffer, file_buffer_mutex *sync.RWMutex, throttlePool *iothrottler.IOThrottlerPool, currentFileLocation *int64, fileIndex *int64, cond *sync.Cond) {
+	lastFileId := 0
+	//buffer := make([]byte, 40*1024)
+	for {
+		file, success := GetRandomPublicDomainFileInLibrary(conn, lastFileId)
+		if !success {
+			fmt.Printf("Error getting random public domain file from library\n")
+			continue
+		}
+		lastFileId = file.Id
+
+		openFile, err := os.OpenFile(musicDirectory+file.Filename, os.O_RDONLY, 0644)
+		if err != nil {
+			fmt.Printf("Failed to open file '%s': %v\n", musicDirectory+file.Filename, err)
+			continue
+		}
+
+		// Skip ID3v2 Tags at start of file
+		skip_err := SkipId3HeaderTags(openFile)
+		if skip_err != nil {
+			fmt.Printf("Failed to skip ID3 Headers\n")
+		}
+
+		//throttledFile, _ := throttlePool.AddReader(openFile)
+		file_buffer_mutex.Lock()
+		{
+			fmt.Printf("Getting next song.\n")
+			io.Copy(file_buffer, openFile)
+			(*currentFileLocation) = 0
+			(*fileIndex) += 1
+		}
+		file_buffer_mutex.Unlock()
+		cond.Broadcast()
+		openFile.Close()
+
+		// Start "playing" the buffered File - This goroutine will control the current file location
+		throttled, _ := throttlePool.AddReader(io.NopCloser(file_buffer))
+		tmpBuffer := make([]byte, (40*1024)+5)
+		for {
+			n, r_err := throttled.Read(tmpBuffer)
+			(*currentFileLocation) += int64(n)
+			if r_err == io.EOF {
+				// End of file
+				fmt.Printf("End of file.\n")
+				break
+			}
+		}
+
+		/*for {
+			//rw_mutex.Lock()
+			_, r_err := openFile.Read(buffer)
+			io.Copy(writer, bytes.NewReader(buffer))
+			//(*write_num) += 1
+			//rw_mutex.Unlock()
+			if r_err == io.EOF {
+				// End of file
+				break
+			}
+			time.Sleep(1 * time.Second)
+		}*/
+	}
+}
+
+/*
+func radio_nullReceiver(conn *sql.DB, writers *[]*io.PipeWriter) {
+	reader, writer := io.Pipe()
+	writers = append((*writers), writer)
+	for {
+		dummyBuffer := make([]byte, 40*1024)
+		reader.Read(dummyBuffer)
+	}
+}
+*/

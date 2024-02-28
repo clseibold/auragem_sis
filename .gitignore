@@ -1,0 +1,12 @@
+data/
+access.log
+*.pem
+*.key
+*.crt
+*.exe
+auragem_sis
+config/config.go
+main
+main.backup
+SIS/
+

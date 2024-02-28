@@ -1,0 +1,28 @@
+PST         | CST         | Weekdays      | Weekends
+------------|-------------|---------------|---------------
+10 - 11 PM  | 12 -  1 AM  | Ambient       | Electronic
+11 - 12     |  1 -  2     | Lofi          | Electronic
+12 -  1 AM  |  2 -  3     | Cinematic     | Calm Piano
+ 1 -  2     |  3 -  4     | Acoustic      | Ambient
+ 2 -  3     |  4 -  5     | BeOS Music    | Lofi
+ 3 -  4     |  5 -  6     | World         | World
+ 4 -  5     |  6 -  7     | Classical     | Classical
+ 5 -  6     |  7 -  8     | Classical     | Classical
+ 6 -  7     |  8 -  9     | Jazz          | Jazz
+ 7 -  8     |  9 - 10     | "Pop"         | Cinematic
+ 8 -  9     | 10 - 11     | Rock          | Acoustic
+ 9 - 10     | 11 - 12     | "Pop"         | Blues
+10 - 11     | 12 -  1 PM  | Rock          | "Pop"
+11 - 12     |  1 -  2     | Any           | Rock
+12 -  1 PM  |  2 -  3     | Any           | "Pop"
+ 1 -  2     |  3 -  4     | Any           | Rock
+ 2 -  3     |  4 -  5     | Any           | Any
+ 3 -  4     |  5 -  6     | Any           | Any
+ 4 -  5     |  6 -  7     | Blues & Jazz  | Blues & Jazz
+ 5 -  6     |  7 -  8     | "Pop"         | "Pop"
+ 6 -  7     |  8 -  9     | Rock          | Any
+ 7 -  8     |  9 - 10     | Electronic    | Classical
+ 8 -  9     | 10 - 11     | Calm Piano    | Rock
+ 9 - 10     | 11 - 12     | Classical     | Electronic
+
+Note that this schedule could change in the future. Also, times are fluid as a song may run over the hour mark.

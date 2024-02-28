@@ -1,0 +1,145 @@
+package music
+
+import (
+	"database/sql"
+	"fmt"
+	"io"
+	"os"
+	"sync"
+
+	"github.com/efarrer/iothrottler"
+	"github.com/pitr/gig"
+)
+
+type RadioBufInterface interface {
+	io.WriteCloser
+	NewReader() (io.ReadSeekCloser, error)
+}
+
+type RadioBuf struct {
+	fileChangeIndex     int64
+	currentFileLocation int64
+	*os.File
+	sync.RWMutex
+	*sync.Cond
+}
+
+func (rb *RadioBuf) NewFile(name string) error {
+	rb.Lock() // Lock to change the main file. Will wait until all RLocks are complete
+	if rb.File != nil {
+		rb.Close()
+	}
+	f, err := os.Open(name)
+	if err != nil {
+		return err
+	}
+	rb.File = f
+
+	// Skip ID3v2 Tags at start of file
+	skip_err := SkipId3HeaderTags(rb.File)
+	if skip_err != nil {
+		fmt.Printf("Failed to skip ID3 Headers\n")
+	}
+
+	currentLocation, _ := rb.File.Seek(0, io.SeekCurrent)
+	rb.currentFileLocation = currentLocation
+	rb.fileChangeIndex += 1
+	rb.Unlock()
+	rb.Cond.Broadcast() // Broadcast that there's been a change in file
+	return nil
+}
+
+func (rb *RadioBuf) NewReader(old_fileChangeIndex int64) (io.ReadSeekCloser, int64, error) {
+	rb.RLock()
+	fmt.Printf("Checking (%d==%d)\n", old_fileChangeIndex, rb.fileChangeIndex)
+	for old_fileChangeIndex == rb.fileChangeIndex {
+		fmt.Printf("Waiting (%d==%d)\n", old_fileChangeIndex, rb.fileChangeIndex)
+		rb.Cond.Wait()
+		fmt.Printf("Received Broadcast (%d==%d)\n", old_fileChangeIndex, rb.fileChangeIndex)
+	}
+	f, err := os.Open(rb.Name())
+	rb.RUnlock()
+	f.Seek(rb.currentFileLocation, io.SeekStart)
+	if err != nil {
+		return nil, 0, err
+	}
+	return f, rb.fileChangeIndex, nil
+}
+
+func NewRadioBuffer() (*RadioBuf, error) {
+	/*f, err := os.Open(name)
+	if err != nil {
+		return nil, err
+	}*/
+
+	radioBuffer := new(RadioBuf)
+	radioBuffer.fileChangeIndex = 0
+	radioBuffer.currentFileLocation = 0
+	radioBuffer.File = nil
+	radioBuffer.RWMutex = sync.RWMutex{}
+	radioBuffer.Cond = sync.NewCond(radioBuffer.RWMutex.RLocker())
+	return radioBuffer, nil
+}
+
+func handleRadioService(g *gig.Gig, conn *sql.DB) {
+	//var file_buffer_mutex sync.RWMutex
+
+	radioBuffer, _ := NewRadioBuffer()
+
+	go radioService(conn, radioBuffer)
+
+	g.Handle("/music/radiotest", func(c gig.Context) error {
+		throttlePool := iothrottler.NewIOThrottlerPool(iothrottler.Kbps * 96)
+		defer throttlePool.ReleasePool()
+
+		// Seek to current location in file, then start playing the file
+		var old_fileChangeIndex int64 = 0
+		for {
+			file_reader, fileChangeIndex, err := radioBuffer.NewReader(old_fileChangeIndex)
+			old_fileChangeIndex = fileChangeIndex
+
+			//file_reader := bytes.NewReader(file_buffer.Bytes())
+			//file_reader.Seek(currentFileLocation, io.SeekStart)
+
+			file_reader_throttled, _ := throttlePool.AddReader(file_reader)
+			err2 := c.Stream("audio/mpeg", file_reader_throttled)
+			file_reader_throttled.Close()
+			if err2 != nil {
+				return err
+			}
+		}
+	})
+}
+
+func radioService(conn *sql.DB, radioBuffer *RadioBuf) {
+	throttlePool := iothrottler.NewIOThrottlerPool(iothrottler.Kbps * 96)
+	defer throttlePool.ReleasePool()
+
+	lastFileId := 0
+	for {
+		file, success := GetRandomPublicDomainFileInLibrary(conn, lastFileId)
+		if !success {
+			fmt.Printf("Error getting random public domain file from library\n")
+			continue
+		}
+		lastFileId = file.Id
+
+		radioBuffer.NewFile(musicDirectory + file.Filename)
+
+		fmt.Printf("Getting next song.\n")
+
+		// Start "playing" the buffered File - This goroutine will control the current file location
+		throttledFile, _ := throttlePool.AddReader(radioBuffer)
+		tmpBuffer := make([]byte, 96*(1024/8))
+		for {
+			n, r_err := throttledFile.Read(tmpBuffer)
+			radioBuffer.currentFileLocation += int64(n)
+			if r_err == io.EOF {
+				// End of file
+				fmt.Printf("End of file.\n")
+				break
+			}
+		}
+		throttledFile.Close()
+	}
+}
