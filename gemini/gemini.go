@@ -39,9 +39,9 @@ var GeminiCommand = &cobra.Command{
 		}
 
 		// TODO: Pointers are not stable! Use a new ServerID struct with methods instead.
-		geminiServer := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "gemini", Hostname: "localhost"})
+		geminiServer := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "gemini", Hostname: "auragem.letz.dev"})
 		geminiServer.AddCertificate("auragem.pem")
-		context.GetPortListener("0.0.0.0", "1965").AddCertificate("localhost", "auragem.pem")
+		context.GetPortListener("0.0.0.0", "1965").AddCertificate("auragem.letz.dev", "auragem.pem")
 
 		geminiServer.AddDirectory("/*", "./")
 		geminiServer.AddFile("/.well-known/security.txt", "./security.txt")
