@@ -101,7 +101,7 @@ func (rb *RadioBuf) NewSong(conn *sql.DB, songsPlayed []int64, station *RadioSta
 	rb.bitrate = file.CbrKbps
 	rb.fileChangeIndex += 1
 	rb.Unlock()
-	fmt.Printf("%s Station: Unlocked\n", station.Name)
+	//fmt.Printf("%s Station: Unlocked\n", station.Name)
 	rb.readCond.Broadcast() // Broadcast that there's been a change in file
 	f.Close()
 	return file, false, currentRadioGenre, nil
@@ -109,11 +109,11 @@ func (rb *RadioBuf) NewSong(conn *sql.DB, songsPlayed []int64, station *RadioSta
 
 func (rb *RadioBuf) NewReader(old_fileChangeIndex int64, station *RadioStation) (io.ReadSeekCloser, int64, int64, error) {
 	rb.RLock()
-	fmt.Printf("%s Station: Checking (%d==%d)\n", station.Name, old_fileChangeIndex, rb.fileChangeIndex)
+	//fmt.Printf("%s Station: Checking (%d==%d)\n", station.Name, old_fileChangeIndex, rb.fileChangeIndex)
 	for old_fileChangeIndex == rb.fileChangeIndex {
-		fmt.Printf("%s Station: Waiting (%d==%d)\n", station.Name, old_fileChangeIndex, rb.fileChangeIndex)
+		//fmt.Printf("%s Station: Waiting (%d==%d)\n", station.Name, old_fileChangeIndex, rb.fileChangeIndex)
 		rb.readCond.Wait()
-		fmt.Printf("%s Station: Received Broadcast (%d==%d)\n", station.Name, old_fileChangeIndex, rb.fileChangeIndex)
+		//fmt.Printf("%s Station: Received Broadcast (%d==%d)\n", station.Name, old_fileChangeIndex, rb.fileChangeIndex)
 	}
 	f, err := os.Open(musicDirectory + rb.currentMusicFile.Filename)
 	bitrate := rb.bitrate

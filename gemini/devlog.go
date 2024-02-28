@@ -12,6 +12,6 @@ func handleDevlog(g sis.ServerHandle) {
 	})*/
 
 	g.AddRoute("/devlog/atom.xml", func(request sis.Request) {
-		request.TextWithMimetype("text/xml", utils.GenerateAtomFrom("SIS/gemini/devlog/index.gmi", "gemini://auragem.letz.dev", "gemini://auragem.letz.dev/devlog", "Christian \"Krixano\" Seibold", "krixano@protonmail.com"))
+		request.TextWithMimetype("text/xml", utils.GenerateAtomFrom("SIS/auragem_gemini/devlog/index.gmi", "gemini://auragem.letz.dev", "gemini://auragem.letz.dev/devlog", "Christian \"Krixano\" Seibold", "krixano@protonmail.com"))
 	})
 }

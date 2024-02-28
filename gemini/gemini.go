@@ -38,8 +38,10 @@ var GeminiCommand = &cobra.Command{
 			panic(err)
 		}
 
+		// ----- AuraGem Servers -----
+
 		// TODO: Pointers are not stable! Use a new ServerID struct with methods instead.
-		geminiServer := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "gemini", Hostname: "auragem.letz.dev"})
+		geminiServer := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "auragem_gemini", Hostname: "auragem.letz.dev"})
 		geminiServer.AddCertificate("auragem.pem")
 		context.GetPortListener("0.0.0.0", "1965").AddCertificate("auragem.letz.dev", "auragem.pem")
 
@@ -63,12 +65,16 @@ var GeminiCommand = &cobra.Command{
 		// twitch.HandleTwitch(geminiServer)
 		// ask.HandleAsk(geminiServer)
 
-		nexServer := context.AddServer(sis.Server{Type: sis.ServerType_Nex, Name: "nex", Hostname: "localhost"})
+		nexServer := context.AddServer(sis.Server{Type: sis.ServerType_Nex, Name: "auragem_nex", Hostname: "localhost"})
 		nexServer.AddDirectory("/*", "./")
 		nexServer.AddProxyRoute("/gemini/*", "$gemini/*", '1')
 
-		// Start server on PORT or default port
-		//g.Run("auragem.crt", "auragem.key") // cert.pem, key.pem
+		// ----- Scholastic Diversity stuff -----
+		scholasticdiversity_gemini := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "scholasticdiversity_gemini", Hostname: "scholasticdiversity.us.to"})
+		scholasticdiversity_gemini.AddCertificate("scholasticdiversity.pem")
+		context.GetPortListener("0.0.0.0", "1965").AddCertificate("scholasticdiversity.us.to", "scholasticdiversity.pem")
+		scholasticdiversity_gemini.AddDirectory("/*", "./")
+
 		context.Start()
 	},
 }
