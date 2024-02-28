@@ -17,7 +17,7 @@ func getRecent(conn *sql.DB) []Page {
 
 	rows, rows_err := conn.QueryContext(context.Background(), q)
 
-	var pages []Page
+	var pages []Page = make([]Page, 0, 50)
 	if rows_err == nil {
 		defer rows.Close()
 		for rows.Next() {
@@ -35,17 +35,21 @@ func getRecent(conn *sql.DB) []Page {
 }
 
 func getCapsules(conn *sql.DB) []Domain {
-	q := `SELECT id, domain, title, port, has_robots, has_security, has_favicon, favicon, crawlindex, date_added FROM domains ORDER BY date_added DESC`
+	q := `SELECT COUNT(*) OVER () as total, id, domain, title, port, has_robots, has_security, has_favicon, favicon, crawlindex, date_added FROM domains ORDER BY date_added DESC`
 
 	rows, rows_err := conn.QueryContext(context.Background(), q)
 
-	var capsules []Domain
+	var capsules []Domain = nil
 	if rows_err == nil {
+		var count int64
 		defer rows.Close()
 		for rows.Next() {
 			var domain Domain
-			scan_err := rows.Scan(&domain.Id, &domain.Domain, &domain.Title, &domain.Port, &domain.HasRobots, &domain.HasSecurity, &domain.HasFavicon, &domain.Favicon, &domain.CrawlIndex, &domain.Date_added)
+			scan_err := rows.Scan(&count, &domain.Id, &domain.Domain, &domain.Title, &domain.Port, &domain.HasRobots, &domain.HasSecurity, &domain.HasFavicon, &domain.Favicon, &domain.CrawlIndex, &domain.Date_added)
 			if scan_err == nil {
+				if capsules == nil {
+					capsules = make([]Domain, 0, count)
+				}
 				capsules = append(capsules, domain)
 			} else {
 				panic(scan_err)
@@ -81,17 +85,21 @@ func getTags(conn *sql.DB) []Tag {
 
 // TODO: Set a way to order the results
 func getPagesOfTag(conn *sql.DB, name string) []Page {
-	q := `SELECT pages.id, pages.url, pages.scheme, pages.domainid, pages.contenttype, pages.charset, pages.language, pages.linecount, pages.title, pages.prompt, pages.size, pages.hash, pages.feed, pages.publishdate, pages.indextime, pages.album, pages.artist, pages.albumartist, pages.composer, pages.track, pages.disc, pages.copyright, pages.crawlindex, pages.date_added, pages.last_successful_visit, pages.hidden FROM tags JOIN pages ON pages.id = tags.pageid where tags.name=?`
+	q := `SELECT COUNT(*) OVER () as total, pages.id, pages.url, pages.scheme, pages.domainid, pages.contenttype, pages.charset, pages.language, pages.linecount, pages.title, pages.prompt, pages.size, pages.hash, pages.feed, pages.publishdate, pages.indextime, pages.album, pages.artist, pages.albumartist, pages.composer, pages.track, pages.disc, pages.copyright, pages.crawlindex, pages.date_added, pages.last_successful_visit, pages.hidden FROM tags JOIN pages ON pages.id = tags.pageid where tags.name=?`
 
 	rows, rows_err := conn.QueryContext(context.Background(), q, name)
 
-	var pages []Page
+	var pages []Page = nil
 	if rows_err == nil {
+		var count int64
 		defer rows.Close()
 		for rows.Next() {
 			var page pageNullable
-			scan_err := rows.Scan(&page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
+			scan_err := rows.Scan(&count, &page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
 			if scan_err == nil {
+				if pages == nil {
+					pages = make([]Page, 0, count)
+				}
 				pages = append(pages, scanPage(page))
 			} else {
 				panic(scan_err)
@@ -107,7 +115,7 @@ func getMimetypeFiles(conn *sql.DB, mimetype string) []Page {
 
 	rows, rows_err := conn.QueryContext(context.Background(), q, mimetype)
 
-	var pages []Page
+	var pages []Page = make([]Page, 0, 300)
 	if rows_err == nil {
 		defer rows.Close()
 		for rows.Next() {
@@ -130,7 +138,7 @@ type MimetypeListItem struct {
 }
 
 func getMimetypes(conn *sql.DB) []MimetypeListItem {
-	var mimetypes []MimetypeListItem
+	var mimetypes []MimetypeListItem = make([]MimetypeListItem, 0, 50)
 	rows, rows_err := conn.QueryContext(context.Background(), "SELECT contenttype, COUNT(*) FROM pages GROUP BY contenttype ORDER BY COUNT(*) DESC")
 	if rows_err == nil {
 		defer rows.Close()
@@ -149,15 +157,19 @@ func getMimetypes(conn *sql.DB) []MimetypeListItem {
 }
 
 func getFeeds(conn *sql.DB) []Page {
-	rows, rows_err := conn.QueryContext(context.Background(), "SELECT id, url, scheme, domainid, contenttype, charset, language, linecount, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE feed = true")
+	rows, rows_err := conn.QueryContext(context.Background(), "SELECT id, COUNT(*) OVER () as total, url, scheme, domainid, contenttype, charset, language, linecount, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE feed = true")
 
-	var pages []Page
+	var pages []Page = nil
 	if rows_err == nil {
+		var count int64
 		defer rows.Close()
 		for rows.Next() {
 			var page pageNullable
-			scan_err := rows.Scan(&page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
+			scan_err := rows.Scan(&count, &page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
 			if scan_err == nil {
+				if pages == nil {
+					pages = make([]Page, 0, count)
+				}
 				pages = append(pages, scanPage(page))
 			} else {
 				panic(scan_err)
@@ -169,15 +181,19 @@ func getFeeds(conn *sql.DB) []Page {
 }
 
 func getPagesWithPublishDate(conn *sql.DB) []Page {
-	rows, rows_err := conn.QueryContext(context.Background(), "SELECT id, url, scheme, domainid, contenttype, charset, language, linecount, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE publishdate != ? ORDER BY publishdate DESC", time.Time{})
+	rows, rows_err := conn.QueryContext(context.Background(), "SELECT COUNT(*) OVER () as total, id, url, scheme, domainid, contenttype, charset, language, linecount, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE publishdate != ? ORDER BY publishdate DESC", time.Time{})
 
-	var pages []Page
+	var pages []Page = nil
 	if rows_err == nil {
+		var count int64
 		defer rows.Close()
 		for rows.Next() {
 			var page pageNullable
-			scan_err := rows.Scan(&page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
+			scan_err := rows.Scan(&count, &page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
 			if scan_err == nil {
+				if pages == nil {
+					pages = make([]Page, 0, count)
+				}
 				pages = append(pages, scanPage(page))
 			} else {
 				panic(scan_err)
@@ -194,7 +210,7 @@ func getPagesWithPublishDateFromLastYear(conn *sql.DB, results int, skip int) ([
 	query := fmt.Sprintf("SELECT FIRST %d SKIP %d COUNT(*) OVER () totalCount, id, url, scheme, domainid, contenttype, charset, language, linecount, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE publishdate > dateadd(-1 year to ?) AND (language = '' OR language SIMILAR TO 'en%%') ORDER BY publishdate DESC", results, skip)
 	rows, rows_err := conn.QueryContext(context.Background(), query, time.Now().UTC())
 
-	var pages []Page
+	var pages []Page = make([]Page, 0, results)
 	var totalCount int
 	if rows_err == nil {
 		defer rows.Close()
@@ -219,7 +235,7 @@ func getAudioFiles(conn *sql.DB, page int64) []Page {
 
 	rows, rows_err := conn.QueryContext(context.Background(), q)
 
-	var pages []Page
+	var pages []Page = make([]Page, 0, results)
 	if rows_err == nil {
 		defer rows.Close()
 		for rows.Next() {
@@ -243,7 +259,7 @@ func getImageFiles(conn *sql.DB, page int64) []Page {
 
 	rows, rows_err := conn.QueryContext(context.Background(), q)
 
-	var pages []Page
+	var pages []Page = make([]Page, 0, results)
 	if rows_err == nil {
 		defer rows.Close()
 		for rows.Next() {
@@ -261,17 +277,21 @@ func getImageFiles(conn *sql.DB, page int64) []Page {
 }
 
 func getTwtxtFiles(conn *sql.DB) []Page {
-	q := `SELECT id, url, scheme, domainid, contenttype, charset, language, linecount, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE url LIKE '%twtxt.txt' OR url LIKE '%tw.txt'`
+	q := `SELECT COUNT(*) OVER () as total, id, url, scheme, domainid, contenttype, charset, language, linecount, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE url LIKE '%twtxt.txt' OR url LIKE '%tw.txt'`
 
 	rows, rows_err := conn.QueryContext(context.Background(), q)
 
-	var pages []Page
+	var pages []Page = nil
 	if rows_err == nil {
+		var count int64
 		defer rows.Close()
 		for rows.Next() {
 			var page pageNullable
-			scan_err := rows.Scan(&page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
+			scan_err := rows.Scan(&count, &page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
 			if scan_err == nil {
+				if pages == nil {
+					pages = make([]Page, 0, count)
+				}
 				pages = append(pages, scanPage(page))
 			} else {
 				panic(scan_err)
@@ -283,18 +303,22 @@ func getTwtxtFiles(conn *sql.DB) []Page {
 }
 
 func getSecurityTxtFiles(conn *sql.DB) []PageWithDomain {
-	q := `SELECT pages.id, pages.url, pages.scheme, pages.domainid, pages.contenttype, pages.charset, pages.language, pages.linecount, pages.title, pages.prompt, pages.size, pages.hash, pages.feed, pages.publishdate, pages.indextime, pages.album, pages.artist, pages.albumartist, pages.composer, pages.track, pages.disc, pages.copyright, pages.crawlindex, pages.date_added, pages.last_successful_visit, pages.hidden, domains.id, domains.domain, domains.title, domains.port, domains.has_robots, domains.has_security, domains.has_favicon, domains.favicon, domains.crawlindex, domains.date_added FROM pages INNER JOIN domains ON domains.ID = pages.domainid WHERE pages.url LIKE '%security.txt'`
+	q := `SELECT COUNT(*) OVER () as total, pages.id, pages.url, pages.scheme, pages.domainid, pages.contenttype, pages.charset, pages.language, pages.linecount, pages.title, pages.prompt, pages.size, pages.hash, pages.feed, pages.publishdate, pages.indextime, pages.album, pages.artist, pages.albumartist, pages.composer, pages.track, pages.disc, pages.copyright, pages.crawlindex, pages.date_added, pages.last_successful_visit, pages.hidden, domains.id, domains.domain, domains.title, domains.port, domains.has_robots, domains.has_security, domains.has_favicon, domains.favicon, domains.crawlindex, domains.date_added FROM pages INNER JOIN domains ON domains.ID = pages.domainid WHERE pages.url LIKE '%security.txt'`
 
 	rows, rows_err := conn.QueryContext(context.Background(), q)
 
-	var pages []PageWithDomain
+	var pages []PageWithDomain = nil
 	if rows_err == nil {
+		var count int64
 		defer rows.Close()
 		for rows.Next() {
 			var page pageNullable
 			var domain Domain
-			scan_err := rows.Scan(&page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden, &domain.Id, &domain.Domain, &domain.Title, &domain.Port, &domain.HasRobots, &domain.HasSecurity, &domain.HasFavicon, &domain.Favicon, &domain.CrawlIndex, &domain.Date_added)
+			scan_err := rows.Scan(&count, &page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden, &domain.Id, &domain.Domain, &domain.Title, &domain.Port, &domain.HasRobots, &domain.HasSecurity, &domain.HasFavicon, &domain.Favicon, &domain.CrawlIndex, &domain.Date_added)
 			if scan_err == nil {
+				if pages == nil {
+					pages = make([]PageWithDomain, 0, count)
+				}
 				pages = append(pages, PageWithDomain{scanPage(page), domain})
 			} else {
 				panic(scan_err)
