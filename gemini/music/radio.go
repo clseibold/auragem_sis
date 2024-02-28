@@ -39,7 +39,7 @@ func (rb *RadioBuf) NewSong(conn *sql.DB, songsPlayed []int64, station *RadioSta
 		// Wait until prompted to get next song
 		rb.nextSongCond.Wait()
 	}
-	fmt.Printf("%s Station: Getting next song file.\n", station.Name)
+	//fmt.Printf("%s Station: Getting next song file.\n", station.Name)
 
 	// Determine if should play announcer, and set new announcer time
 	t := time.Now()
@@ -166,7 +166,7 @@ func handleRadioService(s sis.ServerHandle, conn *sql.DB) {
 	s.AddRoute("/music/public_radio", func(request sis.Request) {
 		var builder strings.Builder
 		for _, station := range radioStations {
-			fmt.Fprintf(&builder, "=> /music/public_radio/%s %s Station\n", url.PathEscape(station.Name), station.Name)
+			fmt.Fprintf(&builder, "=> /music/public_radio/%s/ %s Station\n", url.PathEscape(station.Name), station.Name)
 		}
 		request.Gemini(fmt.Sprintf(`# AuraGem Music: Public Radio
 This is AuraGem Music's public radio that plays public domain and royalty free music.
@@ -248,7 +248,7 @@ func radioService(conn *sql.DB, radioBuffer *RadioBuf, station *RadioStation) {
 	//songsPlayed := make([]int64, 0, 10) // Ids of songs played within the hour, so we don't get repeats for the whole hour
 	songsPlayed_genre := "Any" // Used to detect genre changes. If changed, clear songsPlayed
 
-	var songsPlayed *deque.Deque[int64] = deque.New[int64](30, 19)
+	var songsPlayed *deque.Deque[int64] = deque.New[int64](50, 19)
 
 	initialTime := time.Now()
 	min := 0

@@ -47,7 +47,7 @@ var GeminiCommand = &cobra.Command{
 
 		geminiServer.AddDirectory("/*", "./")
 		geminiServer.AddFile("/.well-known/security.txt", "./security.txt")
-		geminiServer.AddProxyRoute("/nex/*", "$nex/*", '1')
+		geminiServer.AddProxyRoute("/nex/*", "$auragem_nex/*", '1')
 
 		// Guestbook via Titan
 		geminiServer.AddUploadRoute("/guestbook.gmi", handleGuestbook)
@@ -65,15 +65,44 @@ var GeminiCommand = &cobra.Command{
 		// twitch.HandleTwitch(geminiServer)
 		// ask.HandleAsk(geminiServer)
 
-		nexServer := context.AddServer(sis.Server{Type: sis.ServerType_Nex, Name: "auragem_nex", Hostname: "localhost"})
+		nexServer := context.AddServer(sis.Server{Type: sis.ServerType_Nex, Name: "auragem_nex", Hostname: "auragem.letz.dev"})
 		nexServer.AddDirectory("/*", "./")
-		nexServer.AddProxyRoute("/gemini/*", "$gemini/*", '1')
+		nexServer.AddProxyRoute("/gemini/*", "$auragem_gemini/*", '1')
+		nexServer.AddProxyRoute("/scholasticdiversity/*", "$scholasticdiversity_gemini/*", '1')
 
 		// ----- Scholastic Diversity stuff -----
 		scholasticdiversity_gemini := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "scholasticdiversity_gemini", Hostname: "scholasticdiversity.us.to"})
 		scholasticdiversity_gemini.AddCertificate("scholasticdiversity.pem")
 		context.GetPortListener("0.0.0.0", "1965").AddCertificate("scholasticdiversity.us.to", "scholasticdiversity.pem")
 		scholasticdiversity_gemini.AddDirectory("/*", "./")
+
+		gopherServer := context.AddServer(sis.Server{Type: sis.ServerType_Gopher, Name: "gopher", Hostname: "auragem.letz.dev"})
+		gopherServer.AddRoute("/*", func(request sis.Request) {
+			request.GophermapLine("i", "                             AuraGem Gopher Server", "", request.Hostname(), request.Server.Port)
+			request.GophermapLine("1", "Devlog", "/devlog/", request.Hostname(), request.Server.Port)
+			request.GophermapLine("1", "Personal Log", "/~clseibold/", request.Hostname(), request.Server.Port)
+			request.GophermapLine("1", "Scholastic Diversity", "/scholasticdiversity/", request.Hostname(), request.Server.Port)
+			request.GophermapLine("i", "", "", request.Hostname(), request.Server.Port)
+			request.GophermapLine("i", "Software", "", request.Hostname(), request.Server.Port)
+			request.GophermapLine("i", "--------", "", request.Hostname(), request.Server.Port)
+			request.GophermapLine("1", "Misfin-Server", "/misfin-server/", request.Hostname(), request.Server.Port)
+			request.GophermapLine("i", "", "", request.Hostname(), request.Server.Port)
+			request.GophermapLine("i", "Other", "", request.Hostname(), request.Server.Port)
+			request.GophermapLine("i", "-----", "", request.Hostname(), request.Server.Port)
+			request.GophermapLine("h", "AuraGem Gemini Server", "URL:gemini://auragem.letz.dev", request.Hostname(), request.Server.Port)
+			request.GophermapLine("h", "AuraGem Nex Server", "URL:nex://auragem.letz.dev", request.Hostname(), request.Server.Port)
+			request.GophermapLine("h", "Scholastic Diversity Gemini Server", "URL:gemini://auragem.letz.dev", request.Hostname(), request.Server.Port)
+		})
+		gopherServer.AddProxyRoute("/scholasticdiversity/*", "$scholasticdiversity_gemini/*", '1')
+		gopherServer.AddProxyRoute("/devlog/*", "$auragem_gemini/devlog/*", '1')
+		gopherServer.AddProxyRoute("/~clseibold/*", "$auragem_gemini/~clseibold/*", '1')
+		gopherServer.AddProxyRoute("/misfin-server/*", "$auragem_gemini/misfin-server/*", '1')
+
+		// Proxy public_radio stuff to gopherserver
+		gopherServer.AddProxyRoute("/public_radio/", "$auragem_gemini/music/public_radio/", '1')
+		gopherServer.AddProxyRoute("/public_radio/:station_name", "$auragem_gemini/music/public_radio/$station_name", '1')
+		gopherServer.AddProxyRoute("/public_radio/:station_name/schedule_feed", "$auragem_gemini/public_radio/$station_name/schedule_feed", '1')
+		gopherServer.AddProxyRoute("/stream/public_radio/:station_name.mp3", "$auragem_gemini/stream/public_radio/$station_name.mp3", 's')
 
 		context.Start()
 	},

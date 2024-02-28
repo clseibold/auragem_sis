@@ -207,8 +207,11 @@ func GetRandomFileInUserLibray_excludeId(conn *sql.DB, userId int64, exclude_id 
 // NOTE: Will exclude BeOS and Classical music (to get these, use GetRandomPublicDomainFileInLibrary_RadioGenre instead)
 func GetRandomPublicDomainFileInLibrary(conn *sql.DB, exclude_ids []int64) (MusicFile, bool) {
 	var builder strings.Builder
+	builder.Grow(18 * len(exclude_ids)) // Grow for enough room for each exclude_id addition, assuming a 1-digit integer id.
 	for _, id := range exclude_ids {
-		fmt.Fprintf(&builder, "AND library.id<>%d ", id)
+		builder.WriteString("AND library.id<>")
+		builder.WriteString(strconv.FormatInt(id, 10))
+		builder.WriteRune(' ')
 	}
 
 	randomSeed := cryptoRandomSeed()
@@ -230,8 +233,11 @@ func GetRandomPublicDomainFileInLibrary_RadioGenre(conn *sql.DB, exclude_ids []i
 	}
 
 	var builder strings.Builder
+	builder.Grow(18 * len(exclude_ids)) // Grow for enough room for each exclude_id addition, assuming a 1-digit integer id.
 	for _, id := range exclude_ids {
-		fmt.Fprintf(&builder, "AND library.id<>%d ", id)
+		builder.WriteString("AND library.id<>")
+		builder.WriteString(strconv.FormatInt(id, 10))
+		builder.WriteRune(' ')
 	}
 
 	randomSeed := cryptoRandomSeed()
@@ -248,8 +254,11 @@ func GetRandomPublicDomainFileInLibrary_RadioGenre(conn *sql.DB, exclude_ids []i
 
 func GetRandomPublicDomainFileInLibrary_RadioStation_Any(conn *sql.DB, exclude_ids []int64, station *RadioStation) (MusicFile, bool) {
 	var builder strings.Builder
+	builder.Grow(18 * len(exclude_ids)) // Grow for enough room for each exclude_id addition, assuming a 1-digit integer id.
 	for _, id := range exclude_ids {
-		fmt.Fprintf(&builder, "AND library.id<>%d ", id)
+		builder.WriteString("AND library.id<>")
+		builder.WriteString(strconv.FormatInt(id, 10))
+		builder.WriteRune(' ')
 	}
 
 	fmt.Fprintf(&builder, "AND (")
@@ -277,7 +286,9 @@ func GetRandomPublicDomainFileInLibrary_RadioStation_Any(conn *sql.DB, exclude_i
 func GetRandomPublicDomainFileInLibrary_RadioStation_Announcer(conn *sql.DB, station *RadioStation) (MusicFile, bool) {
 	var builder strings.Builder
 
-	fmt.Fprintf(&builder, "AND library.radio_genre='Announcer' AND library.title='%s Announcer' ", station.Name)
+	builder.WriteString("AND library.radio_genre='Announcer' AND library.title='")
+	builder.WriteString(station.Name)
+	builder.WriteString(" Announcer' ")
 
 	randomSeed := cryptoRandomSeed()
 	query := `SELECT FIRST 1 library.id, library.filehash, library.filename, library.mimetype, library.title, library.album, library.artist, library.albumartist, library.composer, library.genre, library.releaseyear, library.tracknumber, library.discnumber, library.uploadcount, library.allowpublicradio, library.cbr_kbps, library.attribution, library.date_added FROM library WHERE library.allowpublicradio=true ` + builder.String() + ` ORDER BY (library.id + cast(? as bigint))*4294967291-((library.id + cast(? as bigint))*4294967291/49157)*49157`
@@ -297,8 +308,11 @@ func GetRandomPublicDomainFileInLibrary_RadioStation(conn *sql.DB, exclude_ids [
 	radioGenre := GetRadioGenre(currentTime, station)
 
 	var builder strings.Builder
+	builder.Grow(18 * len(exclude_ids)) // Grow for enough room for each exclude_id addition, assuming a 1-digit integer id.
 	for _, id := range exclude_ids {
-		fmt.Fprintf(&builder, "AND library.id<>%d ", id)
+		builder.WriteString("AND library.id<>")
+		builder.WriteString(strconv.FormatInt(id, 10))
+		builder.WriteRune(' ')
 	}
 
 	if radioGenre == "Any" {
@@ -307,10 +321,10 @@ func GetRandomPublicDomainFileInLibrary_RadioStation(conn *sql.DB, exclude_ids [
 		for i, genre := range station.AnyCategory {
 			fmt.Fprintf(&builder, "library.radio_genre='%s' ", genre)
 			if i < len(station.AnyCategory)-1 {
-				fmt.Fprintf(&builder, "OR ")
+				builder.WriteString("OR ")
 			}
 		}
-		fmt.Fprintf(&builder, ")")
+		builder.WriteString(")")
 	} else if radioGenre == "OTR-Program" || radioGenre == "OTR-Program-Rerun" {
 		// Get program for weekday
 		program := station.ProgramInfo[currentTime.Weekday()]
@@ -356,15 +370,19 @@ func GetRandomPublicDomainFileInLibrary_RadioStation(conn *sql.DB, exclude_ids [
 }
 
 func GetFilesInGenre(conn *sql.DB, radioGenre string) []MusicFile {
-	var musicFiles []MusicFile
-	query := `SELECT library.id, library.filehash, library.filename, library.mimetype, library.title, library.album, library.artist, library.albumartist, library.composer, library.genre, library.releaseyear, library.tracknumber, library.discnumber, library.uploadcount, library.allowpublicradio, library.cbr_kbps, library.attribution, library.date_added FROM library WHERE library.allowpublicradio=true AND library.radio_genre=? ORDER BY library.albumartist ASC, library.releaseyear DESC, library.album ASC, library.discnumber ASC, library.tracknumber ASC`
+	var musicFiles []MusicFile = nil
+	query := `SELECT COUNT(*), library.id, library.filehash, library.filename, library.mimetype, library.title, library.album, library.artist, library.albumartist, library.composer, library.genre, library.releaseyear, library.tracknumber, library.discnumber, library.uploadcount, library.allowpublicradio, library.cbr_kbps, library.attribution, library.date_added FROM library WHERE library.allowpublicradio=true AND library.radio_genre=? ORDER BY library.albumartist ASC, library.releaseyear DESC, library.album ASC, library.discnumber ASC, library.tracknumber ASC`
 	rows, rows_err := conn.QueryContext(context.Background(), query, radioGenre)
 	if rows_err == nil {
+		var count int64 = 0
 		defer rows.Close()
 		for rows.Next() {
 			var file MusicFile
-			scan_err := rows.Scan(&file.Id, &file.Filehash, &file.Filename, &file.Mimetype, &file.Title, &file.Album, &file.Artist, &file.Albumartist, &file.Composer, &file.Genre, &file.Releaseyear, &file.Tracknumber, &file.Discnumber, &file.UploadCount, &file.AllowPublicRadio, &file.CbrKbps, &file.Attribution, &file.Date_added)
+			scan_err := rows.Scan(&count, &file.Id, &file.Filehash, &file.Filename, &file.Mimetype, &file.Title, &file.Album, &file.Artist, &file.Albumartist, &file.Composer, &file.Genre, &file.Releaseyear, &file.Tracknumber, &file.Discnumber, &file.UploadCount, &file.AllowPublicRadio, &file.CbrKbps, &file.Attribution, &file.Date_added)
 			if scan_err == nil {
+				if musicFiles == nil {
+					musicFiles = make([]MusicFile, 0, count)
+				}
 				musicFiles = append(musicFiles, file)
 			}
 		}
@@ -396,14 +414,18 @@ func GetUser(conn *sql.DB, certHash string) (MusicUser, bool) {
 }
 
 func GetFilesInUserLibrary(conn *sql.DB, userId int64) []MusicFile {
-	var musicFiles []MusicFile
-	rows, rows_err := conn.QueryContext(context.Background(), "SELECT library.id, library.filehash, library.filename, library.mimetype, library.title, library.album, library.artist, library.albumartist, library.composer, library.genre, library.releaseyear, library.tracknumber, library.discnumber, library.uploadcount, library.allowpublicradio, library.cbr_kbps, library.attribution, library.date_added FROM uploads INNER JOIN library ON uploads.fileid=library.id WHERE uploads.memberid=? ORDER BY library.albumartist ASC, library.releaseyear DESC, library.album ASC, library.discnumber ASC, library.tracknumber ASC", userId)
+	var musicFiles []MusicFile = nil
+	rows, rows_err := conn.QueryContext(context.Background(), "SELECT COUNT(*), library.id, library.filehash, library.filename, library.mimetype, library.title, library.album, library.artist, library.albumartist, library.composer, library.genre, library.releaseyear, library.tracknumber, library.discnumber, library.uploadcount, library.allowpublicradio, library.cbr_kbps, library.attribution, library.date_added FROM uploads INNER JOIN library ON uploads.fileid=library.id WHERE uploads.memberid=? ORDER BY library.albumartist ASC, library.releaseyear DESC, library.album ASC, library.discnumber ASC, library.tracknumber ASC", userId)
 	if rows_err == nil {
+		var count int64 = 0
 		defer rows.Close()
 		for rows.Next() {
 			var file MusicFile
-			scan_err := rows.Scan(&file.Id, &file.Filehash, &file.Filename, &file.Mimetype, &file.Title, &file.Album, &file.Artist, &file.Albumartist, &file.Composer, &file.Genre, &file.Releaseyear, &file.Tracknumber, &file.Discnumber, &file.UploadCount, &file.AllowPublicRadio, &file.CbrKbps, &file.Attribution, &file.Date_added)
+			scan_err := rows.Scan(&count, &file.Id, &file.Filehash, &file.Filename, &file.Mimetype, &file.Title, &file.Album, &file.Artist, &file.Albumartist, &file.Composer, &file.Genre, &file.Releaseyear, &file.Tracknumber, &file.Discnumber, &file.UploadCount, &file.AllowPublicRadio, &file.CbrKbps, &file.Attribution, &file.Date_added)
 			if scan_err == nil {
+				if musicFiles == nil {
+					musicFiles = make([]MusicFile, 0, count)
+				}
 				musicFiles = append(musicFiles, file)
 			}
 		}
@@ -413,7 +435,7 @@ func GetFilesInUserLibrary(conn *sql.DB, userId int64) []MusicFile {
 }
 
 func GetArtistsInUserLibrary(conn *sql.DB, userId int64) []string {
-	var artists []string
+	var artists []string = make([]string, 0, 15)
 	rows, rows_err := conn.QueryContext(context.Background(), "SELECT DISTINCT library.albumartist FROM uploads INNER JOIN library ON uploads.fileid=library.id WHERE uploads.memberid=? ORDER By library.albumartist ASC", userId)
 	if rows_err == nil {
 		defer rows.Close()
@@ -430,7 +452,7 @@ func GetArtistsInUserLibrary(conn *sql.DB, userId int64) []string {
 }
 
 func GetAlbumsInUserLibrary(conn *sql.DB, userId int64) []MusicAlbum {
-	var albums []MusicAlbum
+	var albums []MusicAlbum = make([]MusicAlbum, 0, 15)
 	rows, rows_err := conn.QueryContext(context.Background(), "SELECT DISTINCT library.album, library.albumartist FROM uploads INNER JOIN library ON uploads.fileid=library.id WHERE uploads.memberid=? ORDER BY library.albumartist, library.releaseyear DESC, library.album ASC", userId)
 	if rows_err == nil {
 		defer rows.Close()
@@ -447,7 +469,7 @@ func GetAlbumsInUserLibrary(conn *sql.DB, userId int64) []MusicAlbum {
 }
 
 func GetAlbumsFromArtistInUserLibrary(conn *sql.DB, userId int64, albumArtist string) []MusicAlbum {
-	var albums []MusicAlbum
+	var albums []MusicAlbum = make([]MusicAlbum, 0, 15)
 	rows, rows_err := conn.QueryContext(context.Background(), "SELECT DISTINCT library.album, library.albumartist FROM uploads INNER JOIN library ON uploads.fileid=library.id WHERE uploads.memberid=? AND library.albumartist=? ORDER BY library.releaseyear DESC, library.album ASC", userId, albumArtist)
 	if rows_err == nil {
 		defer rows.Close()
@@ -464,14 +486,18 @@ func GetAlbumsFromArtistInUserLibrary(conn *sql.DB, userId int64, albumArtist st
 }
 
 func GetFilesFromAlbumInUserLibrary(conn *sql.DB, userId int64, albumArtist string, album string) []MusicFile {
-	var musicFiles []MusicFile
-	rows, rows_err := conn.QueryContext(context.Background(), "SELECT library.id, library.filehash, library.filename, library.mimetype, library.title, library.album, library.artist, library.albumartist, library.composer, library.genre, library.releaseyear, library.tracknumber, library.discnumber, library.uploadcount, library.allowpublicradio, library.cbr_kbps, library.attribution, library.date_added FROM uploads INNER JOIN library ON uploads.fileid=library.id WHERE uploads.memberid=? AND albumartist=? AND album=? ORDER BY library.discnumber, library.tracknumber ASC", userId, albumArtist, album)
+	var musicFiles []MusicFile = nil
+	rows, rows_err := conn.QueryContext(context.Background(), "SELECT COUNT(*), library.id, library.filehash, library.filename, library.mimetype, library.title, library.album, library.artist, library.albumartist, library.composer, library.genre, library.releaseyear, library.tracknumber, library.discnumber, library.uploadcount, library.allowpublicradio, library.cbr_kbps, library.attribution, library.date_added FROM uploads INNER JOIN library ON uploads.fileid=library.id WHERE uploads.memberid=? AND albumartist=? AND album=? ORDER BY library.discnumber, library.tracknumber ASC", userId, albumArtist, album)
 	if rows_err == nil {
+		var count int64 = 0
 		defer rows.Close()
 		for rows.Next() {
 			var file MusicFile
-			scan_err := rows.Scan(&file.Id, &file.Filehash, &file.Filename, &file.Mimetype, &file.Title, &file.Album, &file.Artist, &file.Albumartist, &file.Composer, &file.Genre, &file.Releaseyear, &file.Tracknumber, &file.Discnumber, &file.UploadCount, &file.AllowPublicRadio, &file.CbrKbps, &file.Attribution, &file.Date_added)
+			scan_err := rows.Scan(&count, &file.Id, &file.Filehash, &file.Filename, &file.Mimetype, &file.Title, &file.Album, &file.Artist, &file.Albumartist, &file.Composer, &file.Genre, &file.Releaseyear, &file.Tracknumber, &file.Discnumber, &file.UploadCount, &file.AllowPublicRadio, &file.CbrKbps, &file.Attribution, &file.Date_added)
 			if scan_err == nil {
+				if musicFiles == nil {
+					musicFiles = make([]MusicFile, 0, count)
+				}
 				musicFiles = append(musicFiles, file)
 			}
 		}
@@ -482,14 +508,18 @@ func GetFilesFromAlbumInUserLibrary(conn *sql.DB, userId int64, albumArtist stri
 
 // TODO: Add randomization to order of albums?
 func GetFilesFromArtistInUserLibrary(conn *sql.DB, userId int64, albumArtist string) []MusicFile {
-	var musicFiles []MusicFile
-	rows, rows_err := conn.QueryContext(context.Background(), "SELECT library.id, library.filehash, library.filename, library.mimetype, library.title, library.album, library.artist, library.albumartist, library.composer, library.genre, library.releaseyear, library.tracknumber, library.discnumber, library.uploadcount, library.allowpublicradio, library.cbr_kbps, library.attribution, library.date_added FROM uploads INNER JOIN library ON uploads.fileid=library.id WHERE uploads.memberid=? AND albumartist=? ORDER BY library.album ASC, library.discnumber, library.tracknumber ASC", userId, albumArtist)
+	var musicFiles []MusicFile = nil
+	rows, rows_err := conn.QueryContext(context.Background(), "SELECT COUNT(*), library.id, library.filehash, library.filename, library.mimetype, library.title, library.album, library.artist, library.albumartist, library.composer, library.genre, library.releaseyear, library.tracknumber, library.discnumber, library.uploadcount, library.allowpublicradio, library.cbr_kbps, library.attribution, library.date_added FROM uploads INNER JOIN library ON uploads.fileid=library.id WHERE uploads.memberid=? AND albumartist=? ORDER BY library.album ASC, library.discnumber, library.tracknumber ASC", userId, albumArtist)
 	if rows_err == nil {
+		var count int64 = 0
 		defer rows.Close()
 		for rows.Next() {
 			var file MusicFile
-			scan_err := rows.Scan(&file.Id, &file.Filehash, &file.Filename, &file.Mimetype, &file.Title, &file.Album, &file.Artist, &file.Albumartist, &file.Composer, &file.Genre, &file.Releaseyear, &file.Tracknumber, &file.Discnumber, &file.UploadCount, &file.AllowPublicRadio, &file.CbrKbps, &file.Attribution, &file.Date_added)
+			scan_err := rows.Scan(&count, &file.Id, &file.Filehash, &file.Filename, &file.Mimetype, &file.Title, &file.Album, &file.Artist, &file.Albumartist, &file.Composer, &file.Genre, &file.Releaseyear, &file.Tracknumber, &file.Discnumber, &file.UploadCount, &file.AllowPublicRadio, &file.CbrKbps, &file.Attribution, &file.Date_added)
 			if scan_err == nil {
+				if musicFiles == nil {
+					musicFiles = make([]MusicFile, 0, count)
+				}
 				musicFiles = append(musicFiles, file)
 			}
 		}
@@ -578,7 +608,7 @@ type RadioGenre struct {
 }
 
 func Admin_RadioGenreCounts(conn *sql.DB) []RadioGenre {
-	var radioGenres []RadioGenre
+	var radioGenres []RadioGenre = make([]RadioGenre, 0, 10)
 	q := `SELECT radio_genre, COUNT(*) FROM library WHERE allowpublicradio=true GROUP BY radio_genre ORDER BY COUNT(*) DESC`
 	rows, rows_err := conn.QueryContext(context.Background(), q)
 	if rows_err == nil {

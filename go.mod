@@ -16,7 +16,7 @@ require (
 	github.com/rs/zerolog v1.31.0
 	github.com/spf13/cobra v1.8.0
 	github.com/warpfork/go-fsx v0.4.0
-	gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240228143921-d889ffc87251
+	gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240228205848-a57a6c8d5644
 	golang.org/x/net v0.18.0
 	golang.org/x/oauth2 v0.14.0
 	golang.org/x/text v0.14.0
@@ -30,6 +30,7 @@ require (
 	github.com/bitly/go-simplejson v0.5.1 // indirect
 	github.com/dlclark/regexp2 v1.10.0 // indirect
 	github.com/dop251/goja v0.0.0-20230828202809-3dbe69dd2b8e // indirect
+	github.com/eidolon/wordwrap v0.0.0-20161011182207-e0f54129b8bb // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/go-sourcemap/sourcemap v2.1.3+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect

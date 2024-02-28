@@ -140,8 +140,8 @@ func setupStation(s sis.ServerHandle, conn *sql.DB, station *RadioStation, total
 %s
 
 => /music/public_radio/ Public Radio Home
-=> /music/public_radio/%s/schedule_feed Schedule Gemsub Feed
-=> /music/stream/public_radio/%s Stream Station
+=> /music/public_radio/%s/schedule_feed/ Schedule Gemsub Feed
+=> /music/stream/public_radio/%s.mp3 Stream Station
 
 Clients Currently Connected to Station: %d
 Current Time and Genre: %s CST (%s)
@@ -187,16 +187,16 @@ Current song playing: %s by %s
 => /music/public_radio/ Public Radio Home
 => /music/public_radio/%s Station Homepage
 
-=> /music/stream/public_radio/%s %s %s UTC %s: Ep. %d
+=> /music/stream/public_radio/%s.mp3 %s %s UTC %s: Ep. %d
 
 `
 		request.Gemini(fmt.Sprintf(template, station.Name, station.Description, url.PathEscape(station.Name), url.PathEscape(station.Name), timeOfProgram.UTC().Format("2006-01-02"), timeOfProgram.UTC().Format("03:04 PM"), program, episode))
 	})
 
 	s.AddRoute("/music/stream/public_radio", func(request sis.Request) {
-		request.Redirect("/music/stream/public_radio/" + url.PathEscape(RadioStation_Diverse.Name))
+		request.Redirect("/music/stream/public_radio/" + url.PathEscape(RadioStation_Diverse.Name) + ".mp3")
 	})
-	s.AddRoute("/music/stream/public_radio/"+url.PathEscape(station.Name), func(request sis.Request) {
+	s.AddRoute("/music/stream/public_radio/"+url.PathEscape(station.Name)+".mp3", func(request sis.Request) {
 		// Station streaming here
 		// Add to client count
 		radioBuffer.clientCount += 1

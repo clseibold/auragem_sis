@@ -31,6 +31,8 @@ github.com/dop251/goja_nodejs v0.0.0-20210225215109-d91c329300e7/go.mod h1:hn7BA
 github.com/dop251/goja_nodejs v0.0.0-20211022123610-8dd9abb0616d/go.mod h1:DngW8aVqWbuLRMHItjPUyqdj+HWPvnQe8V8y1nDpIbM=
 github.com/efarrer/iothrottler v0.0.3 h1:6m8eKBQ1ouigjXQoBxwEWz12fUGGYfYppEJVcyZFcYg=
 github.com/efarrer/iothrottler v0.0.3/go.mod h1:zGWF5N0NKSCskcPFytDAFwI121DdU/NfW4XOjpTR+ys=
+github.com/eidolon/wordwrap v0.0.0-20161011182207-e0f54129b8bb h1:ioQwBmKdOCpMVS/bDaESqNWXIE/aw4+gsVtysCGMWZ4=
+github.com/eidolon/wordwrap v0.0.0-20161011182207-e0f54129b8bb/go.mod h1:ZAPs+OyRzeVJFGvXVDVffgCzQfjg3qU9Ig8G/MU3zZ4=
 github.com/envoyproxy/go-control-plane v0.9.0/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.4/go.mod h1:6rpuAdCZL397s3pYoYcLgu1mIlRU8Am5FuJP05cCM98=
@@ -164,6 +166,18 @@ gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240228131437-64b240632
 gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240228131437-64b240632f44/go.mod h1:xYZYmvoO9i5hDIQrOlKFHBJPZP4O1gf93XeVZ+Ph/Ps=
 gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240228143921-d889ffc87251 h1:aLYPqbam71G8y/CQTzFKqOC1UWxacTEplPjNuh1Zfws=
 gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240228143921-d889ffc87251/go.mod h1:xYZYmvoO9i5hDIQrOlKFHBJPZP4O1gf93XeVZ+Ph/Ps=
+gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240228174902-f079a6fd9eac h1:d3W2r3A2whO3Pq/z62hHqN9j2F+FjCz1iPbFULyHWCI=
+gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240228174902-f079a6fd9eac/go.mod h1:xYZYmvoO9i5hDIQrOlKFHBJPZP4O1gf93XeVZ+Ph/Ps=
+gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240228184718-905c878092e3 h1:ccHGqQvxVNupQ5Eg1//K7vPjArFXAiOzj1z2iwHu6lc=
+gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240228184718-905c878092e3/go.mod h1:4JbT4i/Kh08G+Z6brPWq/HfRLqSK7+0HXuw1GC1wa9U=
+gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240228185635-99b8dcc848dc h1:WOqz5rP8Frk4ZQep/RM9fBTtBa/8FaEQ3WEvUuxwkU0=
+gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240228185635-99b8dcc848dc/go.mod h1:4JbT4i/Kh08G+Z6brPWq/HfRLqSK7+0HXuw1GC1wa9U=
+gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240228194450-1b434dceba60 h1:MbFEmTOsaza4y5u6hEIaW50chyajNIhPTlIgMIwx1vU=
+gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240228194450-1b434dceba60/go.mod h1:4JbT4i/Kh08G+Z6brPWq/HfRLqSK7+0HXuw1GC1wa9U=
+gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240228203725-355547396f31 h1:r6ia9Fdo3lKCKiJ7nPpfhdoRHtWcfCbH/lKcvucOgwU=
+gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240228203725-355547396f31/go.mod h1:4JbT4i/Kh08G+Z6brPWq/HfRLqSK7+0HXuw1GC1wa9U=
+gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240228205848-a57a6c8d5644 h1:qSGIAls7MPWHbSItLDnxTLYEwRYtHc8mBPm+Yu1cnKU=
+gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240228205848-a57a6c8d5644/go.mod h1:4JbT4i/Kh08G+Z6brPWq/HfRLqSK7+0HXuw1GC1wa9U=
 gitlab.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b h1:7gd+rd8P3bqcn/96gOZa3F5dpJr/vEiDQYlNb/y2uNs=
 gitlab.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b/go.mod h1:T3BPAOm2cqquPa0MKWeNkmOM5RQsRhkrwMWonFMN7fE=
 go.opencensus.io v0.24.0 h1:y73uSU6J157QMP2kn2r30vwW1A2W2WFwSCGnAVxeaD0=
