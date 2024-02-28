@@ -371,7 +371,7 @@ func GetRandomPublicDomainFileInLibrary_RadioStation(conn *sql.DB, exclude_ids [
 
 func GetFilesInGenre(conn *sql.DB, radioGenre string) []MusicFile {
 	var musicFiles []MusicFile = nil
-	query := `SELECT COUNT(*), library.id, library.filehash, library.filename, library.mimetype, library.title, library.album, library.artist, library.albumartist, library.composer, library.genre, library.releaseyear, library.tracknumber, library.discnumber, library.uploadcount, library.allowpublicradio, library.cbr_kbps, library.attribution, library.date_added FROM library WHERE library.allowpublicradio=true AND library.radio_genre=? ORDER BY library.albumartist ASC, library.releaseyear DESC, library.album ASC, library.discnumber ASC, library.tracknumber ASC`
+	query := `SELECT COUNT(*) OVER () as total, library.id, library.filehash, library.filename, library.mimetype, library.title, library.album, library.artist, library.albumartist, library.composer, library.genre, library.releaseyear, library.tracknumber, library.discnumber, library.uploadcount, library.allowpublicradio, library.cbr_kbps, library.attribution, library.date_added FROM library WHERE library.allowpublicradio=true AND library.radio_genre=? ORDER BY library.albumartist ASC, library.releaseyear DESC, library.album ASC, library.discnumber ASC, library.tracknumber ASC`
 	rows, rows_err := conn.QueryContext(context.Background(), query, radioGenre)
 	if rows_err == nil {
 		var count int64 = 0
@@ -415,7 +415,7 @@ func GetUser(conn *sql.DB, certHash string) (MusicUser, bool) {
 
 func GetFilesInUserLibrary(conn *sql.DB, userId int64) []MusicFile {
 	var musicFiles []MusicFile = nil
-	rows, rows_err := conn.QueryContext(context.Background(), "SELECT COUNT(*), library.id, library.filehash, library.filename, library.mimetype, library.title, library.album, library.artist, library.albumartist, library.composer, library.genre, library.releaseyear, library.tracknumber, library.discnumber, library.uploadcount, library.allowpublicradio, library.cbr_kbps, library.attribution, library.date_added FROM uploads INNER JOIN library ON uploads.fileid=library.id WHERE uploads.memberid=? ORDER BY library.albumartist ASC, library.releaseyear DESC, library.album ASC, library.discnumber ASC, library.tracknumber ASC", userId)
+	rows, rows_err := conn.QueryContext(context.Background(), "SELECT COUNT(*) OVER () as total, library.id, library.filehash, library.filename, library.mimetype, library.title, library.album, library.artist, library.albumartist, library.composer, library.genre, library.releaseyear, library.tracknumber, library.discnumber, library.uploadcount, library.allowpublicradio, library.cbr_kbps, library.attribution, library.date_added FROM uploads INNER JOIN library ON uploads.fileid=library.id WHERE uploads.memberid=? ORDER BY library.albumartist ASC, library.releaseyear DESC, library.album ASC, library.discnumber ASC, library.tracknumber ASC", userId)
 	if rows_err == nil {
 		var count int64 = 0
 		defer rows.Close()
@@ -487,7 +487,7 @@ func GetAlbumsFromArtistInUserLibrary(conn *sql.DB, userId int64, albumArtist st
 
 func GetFilesFromAlbumInUserLibrary(conn *sql.DB, userId int64, albumArtist string, album string) []MusicFile {
 	var musicFiles []MusicFile = nil
-	rows, rows_err := conn.QueryContext(context.Background(), "SELECT COUNT(*), library.id, library.filehash, library.filename, library.mimetype, library.title, library.album, library.artist, library.albumartist, library.composer, library.genre, library.releaseyear, library.tracknumber, library.discnumber, library.uploadcount, library.allowpublicradio, library.cbr_kbps, library.attribution, library.date_added FROM uploads INNER JOIN library ON uploads.fileid=library.id WHERE uploads.memberid=? AND albumartist=? AND album=? ORDER BY library.discnumber, library.tracknumber ASC", userId, albumArtist, album)
+	rows, rows_err := conn.QueryContext(context.Background(), "SELECT COUNT(*) OVER () as total, library.id, library.filehash, library.filename, library.mimetype, library.title, library.album, library.artist, library.albumartist, library.composer, library.genre, library.releaseyear, library.tracknumber, library.discnumber, library.uploadcount, library.allowpublicradio, library.cbr_kbps, library.attribution, library.date_added FROM uploads INNER JOIN library ON uploads.fileid=library.id WHERE uploads.memberid=? AND albumartist=? AND album=? ORDER BY library.discnumber, library.tracknumber ASC", userId, albumArtist, album)
 	if rows_err == nil {
 		var count int64 = 0
 		defer rows.Close()
@@ -509,7 +509,7 @@ func GetFilesFromAlbumInUserLibrary(conn *sql.DB, userId int64, albumArtist stri
 // TODO: Add randomization to order of albums?
 func GetFilesFromArtistInUserLibrary(conn *sql.DB, userId int64, albumArtist string) []MusicFile {
 	var musicFiles []MusicFile = nil
-	rows, rows_err := conn.QueryContext(context.Background(), "SELECT COUNT(*), library.id, library.filehash, library.filename, library.mimetype, library.title, library.album, library.artist, library.albumartist, library.composer, library.genre, library.releaseyear, library.tracknumber, library.discnumber, library.uploadcount, library.allowpublicradio, library.cbr_kbps, library.attribution, library.date_added FROM uploads INNER JOIN library ON uploads.fileid=library.id WHERE uploads.memberid=? AND albumartist=? ORDER BY library.album ASC, library.discnumber, library.tracknumber ASC", userId, albumArtist)
+	rows, rows_err := conn.QueryContext(context.Background(), "SELECT COUNT(*) OVER () as total, library.id, library.filehash, library.filename, library.mimetype, library.title, library.album, library.artist, library.albumartist, library.composer, library.genre, library.releaseyear, library.tracknumber, library.discnumber, library.uploadcount, library.allowpublicradio, library.cbr_kbps, library.attribution, library.date_added FROM uploads INNER JOIN library ON uploads.fileid=library.id WHERE uploads.memberid=? AND albumartist=? ORDER BY library.album ASC, library.discnumber, library.tracknumber ASC", userId, albumArtist)
 	if rows_err == nil {
 		var count int64 = 0
 		defer rows.Close()
