@@ -110,9 +110,11 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 				for _, format := range formats {
 					audioQuality := ""
 					switch format.AudioQuality {
-					case "AUDIO_QUALITY_Medium":
+					case "AUDIO_QUALITY_HIGH":
+						audioQuality = "High Audio Quality"
+					case "AUDIO_QUALITY_MEDIUM":
 						audioQuality = "Medium Audio Quality"
-					case "AUDIO_QUALITY_Low":
+					case "AUDIO_QUALITY_LOW":
 						audioQuality = "Low Audio Quality"
 					}
 					fmt.Fprintf(&downloadFormatsBuilder, "=> /youtube/downloadVideo/%s/%s Download Video - %s (%s)\n", format.Quality, video.Id, format.Quality, audioQuality)

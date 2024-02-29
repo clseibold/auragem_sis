@@ -32,13 +32,14 @@ var GeminiCommand = &cobra.Command{
 		//gig.DefaultWriter = io.MultiWriter(f, os.Stdout)
 
 		context, err := sis.InitSIS("./SIS/")
+		context.AdminServer().BindAddress = "0.0.0.0"
+		context.AdminServer().Hostname = "auragem.letz.dev"
 		context.AdminServer().AddCertificate("auragem.pem")
-		context.GetPortListener("localhost", "1995").AddCertificate("localhost", "auragem.pem")
+		context.SaveConfiguration()
 		context.GetPortListener("0.0.0.0", "1995").AddCertificate("auragem.letz.dev", "auragem.pem")
 		if err != nil {
 			panic(err)
 		}
-		context.SaveConfiguration()
 
 		// ----- AuraGem Servers -----
 
