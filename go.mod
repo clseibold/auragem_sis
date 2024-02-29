@@ -12,11 +12,9 @@ require (
 	github.com/kkdai/youtube/v2 v2.9.0
 	github.com/krayzpipes/cronticker v0.0.1
 	github.com/nakagami/firebirdsql v0.9.6
-	github.com/pitr/gig v0.9.8
 	github.com/rs/zerolog v1.31.0
 	github.com/spf13/cobra v1.8.0
-	github.com/warpfork/go-fsx v0.4.0
-	gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240228231352-7801fca2840d
+	gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240229204432-77e5f2792788
 	golang.org/x/net v0.18.0
 	golang.org/x/oauth2 v0.14.0
 	golang.org/x/text v0.14.0
@@ -50,8 +48,7 @@ require (
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	github.com/valyala/fasttemplate v1.1.0 // indirect
+	github.com/warpfork/go-fsx v0.4.0 // indirect
 	gitlab.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b // indirect
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/crypto v0.15.0 // indirect
