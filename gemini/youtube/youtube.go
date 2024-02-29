@@ -170,6 +170,16 @@ func handleCaptionDownload(s sis.ServerHandle) {
 	s.AddRoute("/youtube/video/:id/transcript", func(request sis.Request) {
 		client := ytd.Client{}
 		video, err := client.GetVideo(request.GetParam("id"))
+		retries := 0
+		for err != nil {
+			// Try again, for a maximum of 5 times.
+			ytd_vid, err = client.GetVideo(video.Id)
+			retries += 1
+			if retries == 5 {
+				break
+			}
+			time.Sleep(time.Millisecond * 120)
+		}
 		if err != nil {
 			//panic(err)
 			request.TemporaryFailure("Error: Couldn't find video. %s\n", err.Error())
@@ -188,6 +198,17 @@ func handleCaptionDownload(s sis.ServerHandle) {
 	s.AddRoute("/youtube/video/:id/caption/:caption", func(request sis.Request) {
 		client := ytd.Client{}
 		video, err := client.GetVideo(request.GetParam("id"))
+		retries := 0
+		for err != nil {
+			// Try again, for a maximum of 5 times.
+			ytd_vid, err = client.GetVideo(video.Id)
+			retries += 1
+			if retries == 5 {
+				break
+			}
+			time.Sleep(time.Millisecond * 120)
+		}
+
 		if err != nil {
 			//panic(err)
 			request.TemporaryFailure("Error: Couldn't find video. %s\n", err.Error())
