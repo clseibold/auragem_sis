@@ -108,7 +108,7 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 			if retries == 5 {
 				break
 			}
-			time.Sleep(time.Millisecond * 70)
+			time.Sleep(time.Millisecond * 120)
 		}
 		if err != nil { // If still getting an error after retrying 5 times.
 			fmt.Printf("Couldn't find video in ytd client.\n")
@@ -255,7 +255,7 @@ func getVideoDownloadRouteFunc() sis.RequestHandler {
 			if retries == 5 {
 				break
 			}
-			time.Sleep(time.Millisecond * 70)
+			time.Sleep(time.Millisecond * 120)
 		}
 
 		// If still can't get video after 5 retries, then error out
