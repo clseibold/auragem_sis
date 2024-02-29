@@ -87,12 +87,8 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 		if len(response.Items) == 0 {
 			request.TemporaryFailure("Video not found.")
 			return
-			//return c.NoContent(gig.StatusTemporaryFailure, "Video not found.")
 		}
 		video := response.Items[0] // TODO: Error if video is not found
-
-		/*caption_call := service.Captions.List([]string{"id", "snippet"}, id)
-		caption_response, err := caption_call.Do()*/
 
 		var downloadFormatsBuilder strings.Builder
 		var captionsBuilder strings.Builder
@@ -104,9 +100,6 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 		} else {
 			// List Download Formats
 			formats := ytd_vid.Formats.WithAudioChannels()
-			/*formats = filterYT(formats, func(f ytd.Format) bool {
-				return f.AudioQuality == "AUDIO_QUALITY_MEDIUM" || f.AudioQuality == "AUDIO_QUALITY_LOW" || f.AudioQuality == "AUDIO_QUALITY_HIGH"
-			})*/
 			formats.Sort()
 			if len(formats) == 0 {
 				fmt.Fprintf(&downloadFormatsBuilder, "No downloads available yet. The video could be a future livestream or premiere.\n")
@@ -134,14 +127,9 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 						captionString = caption.Kind + "_" + captionString
 					}
 					fmt.Fprintf(&captionsBuilder, "=> /youtube/video/%s/caption/%s %s %s\n", video.Id, url.PathEscape(captionString), caption.Kind, caption.LanguageCode)
-					fmt.Printf("Caption Info: %s, %s, %s\n", caption.Kind, caption.VssID, caption.BaseURL)
 				}
 			}
 		}
-
-		/*for _, caption := range caption_response.Items {
-			fmt.Fprintf(&captionsBuilder, "=> /youtube/caption/%s %s", caption.Id, caption.Snippet.Name)
-		}*/
 
 		request.Gemini(fmt.Sprintf(`# Video: %s
 
