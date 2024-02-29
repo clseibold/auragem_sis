@@ -91,23 +91,33 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 		/*caption_call := service.Captions.List([]string{"id", "snippet"}, id)
 		caption_response, err := caption_call.Do()*/
 
+		var downloadFormatsBuilder strings.Builder
+		var captionsBuilder strings.Builder
 		client := ytd.Client{}
 		ytd_vid, err := client.GetVideo(video.Id)
+		if err != nil {
+			fmt.Printf("Couldn't find video in ytd client.\n")
+			request.TemporaryFailure("Video not found.")
+			return
+		} else {
+			// List Download Formats
+			formats := ytd_vid.Formats.WithAudioChannels()
+			/*formats = filterYT(formats, func(f ytd.Format) bool {
+				return f.AudioQuality == "AUDIO_QUALITY_MEDIUM" || f.AudioQuality == "AUDIO_QUALITY_LOW" || f.AudioQuality == "AUDIO_QUALITY_HIGH"
+			})*/
+			formats.Sort()
+			for _, format := range formats {
+				audioQuality := ""
+				switch format.AudioQuality {
+				case "AUDIO_QUALITY_Medium":
+					audioQuality = "Medium Audio Quality"
+				case "AUDIO_QUALITY_Low":
+					audioQuality = "Low Audio Quality"
+				}
+				fmt.Fprintf(&downloadFormatsBuilder, "=> /youtube/downloadVideo/%s/%s Download Video - %s (%s)\n", format.Quality, video.Id, format.Quality, audioQuality)
+			}
 
-		// List Download Formats
-		var downloadFormatsBuilder strings.Builder
-		formats := ytd_vid.Formats.WithAudioChannels()
-		formats = filterYT(formats, func(f ytd.Format) bool {
-			return f.AudioQuality == "AUDIO_QUALITY_MEDIUM" || f.AudioQuality == "AUDIO_QUALITY_LOW" || f.AudioQuality == "AUDIO_QUALITY_HIGH"
-		})
-		formats.Sort()
-		for _, format := range formats {
-			fmt.Fprintf(&downloadFormatsBuilder, "=> /youtube/downloadVideo/%s/%s Download Video - %s (%s)\n", format.Quality, video.Id, format.Quality, format.AudioQuality)
-		}
-
-		// Captions
-		var captionsBuilder strings.Builder
-		if err == nil {
+			// Captions
 			fmt.Fprintf(&captionsBuilder, "## Caption Transcripts\n")
 			for _, caption := range ytd_vid.CaptionTracks {
 				fmt.Fprintf(&captionsBuilder, "=> /youtube/video/%s/caption/%s %s (%s)\n", video.Id, url.PathEscape(caption.Name.SimpleText), caption.Name.SimpleText, caption.LanguageCode)
