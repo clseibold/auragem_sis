@@ -169,11 +169,12 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 func handleCaptionDownload(s sis.ServerHandle) {
 	s.AddRoute("/youtube/video/:id/transcript", func(request sis.Request) {
 		client := ytd.Client{}
-		video, err := client.GetVideo(request.GetParam("id"))
+		videoId := request.GetParam("id")
+		video, err := client.GetVideo(videoId)
 		retries := 0
 		for err != nil {
 			// Try again, for a maximum of 5 times.
-			ytd_vid, err = client.GetVideo(video.Id)
+			video, err = client.GetVideo(videoId)
 			retries += 1
 			if retries == 5 {
 				break
@@ -197,11 +198,12 @@ func handleCaptionDownload(s sis.ServerHandle) {
 
 	s.AddRoute("/youtube/video/:id/caption/:caption", func(request sis.Request) {
 		client := ytd.Client{}
-		video, err := client.GetVideo(request.GetParam("id"))
+		videoId := request.GetParam("id")
+		video, err := client.GetVideo(videoId)
 		retries := 0
 		for err != nil {
 			// Try again, for a maximum of 5 times.
-			ytd_vid, err = client.GetVideo(video.Id)
+			video, err = client.GetVideo(videoId)
 			retries += 1
 			if retries == 5 {
 				break
