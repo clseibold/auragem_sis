@@ -300,11 +300,8 @@ func getRepoContents(ctx context.Context, client *github.Client, repository *git
 		c, _ := fileContents.GetContent()
 		return c, true
 	}
-	if dirContents == nil && fileContents == nil {
-		fmt.Fprintf(&builder, "Not found")
-		return builder.String(), false
-	}
 
+	fmt.Fprintf(&builder, "Not found")
 	return builder.String(), false
 }
 
