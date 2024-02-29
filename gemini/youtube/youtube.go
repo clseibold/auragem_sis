@@ -5,6 +5,9 @@ import (
 	"embed"
 	"fmt"
 	"html"
+	"net/http"
+	"net/url"
+	"path/filepath"
 	"strings"
 
 	//"log"
@@ -24,7 +27,7 @@ var (
 //go:embed index.gmi
 var content embed.FS
 
-func HandleYoutube(g sis.ServerHandle) {
+func HandleYoutube(s sis.ServerHandle) {
 	// Create Youtube Service
 	service, err1 := youtube.NewService(context.Background(), option.WithAPIKey(youtubeAPIKey))
 	if err1 != nil {
@@ -35,17 +38,18 @@ func HandleYoutube(g sis.ServerHandle) {
 	videoPageRoute := getVideoPageRouteFunc(service)
 	videoDownloadRoute := getVideoDownloadRouteFunc()
 
-	g.AddRoute("/cgi-bin/youtube.cgi", func(request sis.Request) {
+	s.AddRoute("/cgi-bin/youtube.cgi", func(request sis.Request) {
 		request.Redirect("/youtube") // TODO: Temporary Redirect
 	})
-	g.AddRoute("/youtube", indexRoute)
-	g.AddRoute("/youtube/search", searchRoute)
-	g.AddRoute("/youtube/search/:page", searchRoute)
-	g.AddRoute("/youtube/video/:id/", videoPageRoute)
-	g.AddRoute("/youtube/downloadVideo/:quality/:id", videoDownloadRoute)
+	s.AddRoute("/youtube", indexRoute)
+	s.AddRoute("/youtube/search", searchRoute)
+	s.AddRoute("/youtube/search/:page", searchRoute)
+	s.AddRoute("/youtube/video/:id/", videoPageRoute)
+	s.AddRoute("/youtube/downloadVideo/:quality/:id", videoDownloadRoute)
+	handleCaptionDownload(s)
 
-	handleChannelPage(g, service)
-	handlePlaylistPage(g, service)
+	handleChannelPage(s, service)
+	handlePlaylistPage(s, service)
 }
 
 func indexRoute(request sis.Request) {
@@ -125,7 +129,11 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 			if len(ytd_vid.CaptionTracks) > 0 {
 				fmt.Fprintf(&captionsBuilder, "## Caption Transcripts\n")
 				for _, caption := range ytd_vid.CaptionTracks {
-					fmt.Fprintf(&captionsBuilder, "=> %s %s (%s, %s, %s)\n", caption.BaseURL, caption.Name.SimpleText, caption.Kind, caption.VssID, caption.LanguageCode)
+					captionString := caption.LanguageCode + ".srv3"
+					if caption.Kind != "" {
+						captionString = caption.Kind + "_" + captionString
+					}
+					fmt.Fprintf(&captionsBuilder, "=> /youtube/video/%s/caption/%s %s %s\n", video.Id, url.PathEscape(captionString), caption.Kind, caption.LanguageCode)
 					fmt.Printf("Caption Info: %s, %s, %s\n", caption.Kind, caption.VssID, caption.BaseURL)
 				}
 			}
@@ -149,13 +157,48 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 	}
 }
 
-func handleCaptionPage(g *sis.Server, service *youtube.Service) {
-	g.AddRoute("/youtube/caption/:id", func(request sis.Request) {
-		//caption_call := service.Captions.Download(c.Param("id"))
-		//caption_response, err := caption_call.Do()
+func handleCaptionDownload(s sis.ServerHandle) {
+	s.AddRoute("/youtube/video/:id/caption/:caption", func(request sis.Request) {
+		client := ytd.Client{}
+		video, err := client.GetVideo(request.GetParam("id"))
+		if err != nil {
+			//panic(err)
+			request.TemporaryFailure("Error: Couldn't find video. %s\n", err.Error())
+			return
+		}
 
-		request.TemporaryFailure("Unfinished.")
-		//return c.Gemini(`Video: %s, Caption: %s`, "", "")
+		captionString := request.GetParam("caption")
+		kind, lang, foundKind := strings.Cut(captionString, "_")
+		if !foundKind {
+			lang = kind
+			kind = ""
+		}
+
+		extension := filepath.Ext(lang)
+		lang = strings.TrimSuffix(lang, "."+extension)
+
+		var foundCaption = false
+		var captionFound ytd.CaptionTrack
+		for _, caption := range video.CaptionTracks {
+			if caption.Kind == kind && caption.LanguageCode == lang {
+				captionFound = caption
+				foundCaption = true
+				break
+			}
+		}
+		if !foundCaption {
+			request.TemporaryFailure("Caption not found.")
+			return
+		} else {
+			http_client := http.DefaultClient
+			response, err := http_client.Get(captionFound.BaseURL)
+			if err != nil {
+				request.TemporaryFailure("Couldn't download caption file.")
+				return
+			} else {
+				request.Stream("text/xml; charset=UTF-8", response.Body)
+			}
+		}
 	})
 }
 
