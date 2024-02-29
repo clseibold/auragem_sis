@@ -5,7 +5,6 @@ import (
 	"embed"
 	"fmt"
 	"html"
-	"net/url"
 	"strings"
 
 	//"log"
@@ -97,8 +96,7 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 		ytd_vid, err := client.GetVideo(video.Id)
 		if err != nil {
 			fmt.Printf("Couldn't find video in ytd client.\n")
-			request.TemporaryFailure("Video not found.")
-			return
+			fmt.Fprintf(&downloadFormatsBuilder, "No downloads available yet. Try again later.\n")
 		} else {
 			// List Download Formats
 			formats := ytd_vid.Formats.WithAudioChannels()
@@ -106,22 +104,28 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 				return f.AudioQuality == "AUDIO_QUALITY_MEDIUM" || f.AudioQuality == "AUDIO_QUALITY_LOW" || f.AudioQuality == "AUDIO_QUALITY_HIGH"
 			})*/
 			formats.Sort()
-			for _, format := range formats {
-				audioQuality := ""
-				switch format.AudioQuality {
-				case "AUDIO_QUALITY_Medium":
-					audioQuality = "Medium Audio Quality"
-				case "AUDIO_QUALITY_Low":
-					audioQuality = "Low Audio Quality"
+			if len(formats) == 0 {
+				fmt.Fprintf(&downloadFormatsBuilder, "No downloads available yet. The video could be a future livestream or premiere.\n")
+			} else {
+				for _, format := range formats {
+					audioQuality := ""
+					switch format.AudioQuality {
+					case "AUDIO_QUALITY_Medium":
+						audioQuality = "Medium Audio Quality"
+					case "AUDIO_QUALITY_Low":
+						audioQuality = "Low Audio Quality"
+					}
+					fmt.Fprintf(&downloadFormatsBuilder, "=> /youtube/downloadVideo/%s/%s Download Video - %s (%s)\n", format.Quality, video.Id, format.Quality, audioQuality)
 				}
-				fmt.Fprintf(&downloadFormatsBuilder, "=> /youtube/downloadVideo/%s/%s Download Video - %s (%s)\n", format.Quality, video.Id, format.Quality, audioQuality)
 			}
 
 			// Captions
-			fmt.Fprintf(&captionsBuilder, "## Caption Transcripts\n")
-			for _, caption := range ytd_vid.CaptionTracks {
-				fmt.Fprintf(&captionsBuilder, "=> /youtube/video/%s/caption/%s %s (%s)\n", video.Id, url.PathEscape(caption.Name.SimpleText), caption.Name.SimpleText, caption.LanguageCode)
-				fmt.Printf("Caption Info: %s, %s, %s\n", caption.Kind, caption.VssID, caption.BaseURL)
+			if len(ytd_vid.CaptionTracks) > 0 {
+				fmt.Fprintf(&captionsBuilder, "## Caption Transcripts\n")
+				for _, caption := range ytd_vid.CaptionTracks {
+					fmt.Fprintf(&captionsBuilder, "=> %s %s (%s, %s, %s)\n", caption.BaseURL, caption.Name.SimpleText, caption.Kind, caption.VssID, caption.LanguageCode)
+					fmt.Printf("Caption Info: %s, %s, %s\n", caption.Kind, caption.VssID, caption.BaseURL)
+				}
 			}
 		}
 
@@ -226,7 +230,7 @@ func getVideoDownloadRouteFunc() sis.RequestHandler {
 				return
 				//return c.Gemini("Error: Video At or Below Desired Quality of %s Not Found. Try a higher quality.\n%v", desiredMaxQuality, err) // TODO: Do different thing?
 			} else {
-				request.TemporaryFailure("Video with Audio not found.\n")
+				request.TemporaryFailure("Video with Audio not found. The video could be a premiere.\n")
 				return
 				//return c.Gemini("Error: Video with Audio Not Found.\n%v", err) // TODO: Do different thing?
 			}

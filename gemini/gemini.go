@@ -34,9 +34,11 @@ var GeminiCommand = &cobra.Command{
 		context, err := sis.InitSIS("./SIS/")
 		context.AdminServer().AddCertificate("auragem.pem")
 		context.GetPortListener("localhost", "1995").AddCertificate("localhost", "auragem.pem")
+		context.GetPortListener("0.0.0.0", "1995").AddCertificate("auragem.letz.dev", "auragem.pem")
 		if err != nil {
 			panic(err)
 		}
+		context.SaveConfiguration()
 
 		// ----- AuraGem Servers -----
 
