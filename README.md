@@ -3,18 +3,24 @@
 Search Engine, Star Wars Database, Weather, Music Storage, etc.
 
 ## License Info
-This capsule is currently licensed as MIT, with exceptions given below. Below is a list of libraries that are used and their licenses.
+This capsule is currently licensed as MIT. Below is a list of libraries that are used and their licenses.
+
+* [clseibold/smallnetinformationservices] - BSD-2 Clause - My Server Software
 
 * [nakagami/firebirdsql](https://github.com/nakagami/firebirdsql) - [MIT](https://opensource.org/licenses/MIT)
-* [~adnano/go-gemini](https://git.sr.ht/~adnano/go-gemini) - [MIT](https://opensource.org/licenses/MIT)
-* [briandowns/OpenWeatherMap](https://github.com/briandowns/openweathermap) - [Apache 2.0](https://opensource.org/licenses/Apache-2.0)
-* [afjoseph/RAKE.GO](https://github.com/afjoseph/RAKE.Go) - [MIT](https://opensource.org/licenses/MIT)
+* [google/go-github](github.com/google/go-github/) - Used for github proxy
 * [dhowden/tag](github.com/dhowden/tag) - [BSD-3 Clause](https://opensource.org/licenses/BSD-2-Clause)
-* [google/go-github](https://github.com/google/go-github) - [BSD-3 Clause](https://opensource.org/licenses/BSD-3-Clause)
-* [kkdai/youtube](https://github.com/kkdai/youtube) - [MIT](https://opensource.org/licenses/MIT)
-* [orcaman/concurrent-map](https://github.com/orcaman/concurrent-map) - [MIT](https://opensource.org/licenses/MIT)
-* [rivo/uniseg](https://github.com/rivo/uniseg) - [MIT](https://opensource.org/licenses/MIT)
-* [rs/zerolog](https://github.com/rs/zerolog) - [MIT](https://opensource.org/licenses/MIT)
-* [spf13/cobra](https://github.com/spf13/cobra) - [Apache 2.0](https://opensource.org/licenses/Apache-2.0)
-* [temoto/robotstxt](https://github.com/temoto/robotstxt) - [MIT](https://opensource.org/licenses/MIT)
+* [juju/ratelimit](github.com/juju/ratelimit) - Used for ratelimiting music streaming to a specific kbps
+* [kkdai/youtube](github.com/kkdai/youtube) - MIT - Used for YouTube proxy
+* [krayzpipes/cronticker](github.com/krayzpipes/cronticker) - MIT - Used for gemini live chat, to send a daily system message and clear the chat history.
+
+* [golang.org/x/time](golang.org/x/time) - BSD-3 Clause - Used for time rate limiting
+* [golang.org/x/net](golang.org/x/net) - BSD-3 Clause - Networking stuff
+* [golang.org/x/text](golang.org/x/text) - BSD-3 Clause - Used for text processing
+* [google.golang.org/api](google.golang.org/api) - BSD-3 Clause - Used for YouTube proxy
+* [golang.org/x/oauth2](golang.org/x/oauth2) - BSD-3 Clause - Oauth Client used for Github proxy.
+
+* [rs/zerolog](github.com/rs/zerolog) - MIT - Logging
+* [spf13/cobra](github.com/spf13/cobra) - Apache 2.0 - Command line stuff
+
 * Google Golang Standard Library - [BSD-3 Clause](https://opensource.org/licenses/BSD-3-Clause)

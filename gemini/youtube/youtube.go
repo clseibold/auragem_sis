@@ -5,9 +5,10 @@ import (
 	"embed"
 	"fmt"
 	"html"
+	"net/url"
+	"strings"
 
 	//"log"
-	"strings"
 
 	ytd "github.com/kkdai/youtube/v2"
 	"gitlab.com/clseibold/auragem_sis/config"
@@ -33,7 +34,7 @@ func HandleYoutube(g sis.ServerHandle) {
 	}
 	searchRoute := getSearchRouteFunc(service)
 	videoPageRoute := getVideoPageRouteFunc(service)
-	videoDownloadRoute := getVideoDownloadRouteFunc(service)
+	videoDownloadRoute := getVideoDownloadRouteFunc()
 
 	g.AddRoute("/cgi-bin/youtube.cgi", func(request sis.Request) {
 		request.Redirect("/youtube") // TODO: Temporary Redirect
@@ -87,27 +88,48 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 		}
 		video := response.Items[0] // TODO: Error if video is not found
 
-		caption_call := service.Captions.List([]string{"id", "snippet"}, id)
-		caption_response, err := caption_call.Do()
+		/*caption_call := service.Captions.List([]string{"id", "snippet"}, id)
+		caption_response, err := caption_call.Do()*/
 
-		var captionsBuilder strings.Builder
-		for _, caption := range caption_response.Items {
-			fmt.Fprintf(&captionsBuilder, "=> /youtube/caption/%s %s", caption.Id, caption.Snippet.Name)
+		client := ytd.Client{}
+		ytd_vid, err := client.GetVideo(video.Id)
+
+		// List Download Formats
+		var downloadFormatsBuilder strings.Builder
+		formats := ytd_vid.Formats.WithAudioChannels()
+		formats = filterYT(formats, func(f ytd.Format) bool {
+			return f.AudioQuality == "AUDIO_QUALITY_MEDIUM" || f.AudioQuality == "AUDIO_QUALITY_LOW" || f.AudioQuality == "AUDIO_QUALITY_HIGH"
+		})
+		formats.Sort()
+		for _, format := range formats {
+			fmt.Fprintf(&downloadFormatsBuilder, "=> /youtube/downloadVideo/%s/%s Download Video - %s (%s)\n", format.Quality, video.Id, format.Quality, format.AudioQuality)
 		}
+
+		// Captions
+		var captionsBuilder strings.Builder
+		if err == nil {
+			fmt.Fprintf(&captionsBuilder, "## Caption Transcripts\n")
+			for _, caption := range ytd_vid.CaptionTracks {
+				fmt.Fprintf(&captionsBuilder, "=> /youtube/video/%s/caption/%s %s (%s)\n", video.Id, url.PathEscape(caption.Name.SimpleText), caption.Name.SimpleText, caption.LanguageCode)
+				fmt.Printf("Caption Info: %s, %s, %s\n", caption.Kind, caption.VssID, caption.BaseURL)
+			}
+		}
+
+		/*for _, caption := range caption_response.Items {
+			fmt.Fprintf(&captionsBuilder, "=> /youtube/caption/%s %s", caption.Id, caption.Snippet.Name)
+		}*/
 
 		request.Gemini(fmt.Sprintf(`# Video: %s
 
-=> /youtube/downloadVideo/hd720/%s Download Video - 720p
-=> /youtube/downloadVideo/medium/%s Download Video - medium
+%s
 => https://youtube.com/watch?v=%s On YouTube
 
-## Caption Transcripts
 %s
 
 ## Description
 %s
 => /youtube/channel/%s Uploaded by %s
-`, html.UnescapeString(video.Snippet.Title), video.Id, video.Id /*video.Id, */, video.Id, captionsBuilder.String(), html.UnescapeString(video.Snippet.Description), video.Snippet.ChannelId, html.UnescapeString(video.Snippet.ChannelTitle)))
+`, html.UnescapeString(video.Snippet.Title), downloadFormatsBuilder.String() /*video.Id, */, video.Id, captionsBuilder.String(), html.UnescapeString(video.Snippet.Description), video.Snippet.ChannelId, html.UnescapeString(video.Snippet.ChannelTitle)))
 	}
 }
 
@@ -131,7 +153,7 @@ func filterYT(fl ytd.FormatList, test func(ytd.Format) bool) ytd.FormatList {
 	return ytd.FormatList(ret)
 }
 
-func getVideoDownloadRouteFunc(service *youtube.Service) sis.RequestHandler {
+func getVideoDownloadRouteFunc() sis.RequestHandler {
 	videoQualities := []string{"hd1080", "hd720", "medium", "tiny"}
 
 	return func(request sis.Request) {
@@ -158,7 +180,7 @@ func getVideoDownloadRouteFunc(service *youtube.Service) sis.RequestHandler {
 
 		//fmt.Printf("Formats: %v\n", audioFormats)
 
-		var format *ytd.Format
+		var format *ytd.Format = nil
 		skip := true
 		for _, quality := range videoQualities {
 			if quality == desiredMaxQuality {
@@ -168,20 +190,22 @@ func getVideoDownloadRouteFunc(service *youtube.Service) sis.RequestHandler {
 			}
 
 			// Try medium audio quality first
-			format = audioFormats_mediumAudioQuality.FindByQuality(quality)
-			if format == nil {
+			//format = audioFormats_mediumAudioQuality.FindByQuality(quality)
+			var list ytd.FormatList = audioFormats_mediumAudioQuality.Quality(quality)
+			if len(list) <= 0 {
 				fmt.Printf("Could not find %s-quality video with medium audio. Trying low audio quality.\n", quality)
 				// If not found, then try low audio quality
-				format = audioFormats_lowAudioQuality.FindByQuality(quality)
-				if format == nil {
+				//format = audioFormats_lowAudioQuality.FindByQuality(quality)
+				list = audioFormats_lowAudioQuality.Quality(quality)
+				if len(list) <= 0 {
 					fmt.Printf("Could not find %s-quality video with audio. Trying next quality.\n", quality)
+					continue
 				}
 			}
 
 			// If a format was found, break
-			if format != nil {
-				break
-			}
+			format = &list[0]
+			break
 		}
 
 		if format == nil {
