@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"path/filepath"
 	"strings"
+	"time"
 
 	//"log"
 
@@ -99,12 +100,22 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 		var captionsBuilder strings.Builder
 		client := ytd.Client{}
 		ytd_vid, err := client.GetVideo(video.Id)
-		if err != nil {
+		retries := 0
+		for err != nil {
+			// Try again, for a maximum of 5 times.
+			ytd_vid, err = client.GetVideo(video.Id)
+			retries += 1
+			if retries == 5 {
+				break
+			}
+			time.Sleep(time.Millisecond * 70)
+		}
+		if err != nil { // If still getting an error after retrying 5 times.
 			fmt.Printf("Couldn't find video in ytd client.\n")
 			fmt.Fprintf(&downloadFormatsBuilder, "No downloads available yet. Try again later.\n")
 		} else {
 			// List Download Formats
-			formats := ytd_vid.Formats.WithAudioChannels().Type("video/mp4")
+			formats := ytd_vid.Formats.WithAudioChannels().Type("video/mp4") // TODO
 			formats.Sort()
 			if len(formats) == 0 {
 				fmt.Fprintf(&downloadFormatsBuilder, "No downloads available yet. The video could be a future livestream or premiere.\n")
@@ -233,16 +244,27 @@ func getVideoDownloadRouteFunc() sis.RequestHandler {
 
 	return func(request sis.Request) {
 		desiredMaxQuality := request.GetParam("quality")
+		videoId := request.GetParam("id")
 		client := ytd.Client{}
-		video, err := client.GetVideo(request.GetParam("id"))
+		video, err := client.GetVideo(videoId)
+		retries := 0
+		for err != nil {
+			// Try again, for a maximum of 5 times.
+			video, err = client.GetVideo(videoId)
+			retries += 1
+			if retries == 5 {
+				break
+			}
+			time.Sleep(time.Millisecond * 70)
+		}
+
+		// If still can't get video after 5 retries, then error out
 		if err != nil {
 			//panic(err)
 			request.TemporaryFailure("Error: Couldn't download video. %s\n", err.Error())
 			return
 		}
 
-		//format := video.Formats.AudioChannels(2).FindByQuality("medium")
-		//video.Formats.Sort()
 		audioFormats := video.Formats.WithAudioChannels()
 		audioFormats.Sort()
 
