@@ -3,6 +3,7 @@ package youtube
 import (
 	"context"
 	"embed"
+	"errors"
 	"fmt"
 	"html"
 	"net/http"
@@ -90,6 +91,10 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 		}
 		video := response.Items[0] // TODO: Error if video is not found
 
+		//video.ContentDetails.RegionRestriction.Allowed
+
+		//video.ContentDetails.Definition
+
 		var downloadFormatsBuilder strings.Builder
 		var captionsBuilder strings.Builder
 		client := ytd.Client{}
@@ -118,9 +123,14 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 				}
 			}
 
+			_, transcript_err := client.GetTranscript(ytd_vid)
+			if !errors.Is(transcript_err, ytd.ErrTranscriptDisabled) {
+				fmt.Fprintf(&captionsBuilder, "=> /youtube/video/%s/transcript View Video Transcript\n\n", video.Id)
+			}
+
 			// Captions
 			if len(ytd_vid.CaptionTracks) > 0 {
-				fmt.Fprintf(&captionsBuilder, "## Caption Transcripts\n")
+				fmt.Fprintf(&captionsBuilder, "## Captions\n")
 				for _, caption := range ytd_vid.CaptionTracks {
 					captionString := caption.LanguageCode + ".srv3"
 					if caption.Kind != "" {
@@ -146,6 +156,24 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 }
 
 func handleCaptionDownload(s sis.ServerHandle) {
+	s.AddRoute("/youtube/video/:id/transcript", func(request sis.Request) {
+		client := ytd.Client{}
+		video, err := client.GetVideo(request.GetParam("id"))
+		if err != nil {
+			//panic(err)
+			request.TemporaryFailure("Error: Couldn't find video. %s\n", err.Error())
+			return
+		}
+
+		transcript, err := client.GetTranscript(video)
+		if err != nil {
+			request.TemporaryFailure("Video doesn't have a transcript.\n")
+			return
+		}
+
+		request.Gemini(transcript.String())
+	})
+
 	s.AddRoute("/youtube/video/:id/caption/:caption", func(request sis.Request) {
 		client := ytd.Client{}
 		video, err := client.GetVideo(request.GetParam("id"))
