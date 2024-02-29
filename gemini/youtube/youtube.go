@@ -139,7 +139,9 @@ func getVideoDownloadRouteFunc(service *youtube.Service) sis.RequestHandler {
 		client := ytd.Client{}
 		video, err := client.GetVideo(request.GetParam("id"))
 		if err != nil {
-			panic(err)
+			//panic(err)
+			request.TemporaryFailure("Error: Couldn't download video. %s\n", err.Error())
+			return
 		}
 
 		//format := video.Formats.AudioChannels(2).FindByQuality("medium")
