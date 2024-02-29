@@ -104,7 +104,7 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 			fmt.Fprintf(&downloadFormatsBuilder, "No downloads available yet. Try again later.\n")
 		} else {
 			// List Download Formats
-			formats := ytd_vid.Formats.WithAudioChannels()
+			formats := ytd_vid.Formats.WithAudioChannels().Type("video/mp4")
 			formats.Sort()
 			if len(formats) == 0 {
 				fmt.Fprintf(&downloadFormatsBuilder, "No downloads available yet. The video could be a future livestream or premiere.\n")
