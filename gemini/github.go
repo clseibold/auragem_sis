@@ -283,7 +283,8 @@ func getRepoContents(ctx context.Context, client *github.Client, repository *git
 	opts := &github.RepositoryContentGetOptions{}
 	fileContents, dirContents, _, err := client.Repositories.GetContents(ctx, repository.GetOwner().GetLogin(), repository.GetName(), path, opts)
 	if err != nil {
-		panic(err) // TODO
+		//panic(err) // TODO
+		return "", false
 	}
 
 	var builder strings.Builder
