@@ -8,7 +8,7 @@ import (
 	"html"
 	"net/http"
 	"net/url"
-	"path/filepath"
+	"path"
 	"strings"
 	"time"
 
@@ -130,7 +130,7 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 					case "AUDIO_QUALITY_LOW":
 						audioQuality = "Low Audio Quality"
 					}
-					fmt.Fprintf(&downloadFormatsBuilder, "=> /youtube/downloadVideo/%s/%s Download Video - %s (%s)\n", format.Quality, video.Id, format.Quality, audioQuality)
+					fmt.Fprintf(&downloadFormatsBuilder, "=> /youtube/downloadVideo/%s/%s.mp4 Download Video - %s (%s)\n", format.Quality, video.Id, format.Quality, audioQuality)
 				}
 			}
 
@@ -225,8 +225,8 @@ func handleCaptionDownload(s sis.ServerHandle) {
 			kind = ""
 		}
 
-		extension := filepath.Ext(lang)
-		lang = strings.TrimSuffix(lang, "."+extension)
+		lang = strings.TrimSuffix(lang, ".srv3")
+		fmt.Printf("Getting caption using kind %s and lang %s\n", kind, lang)
 
 		var foundCaption = false
 		var captionFound ytd.CaptionTrack
@@ -265,11 +265,22 @@ func filterYT(fl ytd.FormatList, test func(ytd.Format) bool) ytd.FormatList {
 }
 
 func getVideoDownloadRouteFunc() sis.RequestHandler {
+	ipsDownloading := make(map[string]struct{})
 	videoQualities := []string{"hd1080", "hd720", "medium", "tiny"}
 
 	return func(request sis.Request) {
+		_, ok := ipsDownloading[request.IPHash()]
+		if ok {
+			request.TemporaryFailure("You are already downloading a video from the proxy. Please wait until that is finished before downloading another.\n")
+			return
+		}
+		ipsDownloading[request.IPHash()] = struct{}{}
 		desiredMaxQuality := request.GetParam("quality")
-		videoId := request.GetParam("id")
+
+		idStr := request.GetParam("id")
+		extension := path.Ext(idStr)
+		videoId := strings.TrimSuffix(idStr, "."+extension)
+
 		client := ytd.Client{}
 		video, err := client.GetVideo(videoId)
 		retries := 0
@@ -338,7 +349,7 @@ func getVideoDownloadRouteFunc() sis.RequestHandler {
 				return
 				//return c.Gemini("Error: Video At or Below Desired Quality of %s Not Found. Try a higher quality.\n%v", desiredMaxQuality, err) // TODO: Do different thing?
 			} else {
-				request.TemporaryFailure("Video with Audio not found. The video could be a premiere.\n")
+				request.TemporaryFailure("Video with Audio not found. The video could be a future premiere or livestream.\n")
 				return
 				//return c.Gemini("Error: Video with Audio Not Found.\n%v", err) // TODO: Do different thing?
 			}
@@ -358,6 +369,7 @@ func getVideoDownloadRouteFunc() sis.RequestHandler {
 		//err2 := c.Stream(format.MimeType, rc)
 		rc.Close()
 
+		delete(ipsDownloading, request.IPHash())
 		//url, err := client.GetStreamURL(video, format)
 
 		//return err2
