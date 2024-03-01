@@ -14,7 +14,7 @@ require (
 	github.com/nakagami/firebirdsql v0.9.7
 	github.com/rs/zerolog v1.32.0
 	github.com/spf13/cobra v1.8.0
-	gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240301004723-4a4bc4f556f2
+	gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240301090632-9841c942c1fb
 	golang.org/x/net v0.21.0
 	golang.org/x/oauth2 v0.17.0
 	golang.org/x/text v0.14.0
@@ -26,6 +26,7 @@ require (
 	cloud.google.com/go/compute v1.23.4 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	github.com/bitly/go-simplejson v0.5.1 // indirect
+	github.com/clseibold/go-gemini v0.0.0-20240226215632-c39755b92b21 // indirect
 	github.com/dlclark/regexp2 v1.10.0 // indirect
 	github.com/dop251/goja v0.0.0-20231027120936-b396bb4c349d // indirect
 	github.com/eidolon/wordwrap v0.0.0-20161011182207-e0f54129b8bb // indirect
