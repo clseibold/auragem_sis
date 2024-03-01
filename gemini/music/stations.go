@@ -208,9 +208,9 @@ Current song playing: %s by %s
 			file_reader, fileChangeIndex, bitrate, _ := radioBuffer.NewReader(old_fileChangeIndex, station)
 			old_fileChangeIndex = fileChangeIndex
 
-			var rate float64 = float64(bitrate) * 1000 / 8
-			rate_reader := RateReader(file_reader, ratelimit.NewBucketWithRate(rate, bitrate*1000/8*2)) // 96 kbps
-			err2 := request.Stream("audio/mpeg", rate_reader)
+			var rate float64 = float64(bitrate) * 1000 / 8 // Turn kbps to KB/s
+			rate_reader := RateReader(file_reader, ratelimit.NewBucketWithRate(rate, bitrate*1000/8*2))
+			err2 := request.StreamBuffer("audio/mpeg", rate_reader, make([]byte, bitrate*1000/8)) // Match buffer size
 			file_reader.Close()
 			if err2 != nil {
 				// Remove client from client count
