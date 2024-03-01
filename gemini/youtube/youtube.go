@@ -187,6 +187,7 @@ func handleCaptionDownload(s sis.ServerHandle) {
 			return
 		}
 
+		time.Sleep(time.Millisecond * 120)
 		transcript, err := client.GetTranscript(video)
 		if err != nil {
 			request.TemporaryFailure("Video doesn't have a transcript.\n")
@@ -247,6 +248,7 @@ func handleCaptionDownload(s sis.ServerHandle) {
 				return
 			} else {
 				request.Stream("text/xml; charset=UTF-8", response.Body)
+				response.Body.Close()
 			}
 		}
 	})
@@ -352,7 +354,7 @@ func getVideoDownloadRouteFunc() sis.RequestHandler {
 			return
 			//return c.Gemini("Error: Video Not Found\n%v", err)
 		}
-		request.Stream(format.MimeType, rc)
+		request.StreamBuffer(format.MimeType, rc, make([]byte, 0, 2*1024*1024)) // 2 MB Buffer
 		//err2 := c.Stream(format.MimeType, rc)
 		rc.Close()
 
