@@ -101,6 +101,8 @@ func StreamFile(request sis.Request, music_file MusicFile) error {
 		panic(err)
 	}
 
+	streamBuffer := make([]byte, music_file.CbrKbps*1000/8)
+
 	// Read 5 seconds worth of data at once to have a buffer (and reduce the effects of stuttering/buffering)
 	buffer_5sec_backing := make([]byte, 0, music_file.CbrKbps*1000/8*5)
 	buffer_5sec := bytes.NewBuffer(buffer_5sec_backing)
@@ -108,14 +110,14 @@ func StreamFile(request sis.Request, music_file MusicFile) error {
 	if copy_err != nil {
 		fmt.Printf("Copy error: %v\n", copy_err)
 	}
-	request.Stream("audio/mpeg", buffer_5sec)
+	request.StreamBuffer("audio/mpeg", buffer_5sec, streamBuffer)
 
 	// Throttle the rest of the file based on the bandwidth throttle of the pool
 	file_throttled, throttle_err := throttlePool.AddReader(file)
 	if throttle_err != nil {
 		panic(throttle_err)
 	}
-	result_err := request.StreamBuffer("audio/mpeg", file_throttled, make([]byte, music_file.CbrKbps*1000/8))
+	result_err := request.StreamBuffer("audio/mpeg", file_throttled, streamBuffer)
 	file_throttled.Close()
 	return result_err
 }
@@ -126,6 +128,7 @@ func StreamMultipleFiles(request sis.Request, musicFiles []MusicFile) error {
 
 	var result_err error
 	first := true
+	streamBuffer := make([]byte, 96*1000/8) // Assume 96 kbps (min bitrate for mp3 files)
 	for _, music_file := range musicFiles {
 		openFile, err := os.OpenFile(musicDirectory+music_file.Filename, os.O_RDONLY, 0644)
 		if err != nil {
@@ -146,7 +149,7 @@ func StreamMultipleFiles(request sis.Request, musicFiles []MusicFile) error {
 			if copy_err != nil {
 				fmt.Printf("Copy error: %v\n", copy_err)
 			}
-			request.Stream("audio/mpeg", buffer_5sec)
+			request.StreamBuffer("audio/mpeg", buffer_5sec, streamBuffer)
 			first = false
 		}
 
@@ -158,7 +161,7 @@ func StreamMultipleFiles(request sis.Request, musicFiles []MusicFile) error {
 			panic(throttle_err)
 		}
 
-		err2 := request.StreamBuffer("audio/mpeg", throttledFile, make([]byte, music_file.CbrKbps*1000/8))
+		err2 := request.StreamBuffer("audio/mpeg", throttledFile, streamBuffer)
 		if err2 != nil {
 			//return err2
 			result_err = err2
@@ -172,6 +175,8 @@ func StreamMultipleFiles(request sis.Request, musicFiles []MusicFile) error {
 func StreamRandomFiles(request sis.Request, conn *sql.DB, user MusicUser) error {
 	throttlePool := iothrottler.NewIOThrottlerPool(320 * 1000 / 8)
 	defer throttlePool.ReleasePool()
+
+	streamBuffer := make([]byte, 96*1000/8) // Assume 96 kbps (min bitrate for mp3 files)
 
 	var result_err error
 	//first := true
@@ -218,7 +223,7 @@ func StreamRandomFiles(request sis.Request, conn *sql.DB, user MusicUser) error 
 			panic(throttle_err)
 		}
 
-		err2 := request.StreamBuffer("audio/mpeg", throttledFile, make([]byte, file.CbrKbps*1000/8))
+		err2 := request.StreamBuffer("audio/mpeg", throttledFile, streamBuffer)
 		if err2 != nil {
 			fmt.Printf("Failed to stream file: '%s': %v\n", musicDirectory+file.Filename, err2)
 			result_err = err2
