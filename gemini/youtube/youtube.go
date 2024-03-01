@@ -354,7 +354,7 @@ func getVideoDownloadRouteFunc() sis.RequestHandler {
 			return
 			//return c.Gemini("Error: Video Not Found\n%v", err)
 		}
-		request.StreamBuffer(format.MimeType, rc, make([]byte, 0, 2*1024*1024)) // 2 MB Buffer
+		request.StreamBuffer(format.MimeType, rc, make([]byte, 2*1024*1024)) // 2 MB Buffer
 		//err2 := c.Stream(format.MimeType, rc)
 		rc.Close()
 
