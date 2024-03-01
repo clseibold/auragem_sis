@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html"
 	"strings"
+	"time"
 
 	sis "gitlab.com/clseibold/smallnetinformationservices"
 	"google.golang.org/api/youtube/v3"
@@ -140,17 +141,22 @@ func getChannelActivity(request sis.Request, service *youtube.Service, channelId
 	response, err := call.Do()
 	if err != nil {
 		//log.Fatalf("Error: %v", err)
-		panic(err)
+		//panic(err)
+		request.TemporaryFailure("Failed to get channel info.")
+		return
 	}
 
 	channel := response.Items[0]
 	uploadsPlaylistId := channel.ContentDetails.RelatedPlaylists.Uploads
 
+	time.Sleep(time.Millisecond * 120)
 	call2 := service.PlaylistItems.List([]string{"id", "snippet"}).PlaylistId(uploadsPlaylistId).MaxResults(100) // TODO
 	response2, err2 := call2.Do()
 	if err2 != nil {
 		//log.Fatalf("Error: %v", err)
-		panic(err)
+		//panic(err)
+		request.TemporaryFailure("Failed to get channel activity.")
+		return
 	}
 
 	var builder strings.Builder
@@ -172,12 +178,15 @@ func getPlaylistVideos(request sis.Request, service *youtube.Service, playlistId
 	response_pl, err_pl := call_pl.Do()
 	if err_pl != nil {
 		//log.Fatalf("Error: %v", err_pl)
-		panic(err_pl)
+		//panic(err_pl)
+		request.TemporaryFailure("Failed to get playlist.")
+		return
 	}
 
 	playlist := response_pl.Items[0]
 	playlistTitle := playlist.Snippet.Title
 
+	time.Sleep(time.Millisecond * 120)
 	var call *youtube.PlaylistItemsListCall
 	if currentPage != "" {
 		call = service.PlaylistItems.List([]string{"id", "snippet"}).PlaylistId(playlistId).MaxResults(50).PageToken(currentPage)
@@ -187,7 +196,9 @@ func getPlaylistVideos(request sis.Request, service *youtube.Service, playlistId
 	response, err := call.Do()
 	if err != nil {
 		//log.Fatalf("Error: %v", err)
-		panic(err)
+		//panic(err)
+		request.TemporaryFailure("Failed to get playlist videos.")
+		return
 	}
 
 	var builder strings.Builder
