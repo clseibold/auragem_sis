@@ -196,6 +196,9 @@ Current song playing: %s by %s
 	s.AddRoute("/music/stream/public_radio", func(request sis.Request) {
 		request.Redirect("/music/stream/public_radio/" + url.PathEscape(RadioStation_Diverse.Name) + ".mp3")
 	})
+	s.AddRoute("/music/stream/public_radio/"+url.PathEscape(station.Name), func(request sis.Request) {
+		request.Redirect("/music/stream/public_radio/" + url.PathEscape(station.Name) + ".mp3")
+	})
 	s.AddRoute("/music/stream/public_radio/"+url.PathEscape(station.Name)+".mp3", func(request sis.Request) {
 		// Station streaming here
 		// Add to client count
