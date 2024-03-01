@@ -271,13 +271,21 @@ When I type "Station", I want an exact match for Station itself. However, when I
 		handleSearchIndex(request, conn)
 	})
 
+	var refreshCacheEvery = time.Hour * 2
+	var pagesCountCache = 0
+	var lastCrawlCache = time.Time{}
+	var totalSizeCache float64 = -1
+	var totalSizeTextCache float64 = -1
+	var lastCacheTime time.Time
 	s.AddRoute("/search/stats", func(request sis.Request) {
-		row := conn.QueryRowContext(context.Background(), "SELECT COUNT(*), MAX(LAST_SUCCESSFUL_VISIT), SUM(SIZE) FROM pages")
-		pagesCount := 0
-		var lastCrawl = time.Time{}
-		var totalSize float64 = 0
-		row.Scan(&pagesCount, &lastCrawl, &totalSize)
-		// Convert totalSize to GB
+		currentTime := time.Now()
+		if totalSizeCache == -1 || (lastCrawlCache == time.Time{}) || lastCacheTime.Add(refreshCacheEvery).Before(currentTime) {
+			row := conn.QueryRowContext(context.Background(), "SELECT COUNT(*), MAX(LAST_SUCCESSFUL_VISIT), SUM(SIZE) FROM pages")
+			row.Scan(&pagesCountCache, &lastCrawlCache, &totalSizeCache)
+			// Convert totalSize to GB
+			lastCacheTime = currentTime
+		}
+		totalSize := totalSizeCache
 		totalSize /= 1024 // Bytes to KB
 		totalSize /= 1024 // KB to MB
 		totalSize /= 1024 // MB to GB
@@ -290,12 +298,23 @@ When I type "Station", I want an exact match for Station itself. However, when I
 		feedCount := 0
 		row3.Scan(&feedCount)
 
-		row4 := conn.QueryRowContext(context.Background(), "SELECT SUM(SIZE) FROM pages WHERE contenttype LIKE 'text/%%'")
-		var totalSizeText float64 = 0
-		row4.Scan(&totalSizeText)
+		if totalSizeTextCache == -1 || lastCacheTime.Add(refreshCacheEvery).Before(currentTime) {
+			row4 := conn.QueryRowContext(context.Background(), "SELECT SUM(SIZE) FROM pages WHERE contenttype LIKE 'text/%%'")
+			row4.Scan(&totalSizeTextCache)
+			lastCacheTime = currentTime
+		}
+		totalSizeText := totalSizeTextCache
 		totalSizeText /= 1024 // Bytes to KB
 		totalSizeText /= 1024 // KB to MB
 		totalSizeText /= 1024 // MB to GB
+
+		row5 := conn.QueryRowContext(context.Background(), "SELECT COUNT(*) FROM domains WHERE slowdowncount<>0")
+		var slowdowncount = 0
+		row5.Scan(&slowdowncount)
+
+		row6 := conn.QueryRowContext(context.Background(), "SELECT COUNT(*) FROM domains WHERE emptymetacount<>0")
+		var emptyMetaCount = 0
+		row6.Scan(&emptyMetaCount)
 
 		request.Gemini(fmt.Sprintf(`# AuraGem Search Stats
 
@@ -308,9 +327,12 @@ Gemsub Feed Count: %d
 Total Size of Geminispace: %.3f GB
 Total Size of Text Files: %.3f GB (%.2f%% of Geminispace)
 
+Number of Domains with SlowDown responses: %d
+Number of Domains that responded with an empty META field: %d
+
 => /search/mimetype Mimetypes with Counts
 
-`, lastCrawl.Format("2006-01-02"), pagesCount, domainsCount, feedCount, totalSize, totalSizeText, totalSizeText/totalSize*100.0))
+`, lastCrawlCache.Format("2006-01-02"), pagesCountCache, domainsCount, feedCount, totalSize, totalSizeText, totalSizeText/totalSize*100.0, slowdowncount, emptyMetaCount))
 	})
 
 	handleSearchFeedback(s)
