@@ -64,15 +64,12 @@ ORDER BY GROUPED_SCORE DESC
 func HandleSearchEngineDown(s sis.ServerHandle) {
 	s.AddRoute("/searchengine", func(request sis.Request) {
 		request.Redirect("/search/")
-		return
 	})
 	s.AddRoute("/searchengine/", func(request sis.Request) {
 		request.Redirect("/search/")
-		return
 	})
 	s.AddRoute("/search", func(request sis.Request) {
 		request.Redirect("/search/")
-		return
 	})
 	s.AddRoute("/search/*", func(request sis.Request) {
 		request.ServerUnavailable("AuraGem Search is currently down due to upgrades.")
@@ -558,7 +555,6 @@ Number of Domains that responded with an empty META field: %d
 
 	s.AddRoute("/search/test", func(request sis.Request) {
 		request.Redirect("/search/yearposts")
-		return
 	})
 	s.AddRoute("/search/yearposts", func(request sis.Request) {
 		page := 1
@@ -878,20 +874,17 @@ FROM DOMAINS r
 ORDER BY (r.ID + cast(? as bigint))*4294967291-((r.ID + cast(? as bigint))*4294967291/49157)*49157`
 		time := time.Now().Unix()
 		row := conn.QueryRowContext(context.Background(), q, time, time)
-		var urlPage Page
-		var page pageNullable
+		var page Page
 		scan_err := row.Scan(&page.Url)
 		if scan_err == nil {
-			urlPage = scanPage(page)
+			request.Redirect(page.Url)
+			return
 		} else if scan_err == sql.ErrNoRows {
 			request.Redirect("/search/")
 			return
 		} else {
 			panic(scan_err)
 		}
-
-		request.Redirect(urlPage.Url)
-		return
 	})
 }
 
@@ -910,7 +903,6 @@ ORDER BY r.CROSSHOST ASC`
 		defer rows.Close()
 		for rows.Next() {
 			var backlink Backlink
-			//var rank interface{}
 			scan_err := rows.Scan(&totalResultsCount, &backlink.Id, &backlink.PageId_From, &backlink.PageURL_FROM, &backlink.Title, &backlink.Crosshost, &backlink.CrawlIndex, &backlink.Date_added)
 			if scan_err == nil {
 				backlinks = append(backlinks, backlink)
@@ -984,11 +976,10 @@ func handleSearch(request sis.Request, conn *sql.DB, query string, page int, sho
 	if rows_err == nil {
 		defer rows.Close()
 		for rows.Next() {
-			var page pageNullable
-			//var rank interface{}
+			var page Page
 			scan_err := rows.Scan(&totalResultsCount, &page.Score, &page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
 			if scan_err == nil {
-				pages = append(pages, scanPage(page))
+				pages = append(pages, page)
 			} else {
 				panic(scan_err)
 			}
@@ -1052,11 +1043,10 @@ func handleSearchIndex(request sis.Request, conn *sql.DB) {
 	if rows_err == nil {
 		defer rows.Close()
 		for rows.Next() {
-			var page pageNullable
-			//var rank interface{}
+			var page Page
 			scan_err := rows.Scan(&totalResultsCount, &page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
 			if scan_err == nil {
-				pages = append(pages, scanPage(page))
+				pages = append(pages, page)
 			} else {
 				panic(scan_err)
 			}
@@ -1082,8 +1072,6 @@ func handleSearchIndex(request sis.Request, conn *sql.DB) {
 		request.TemporaryFailure("Error")
 		return
 	}
-
-	return //nil
 }
 
 func handleAudioSearch(request sis.Request, conn *sql.DB, query string, page int) {
@@ -1107,11 +1095,10 @@ func handleAudioSearch(request sis.Request, conn *sql.DB, query string, page int
 	if rows_err == nil {
 		defer rows.Close()
 		for rows.Next() {
-			var page pageNullable
-			//var rank interface{}
+			var page Page
 			scan_err := rows.Scan(&totalResultsCount, &page.Score, &page.Highlight, &page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
 			if scan_err == nil {
-				pages = append(pages, scanPage(page))
+				pages = append(pages, page)
 			} else {
 				panic(scan_err)
 			}

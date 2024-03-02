@@ -21,10 +21,10 @@ func getRecent(conn *sql.DB) []Page {
 	if rows_err == nil {
 		defer rows.Close()
 		for rows.Next() {
-			var page pageNullable
+			var page Page
 			scan_err := rows.Scan(&page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
 			if scan_err == nil {
-				pages = append(pages, scanPage(page))
+				pages = append(pages, page)
 			} else {
 				panic(scan_err)
 			}
@@ -94,13 +94,13 @@ func getPagesOfTag(conn *sql.DB, name string) []Page {
 		var count int64
 		defer rows.Close()
 		for rows.Next() {
-			var page pageNullable
+			var page Page
 			scan_err := rows.Scan(&count, &page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
 			if scan_err == nil {
 				if pages == nil {
 					pages = make([]Page, 0, count)
 				}
-				pages = append(pages, scanPage(page))
+				pages = append(pages, page)
 			} else {
 				panic(scan_err)
 			}
@@ -119,10 +119,10 @@ func getMimetypeFiles(conn *sql.DB, mimetype string) []Page {
 	if rows_err == nil {
 		defer rows.Close()
 		for rows.Next() {
-			var page pageNullable
+			var page Page
 			scan_err := rows.Scan(&page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
 			if scan_err == nil {
-				pages = append(pages, scanPage(page))
+				pages = append(pages, page)
 			} else {
 				panic(scan_err)
 			}
@@ -164,13 +164,13 @@ func getFeeds(conn *sql.DB) []Page {
 		var count int64
 		defer rows.Close()
 		for rows.Next() {
-			var page pageNullable
+			var page Page
 			scan_err := rows.Scan(&count, &page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
 			if scan_err == nil {
 				if pages == nil {
 					pages = make([]Page, 0, count)
 				}
-				pages = append(pages, scanPage(page))
+				pages = append(pages, page)
 			} else {
 				panic(scan_err)
 			}
@@ -188,13 +188,13 @@ func getPagesWithPublishDate(conn *sql.DB) []Page {
 		var count int64
 		defer rows.Close()
 		for rows.Next() {
-			var page pageNullable
+			var page Page
 			scan_err := rows.Scan(&count, &page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
 			if scan_err == nil {
 				if pages == nil {
 					pages = make([]Page, 0, count)
 				}
-				pages = append(pages, scanPage(page))
+				pages = append(pages, page)
 			} else {
 				panic(scan_err)
 			}
@@ -215,10 +215,10 @@ func getPagesWithPublishDateFromLastYear(conn *sql.DB, results int, skip int) ([
 	if rows_err == nil {
 		defer rows.Close()
 		for rows.Next() {
-			var page pageNullable
+			var page Page
 			scan_err := rows.Scan(&totalCount, &page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
 			if scan_err == nil {
-				pages = append(pages, scanPage(page))
+				pages = append(pages, page)
 			} else {
 				panic(scan_err)
 			}
@@ -239,10 +239,10 @@ func getAudioFiles(conn *sql.DB, page int64) []Page {
 	if rows_err == nil {
 		defer rows.Close()
 		for rows.Next() {
-			var page pageNullable
+			var page Page
 			scan_err := rows.Scan(&page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
 			if scan_err == nil {
-				pages = append(pages, scanPage(page))
+				pages = append(pages, page)
 			} else {
 				panic(scan_err)
 			}
@@ -263,10 +263,10 @@ func getImageFiles(conn *sql.DB, page int64) []Page {
 	if rows_err == nil {
 		defer rows.Close()
 		for rows.Next() {
-			var page pageNullable
+			var page Page
 			scan_err := rows.Scan(&page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
 			if scan_err == nil {
-				pages = append(pages, scanPage(page))
+				pages = append(pages, page)
 			} else {
 				panic(scan_err)
 			}
@@ -286,13 +286,13 @@ func getTwtxtFiles(conn *sql.DB) []Page {
 		var count int64
 		defer rows.Close()
 		for rows.Next() {
-			var page pageNullable
+			var page Page
 			scan_err := rows.Scan(&count, &page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
 			if scan_err == nil {
 				if pages == nil {
 					pages = make([]Page, 0, count)
 				}
-				pages = append(pages, scanPage(page))
+				pages = append(pages, page)
 			} else {
 				panic(scan_err)
 			}
@@ -312,14 +312,14 @@ func getSecurityTxtFiles(conn *sql.DB) []PageWithDomain {
 		var count int64
 		defer rows.Close()
 		for rows.Next() {
-			var page pageNullable
+			var page Page
 			var domain Domain
 			scan_err := rows.Scan(&count, &page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden, &domain.Id, &domain.Domain, &domain.Title, &domain.Port, &domain.HasRobots, &domain.HasSecurity, &domain.HasFavicon, &domain.Favicon, &domain.CrawlIndex, &domain.Date_added)
 			if scan_err == nil {
 				if pages == nil {
 					pages = make([]PageWithDomain, 0, count)
 				}
-				pages = append(pages, PageWithDomain{scanPage(page), domain})
+				pages = append(pages, PageWithDomain{page, domain})
 			} else {
 				panic(scan_err)
 			}

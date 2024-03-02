@@ -110,16 +110,71 @@ func makeTextFromString(announcer string, text string, contentType TextolaConten
 	return textolaText
 }
 
-//go:embed the_cask_of_amontillado.txt
-var theCaskOfAmontilladoText string
+/*
+func makeTextFromFile(announcer string, filepath string, contentType TextolaContentType) TextolaText {
+	text, _ := os.ReadFile(filepath)
+	return makeTextFromString(announcer, string(text), contentType)
+}
+*/
 
 var hourAnnouncer TextolaText = makeTextFromString("Welcome.", "This is AuraGem Textola, the text equivalent of radio!\n$time\n", TextolaContentType_Fiction)
-var theCaskOfAmontillado TextolaText = makeTextFromString("Presenting Edgar Allan Poe's The Cask of Amontillado", theCaskOfAmontilladoText, TextolaContentType_OldClassicsFiction)
+
+var schedule = map[int]string{
+	0:  "",
+	1:  "",
+	2:  "",
+	3:  "",
+	4:  "",
+	5:  "JewishPrayerMorning",
+	6:  "",
+	7:  "",
+	8:  "",
+	9:  "",
+	10: "",
+	11: "",
+	12: "JewishPrayerAfternoon",
+	13: "",
+	14: "",
+	15: "",
+	16: "JewishPrayerAfternoon",
+	17: "",
+	18: "",
+	19: "JewishPrayerEvening",
+	20: "Fiction",
+	21: "",
+	22: "",
+	23: "",
+}
+
+func getTextFromSchedule(s sis.ServerHandle) TextolaText {
+	currentTime := time.Now()
+	scheduleString := schedule[currentTime.Hour()]
+	switch scheduleString {
+	case "JewishPrayerMorning":
+		filedata, _ := s.GetServer().FS.ReadFile("textolatexts/prayers/jewishprayermorning.txt")
+		return makeTextFromString("Presenting Jewish Morning Prayers, Weekdays", string(filedata), TextolaContentType_Poetry)
+	case "JewishPrayerAfternoon":
+		filedata, _ := s.GetServer().FS.ReadFile("textolatexts/prayers/jewishprayerafternoon.txt")
+		return makeTextFromString("Presenting Jewish Afternoon Prayers, Weekdays", string(filedata), TextolaContentType_Poetry)
+	case "JewishPrayerEvening":
+		filedata, _ := s.GetServer().FS.ReadFile("textolatexts/prayers/jewishprayerevening.txt")
+		return makeTextFromString("Presenting Jewish Evening Prayers, Weekdays", string(filedata), TextolaContentType_Poetry)
+	case "Fiction":
+		filedata, _ := s.GetServer().FS.ReadFile("textolatexts/fiction/the_cask_of_amontillado.txt")
+		return makeTextFromString("Presenting Edgar Allan Poe's The Cask of Amontillado", string(filedata), TextolaContentType_OldClassicsFiction)
+	case "": // Anything (random)
+		filedata, _ := s.GetServer().FS.ReadFile("textolatexts/fiction/the_cask_of_amontillado.txt")
+		return makeTextFromString("Presenting Edgar Allan Poe's The Cask of Amontillado", string(filedata), TextolaContentType_OldClassicsFiction)
+	}
+
+	filedata, _ := s.GetServer().FS.ReadFile("the_cask_of_amontillado.txt")
+	return makeTextFromString("Presenting Edgar Allan Poe's The Cask of Amontillado", string(filedata), TextolaContentType_OldClassicsFiction)
+}
 
 func HandleTextola(s sis.ServerHandle) {
 	//fmt.Printf("GuestbookText: %s\n", theCaskOfAmontillado)
 	var context *TextolaContext = &TextolaContext{
-		currentText: theCaskOfAmontillado,
+		currentText: getTextFromSchedule(s),
 		mutex:       sync.RWMutex{},
 	}
 	context.readCond = sync.NewCond(context.mutex.RLocker())
@@ -190,10 +245,10 @@ func HandleTextola(s sis.ServerHandle) {
 
 		connectedClients.Add(-1)
 	})
-	go fakeClient(context)
+	go fakeClient(s, context)
 }
 
-func fakeClient(context *TextolaContext) {
+func fakeClient(s sis.ServerHandle, context *TextolaContext) {
 	// Seconds Ticker
 	//ticker := time.NewTicker(time.Millisecond / 100)
 	limiter := rate.NewLimiter(rate.Every(time.Second), 1)
@@ -224,7 +279,7 @@ func fakeClient(context *TextolaContext) {
 					previousAnnouncerTime = context.startTime
 				} else {
 					// Else, switch to the next text on the schedule
-					context.currentText = theCaskOfAmontillado
+					context.currentText = getTextFromSchedule(s)
 				}
 
 				context.newText = true

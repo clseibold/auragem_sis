@@ -17,12 +17,12 @@ import (
 )
 
 func HandleTexts(g sis.ServerHandle) {
-	g.AddRoute("/texts/", func(request sis.Request) {
+	g.AddRoute("/scriptures/", func(request sis.Request) {
 		request.Gemini(`# Religious Texts
 
-=> /texts/jewish/ ✡ Jewish Texts
-=> /texts/christian/ ✝ Christian Texts
-=> /texts/islam/ ☪ Islamic Texts
+=> /scriptures/jewish/ ✡ Jewish Texts
+=> /scriptures/christian/ ✝ Christian Texts
+=> /scriptures/islam/ ☪ Islamic Texts
 `)
 	})
 

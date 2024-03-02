@@ -52,18 +52,18 @@ func searchFeedbackPage(request sis.Request) {
 		return
 				}*/
 
-		fileBefore, _ := request.Server.FS.ReadFile("searchfeedback.gmi")
+		fileBefore, _ := request.Server.FS().ReadFile("searchfeedback.gmi")
 		//fileBefore, _ := os.ReadFile("searchfeedback.gmi")
 		if !strings.HasPrefix(string(data), string(fileBefore)) {
 			request.TemporaryFailure("You edited a portion of the document that already existed. Only appends are allowed. Your edit is rejected.")
 			return
 		}
 
-		err = request.Server.FS.WriteFile("searchfeedback.gmi", data, 0644)
+		err = request.Server.FS().WriteFile("searchfeedback.gmi", data, 0644)
 		if err != nil {
 			return //err
 		}
-		request.Redirect("gemini://%s:%s/search/feedback.gmi", request.Server.Hostname, request.Server.Port)
+		request.Redirect("gemini://%s:%s/search/feedback.gmi", request.Server.Hostname(), request.Server.Port())
 		return
 	} else {
 		request.FileMimetype("text/gemini", "searchfeedback.gmi")

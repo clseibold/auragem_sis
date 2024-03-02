@@ -4,6 +4,7 @@ import (
 	// "io"
 
 	"fmt"
+	"net/url"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -27,88 +28,95 @@ import (
 
 var GeminiCommand = &cobra.Command{
 	Short: "Start SIS",
-	Run: func(cmd *cobra.Command, args []string) {
-		//f, _ := os.Create("access.log")
-		//gig.DefaultWriter = io.MultiWriter(f, os.Stdout)
+	Run:   RunServer,
+}
 
-		context, err := sis.InitSIS("./SIS/")
-		context.AdminServer().BindAddress = "0.0.0.0"
-		context.AdminServer().Hostname = "auragem.letz.dev"
-		context.AdminServer().AddCertificate("auragem.pem")
-		context.SaveConfiguration()
-		context.GetPortListener("0.0.0.0", "1995").AddCertificate("auragem.letz.dev", "auragem.pem")
-		if err != nil {
-			panic(err)
-		}
+func RunServer(cmd *cobra.Command, args []string) {
+	//f, _ := os.Create("access.log")
+	//gig.DefaultWriter = io.MultiWriter(f, os.Stdout)
 
-		// ----- AuraGem Servers -----
+	context, err := sis.InitSIS("./SIS/")
+	context.AdminServer().BindAddress = "0.0.0.0"
+	context.AdminServer().Hostname = "auragem.letz.dev"
+	context.AdminServer().AddCertificate("auragem.pem")
+	context.SaveConfiguration()
+	context.GetPortListener("0.0.0.0", "1995").AddCertificate("auragem.letz.dev", "auragem.pem")
+	if err != nil {
+		panic(err)
+	}
 
-		// TODO: Pointers are not stable! Use a new ServerID struct with methods instead.
-		geminiServer := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "auragem_gemini", Hostname: "auragem.letz.dev"})
-		geminiServer.AddCertificate("auragem.pem")
-		context.GetPortListener("0.0.0.0", "1965").AddCertificate("auragem.letz.dev", "auragem.pem")
+	// ----- AuraGem Servers -----
 
-		geminiServer.AddDirectory("/*", "./")
-		geminiServer.AddFile("/.well-known/security.txt", "./security.txt")
-		geminiServer.AddProxyRoute("/nex/*", "$auragem_nex/*", '1')
+	// TODO: Pointers are not stable! Use a new ServerID struct with methods instead.
+	geminiServer := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "auragem_gemini", Hostname: "auragem.letz.dev"})
+	geminiServer.AddCertificate("auragem.pem")
+	context.GetPortListener("0.0.0.0", "1965").AddCertificate("auragem.letz.dev", "auragem.pem")
 
-		// Guestbook via Titan
-		geminiServer.AddUploadRoute("/guestbook.gmi", handleGuestbook)
+	geminiServer.AddDirectory("/*", "./")
+	geminiServer.AddFile("/.well-known/security.txt", "./security.txt")
+	geminiServer.AddProxyRoute("/nex/*", "$auragem_nex/*", '1')
 
-		handleDevlog(geminiServer)
-		youtube.HandleYoutube(geminiServer)
-		handleWeather(geminiServer)
-		handleGithub(geminiServer)
-		texts.HandleTexts(geminiServer)
-		textgame.HandleTextGame(geminiServer)
-		chat.HandleChat(geminiServer)
-		textola.HandleTextola(geminiServer)
-		music.HandleMusic(geminiServer)
-		search.HandleSearchEngine(geminiServer)
-		// twitch.HandleTwitch(geminiServer)
-		// ask.HandleAsk(geminiServer)
+	// Guestbook via Titan
+	geminiServer.AddUploadRoute("/guestbook.gmi", handleGuestbook)
 
-		nexServer := context.AddServer(sis.Server{Type: sis.ServerType_Nex, Name: "auragem_nex", Hostname: "auragem.letz.dev"})
-		nexServer.AddDirectory("/*", "./")
-		nexServer.AddProxyRoute("/gemini/*", "$auragem_gemini/*", '1')
-		nexServer.AddProxyRoute("/scholasticdiversity/*", "$scholasticdiversity_gemini/*", '1')
+	handleDevlog(geminiServer)
+	youtube.HandleYoutube(geminiServer)
+	handleWeather(geminiServer)
+	handleGithub(geminiServer)
+	textgame.HandleTextGame(geminiServer)
+	chat.HandleChat(geminiServer)
+	textola.HandleTextola(geminiServer)
+	music.HandleMusic(geminiServer)
+	search.HandleSearchEngine(geminiServer)
+	// twitch.HandleTwitch(geminiServer)
+	// ask.HandleAsk(geminiServer)
 
-		// ----- Scholastic Diversity stuff -----
-		scholasticdiversity_gemini := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "scholasticdiversity_gemini", Hostname: "scholasticdiversity.us.to"})
-		scholasticdiversity_gemini.AddCertificate("scholasticdiversity.pem")
-		context.GetPortListener("0.0.0.0", "1965").AddCertificate("scholasticdiversity.us.to", "scholasticdiversity.pem")
-		scholasticdiversity_gemini.AddDirectory("/*", "./")
+	nexServer := context.AddServer(sis.Server{Type: sis.ServerType_Nex, Name: "auragem_nex", Hostname: "auragem.letz.dev"})
+	nexServer.AddDirectory("/*", "./")
+	nexServer.AddProxyRoute("/gemini/*", "$auragem_gemini/*", '1')
+	nexServer.AddProxyRoute("/scholasticdiversity/*", "$scholasticdiversity_gemini/*", '1')
 
-		gopherServer := context.AddServer(sis.Server{Type: sis.ServerType_Gopher, Name: "gopher", Hostname: "auragem.letz.dev"})
-		gopherServer.AddRoute("/*", func(request sis.Request) {
-			request.GophermapLine("i", "                             AuraGem Gopher Server", "", request.Hostname(), request.Server.Port)
-			request.GophermapLine("1", "Devlog", "/devlog/", request.Hostname(), request.Server.Port)
-			request.GophermapLine("1", "Personal Log", "/~clseibold/", request.Hostname(), request.Server.Port)
-			request.GophermapLine("1", "Scholastic Diversity", "/scholasticdiversity/", request.Hostname(), request.Server.Port)
-			request.GophermapLine("i", "", "", request.Hostname(), request.Server.Port)
-			request.GophermapLine("i", "Software", "", request.Hostname(), request.Server.Port)
-			request.GophermapLine("i", "--------", "", request.Hostname(), request.Server.Port)
-			request.GophermapLine("1", "Misfin-Server", "/misfin-server/", request.Hostname(), request.Server.Port)
-			request.GophermapLine("i", "", "", request.Hostname(), request.Server.Port)
-			request.GophermapLine("i", "Other", "", request.Hostname(), request.Server.Port)
-			request.GophermapLine("i", "-----", "", request.Hostname(), request.Server.Port)
-			request.GophermapLine("h", "AuraGem Gemini Server", "URL:gemini://auragem.letz.dev", request.Hostname(), request.Server.Port)
-			request.GophermapLine("h", "AuraGem Nex Server", "URL:nex://auragem.letz.dev", request.Hostname(), request.Server.Port)
-			request.GophermapLine("h", "Scholastic Diversity Gemini Server", "URL:gemini://auragem.letz.dev", request.Hostname(), request.Server.Port)
-		})
-		gopherServer.AddProxyRoute("/scholasticdiversity/*", "$scholasticdiversity_gemini/*", '1')
-		gopherServer.AddProxyRoute("/devlog/*", "$auragem_gemini/devlog/*", '1')
-		gopherServer.AddProxyRoute("/~clseibold/*", "$auragem_gemini/~clseibold/*", '1')
-		gopherServer.AddProxyRoute("/misfin-server/*", "$auragem_gemini/misfin-server/*", '1')
+	// ----- Scholastic Diversity stuff -----
+	scholasticdiversity_gemini := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "scholasticdiversity_gemini", Hostname: "scholasticdiversity.us.to"})
+	scholasticdiversity_gemini.AddCertificate("scholasticdiversity.pem")
+	context.GetPortListener("0.0.0.0", "1965").AddCertificate("scholasticdiversity.us.to", "scholasticdiversity.pem")
+	scholasticdiversity_gemini.AddDirectory("/*", "./")
 
-		// Proxy public_radio stuff to gopherserver
-		gopherServer.AddProxyRoute("/public_radio/", "$auragem_gemini/music/public_radio/", '1')
-		gopherServer.AddProxyRoute("/public_radio/:station_name", "$auragem_gemini/music/public_radio/$station_name", '1')
-		gopherServer.AddProxyRoute("/public_radio/:station_name/schedule_feed", "$auragem_gemini/public_radio/$station_name/schedule_feed", '1')
-		gopherServer.AddProxyRoute("/stream/public_radio/:station_name.mp3", "$auragem_gemini/stream/public_radio/$station_name.mp3", 's')
+	texts.HandleTexts(scholasticdiversity_gemini)
+	// Add "/texts/" redirect from auragem gemini server to scholastic diversity gemini server
+	geminiServer.AddRoute("/texts/*", func(request sis.Request) {
+		request.Redirect("gemini://scholasticdiversity.us.to/texts/%s", url.PathEscape(request.GlobString))
+	})
 
-		context.Start()
-	},
+	gopherServer := context.AddServer(sis.Server{Type: sis.ServerType_Gopher, Name: "gopher", Hostname: "auragem.letz.dev"})
+	gopherServer.AddRoute("/*", func(request sis.Request) {
+		request.GophermapLine("i", "                             AuraGem Gopher Server", "", request.Hostname(), request.Server.Port())
+		request.GophermapLine("1", "Devlog", "/devlog/", request.Hostname(), request.Server.Port())
+		request.GophermapLine("1", "Personal Log", "/~clseibold/", request.Hostname(), request.Server.Port())
+		request.GophermapLine("1", "Scholastic Diversity", "/scholasticdiversity/", request.Hostname(), request.Server.Port())
+		request.GophermapLine("i", "", "", request.Hostname(), request.Server.Port())
+		request.GophermapLine("i", "Software", "", request.Hostname(), request.Server.Port())
+		request.GophermapLine("i", "--------", "", request.Hostname(), request.Server.Port())
+		request.GophermapLine("1", "Misfin-Server", "/misfin-server/", request.Hostname(), request.Server.Port())
+		request.GophermapLine("i", "", "", request.Hostname(), request.Server.Port())
+		request.GophermapLine("i", "Other", "", request.Hostname(), request.Server.Port())
+		request.GophermapLine("i", "-----", "", request.Hostname(), request.Server.Port())
+		request.GophermapLine("h", "AuraGem Gemini Server", "URL:gemini://auragem.letz.dev", request.Hostname(), request.Server.Port())
+		request.GophermapLine("h", "AuraGem Nex Server", "URL:nex://auragem.letz.dev", request.Hostname(), request.Server.Port())
+		request.GophermapLine("h", "Scholastic Diversity Gemini Server", "URL:gemini://auragem.letz.dev", request.Hostname(), request.Server.Port())
+	})
+	gopherServer.AddProxyRoute("/scholasticdiversity/*", "$scholasticdiversity_gemini/*", '1')
+	gopherServer.AddProxyRoute("/devlog/*", "$auragem_gemini/devlog/*", '1')
+	gopherServer.AddProxyRoute("/~clseibold/*", "$auragem_gemini/~clseibold/*", '1')
+	gopherServer.AddProxyRoute("/misfin-server/*", "$auragem_gemini/misfin-server/*", '1')
+
+	// Proxy public_radio stuff to gopherserver
+	gopherServer.AddProxyRoute("/public_radio/", "$auragem_gemini/music/public_radio/", '1')
+	gopherServer.AddProxyRoute("/public_radio/:station_name", "$auragem_gemini/music/public_radio/$station_name", '1')
+	gopherServer.AddProxyRoute("/public_radio/:station_name/schedule_feed", "$auragem_gemini/public_radio/$station_name/schedule_feed", '1')
+	gopherServer.AddProxyRoute("/stream/public_radio/:station_name.mp3", "$auragem_gemini/stream/public_radio/$station_name.mp3", 's')
+
+	context.Start()
 }
 
 func handleGuestbook(request sis.Request) {
@@ -154,7 +162,7 @@ Lastly, this guestbook is append-only. Any edits made to already-existing conten
 		//return c.NoContent(gig.StatusPermanentFailure, "You edited the start of the document above \"---\". Your edit is rejected.")
 	}
 
-	fileBefore, _ := request.Server.FS.ReadFile("guestbook.gmi")
+	fileBefore, _ := request.Server.FS().ReadFile("guestbook.gmi")
 	//fileBefore, _ := os.ReadFile(filepath.Join(request.Server.Directory, "gemini", "guestbook.gmi"))
 	if !strings.HasPrefix(string(data), string(fileBefore)) {
 		request.TemporaryFailure("You edited a portion of the document that already existed. Only appends are allowed. Your edit is rejected.")
@@ -162,14 +170,14 @@ Lastly, this guestbook is append-only. Any edits made to already-existing conten
 		//return c.NoContent(gig.StatusPermanentFailure, "You edited a portion of the document that already existed. Only appends are allowed. Your edit is rejected.")
 	}
 
-	err := request.Server.FS.WriteFile("guestbook.gmi", data, 0644)
+	err := request.Server.FS().WriteFile("guestbook.gmi", data, 0644)
 	//err := os.WriteFile(filepath.Join(request.Server.Directory, "gemini", "guestbook.gmi"), data, 0644)
 	if err != nil {
 		fmt.Printf("Write failed: %s\n", err.Error())
 		return
 		//return err
 	}
-	request.Redirect("gemini://%s:%s/guestbook.gmi", request.Server.Hostname, request.Server.Port)
+	request.Redirect("gemini://%s:%s/guestbook.gmi", request.Server.Hostname(), request.Server.Port())
 }
 
 func CensorWords(str string) string {

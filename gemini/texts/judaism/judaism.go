@@ -27,7 +27,7 @@ func HandleJewishTexts(g sis.ServerHandle) {
 	index := GetFullIndex()
 	//indexMap := make(map[string]int)
 
-	g.AddRoute("/texts/jewish/", func(request sis.Request) {
+	g.AddRoute("/scriptures/jewish/", func(request sis.Request) {
 		query := request.Query()
 		if query == "" {
 			handleIndex(index, request)
@@ -36,7 +36,7 @@ func HandleJewishTexts(g sis.ServerHandle) {
 		}
 	})
 
-	g.AddRoute("/texts/jewish/t/:ref", func(request sis.Request) {
+	g.AddRoute("/scriptures/jewish/t/:ref", func(request sis.Request) {
 		ref := request.GetParam("ref")
 		handleText(ref, request)
 	})
@@ -45,7 +45,7 @@ func HandleJewishTexts(g sis.ServerHandle) {
 func handleIndex(index []SefariaIndexCategoryOrText, request sis.Request) {
 	var builder strings.Builder
 	for _, category := range index {
-		fmt.Fprintf(&builder, "=> /texts/jewish/?%s %s\n", url.QueryEscape(category.Category), category.Category)
+		fmt.Fprintf(&builder, "=> /scriptures/jewish/?%s %s\n", url.QueryEscape(category.Category), category.Category)
 	}
 
 	calendars := GetCalendars()
@@ -54,19 +54,19 @@ func handleIndex(index []SefariaIndexCategoryOrText, request sis.Request) {
 		// Special handling of parashot
 		if calendar.Title.English == "Parashat Hashavua" {
 			fmt.Fprintf(&builder, "### Parashat %s (%s)\n", calendar.DisplayValue.English, calendar.Title.Hebrew+" "+calendar.DisplayValue.Hebrew)
-			fmt.Fprintf(&builder, "=> /texts/jewish/t/%s %s\n", EncodeTextReference(calendar.Ref), calendar.Ref)
+			fmt.Fprintf(&builder, "=> /scriptures/jewish/t/%s %s\n", EncodeTextReference(calendar.Ref), calendar.Ref)
 			if calendar.Description.English != "" {
 				fmt.Fprintf(&builder, "%s\n\n", calendar.Description.English)
 			}
 		} else if calendar.Title.English == "Tanakh Yomi" {
 			fmt.Fprintf(&builder, "### %s (%s)\n", calendar.Title.English, calendar.Title.Hebrew)
-			fmt.Fprintf(&builder, "=> /texts/jewish/t/%s %s (%s)\n", EncodeTextReference(calendar.Ref), calendar.DisplayValue.English, calendar.Ref)
+			fmt.Fprintf(&builder, "=> /scriptures/jewish/t/%s %s (%s)\n", EncodeTextReference(calendar.Ref), calendar.DisplayValue.English, calendar.Ref)
 			if calendar.Description.English != "" {
 				fmt.Fprintf(&builder, "%s\n\n", calendar.Description.English)
 			}
 		} else {
 			fmt.Fprintf(&builder, "### %s (%s)\n", calendar.Title.English, calendar.Title.Hebrew)
-			fmt.Fprintf(&builder, "=> /texts/jewish/t/%s %s\n", EncodeTextReference(calendar.Ref), calendar.DisplayValue.English)
+			fmt.Fprintf(&builder, "=> /scriptures/jewish/t/%s %s\n", EncodeTextReference(calendar.Ref), calendar.DisplayValue.English)
 			if calendar.Description.English != "" {
 				fmt.Fprintf(&builder, "%s\n\n", calendar.Description.English)
 			}
@@ -102,9 +102,9 @@ func handleCategory(index []SefariaIndexCategoryOrText, query string, request si
 	for _, category := range categoryOrText.Contents {
 		if category.Title != "" {
 			// A text
-			fmt.Fprintf(&builder, "=> /texts/jewish/t/%s %s\n", url.PathEscape(category.Title), category.Title)
+			fmt.Fprintf(&builder, "=> /scriptures/jewish/t/%s %s\n", url.PathEscape(category.Title), category.Title)
 		} else {
-			fmt.Fprintf(&builder, "=> /texts/jewish/?%s %s\n", url.QueryEscape(query+"/"+category.Category), category.Category)
+			fmt.Fprintf(&builder, "=> /scriptures/jewish/?%s %s\n", url.QueryEscape(query+"/"+category.Category), category.Category)
 		}
 	}
 
@@ -175,10 +175,10 @@ func handleText(ref string, request sis.Request) {
 		fmt.Fprintf(&builder, "\n\n")
 	}
 	if text.Prev != "" {
-		fmt.Fprintf(&builder, "=> /texts/jewish/t/%s Previous\n", url.PathEscape(text.Prev))
+		fmt.Fprintf(&builder, "=> /scriptures/jewish/t/%s Previous\n", url.PathEscape(text.Prev))
 	}
 	if text.Next != "" {
-		fmt.Fprintf(&builder, "=> /texts/jewish/t/%s Next", url.PathEscape(text.Next))
+		fmt.Fprintf(&builder, "=> /scriptures/jewish/t/%s Next", url.PathEscape(text.Next))
 	}
 
 	// Commentary links to display on the text's page. The other commentaries are listed on a "More Commentaries" page
@@ -211,7 +211,7 @@ func handleText(ref string, request sis.Request) {
 
 		fmt.Fprintf(&builder, "\n\n##Commentaries\n\n")
 		if text.PrimaryCategory == "Mishnah" {
-			fmt.Fprintf(&builder, "=> /texts/jewish/t/%s Tosefta\n", url.PathEscape("Tosefta "+text.Ref))
+			fmt.Fprintf(&builder, "=> /scriptures/jewish/t/%s Tosefta\n", url.PathEscape("Tosefta "+text.Ref))
 		}
 		for _, link := range links {
 			if (link.Category != "Commentary" && link.Category != "Halakhah" && link.Category != "Targum") || !link.SourceHasEn {
@@ -223,15 +223,15 @@ func handleText(ref string, request sis.Request) {
 			if _, ok := dict[link.IndexTitle]; !ok {
 				// Add to map so we can check whether it repeats, then print the first reference.
 				dict[link.IndexTitle] = true
-				fmt.Fprintf(&builder, "=> /texts/jewish/t/%s %s\n", url.PathEscape(link.Ref), link.IndexTitle)
+				fmt.Fprintf(&builder, "=> /scriptures/jewish/t/%s %s\n", url.PathEscape(link.Ref), link.IndexTitle)
 			}
 		}
 	}
 
 	request.Gemini(fmt.Sprintf(`# %s
 
-=> /texts/jewish Home
-=> /texts/jewish?%s %s
+=> /scriptures/jewish Home
+=> /scriptures/jewish?%s %s
 
 %s
 
@@ -241,7 +241,7 @@ Version: %s
 => %s Source: %s
 License: %s
 
-=> /texts/jewish Jewish Texts
+=> /scriptures/jewish Jewish Texts
 => https://sefaria.org Powered by Sefaria.org`, text.Ref, url.QueryEscape(strings.Join(text.Categories, "/")), text.Categories[len(text.Categories)-1] /*stripTags.Sanitize(*/, builder.String() /*)*/, text.VersionTitle, text.VersionSource, text.VersionSource, text.License))
 }
 

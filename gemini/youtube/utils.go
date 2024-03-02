@@ -102,6 +102,7 @@ func getChannelVideos(request sis.Request, service *youtube.Service, channelId s
 
 	channel := response.Items[0]
 	uploadsPlaylistId := channel.ContentDetails.RelatedPlaylists.Uploads
+	time.Sleep(time.Millisecond * 120)
 
 	var call2 *youtube.PlaylistItemsListCall
 	if currentPage != "" {
@@ -112,7 +113,7 @@ func getChannelVideos(request sis.Request, service *youtube.Service, channelId s
 	response2, err2 := call2.Do()
 	if err2 != nil {
 		//log.Fatalf("Error: %v", err)
-		panic(err)
+		panic(err2)
 	}
 
 	var builder strings.Builder

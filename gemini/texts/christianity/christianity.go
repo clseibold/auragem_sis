@@ -93,14 +93,14 @@ func HandleChristianTexts(g sis.ServerHandle) {
 	// Cache the books from the ASV version of the bible. These should be the same for the ESV bible as well. Note: This does not include the apocrypha.
 	asvBooks := GetBooks(englishBibleVersions[0].Id, apiKey)
 
-	g.AddRoute("/texts/christian/", func(request sis.Request) {
+	g.AddRoute("/scriptures/christian/", func(request sis.Request) {
 		var builder strings.Builder
 		fmt.Fprintf(&builder, "## Bible Versions\n")
 		fmt.Fprintf(&builder, "### English\n")
-		fmt.Fprintf(&builder, "=> /texts/christian/bible/esv/ ESV Bible\n")
+		fmt.Fprintf(&builder, "=> /scriptures/christian/bible/esv/ ESV Bible\n")
 		for _, version := range englishBibleVersions {
 			if version.Id != "" {
-				fmt.Fprintf(&builder, "=> /texts/christian/bible/%s/ %s\n", version.Id, version.Name)
+				fmt.Fprintf(&builder, "=> /scriptures/christian/bible/%s/ %s\n", version.Id, version.Name)
 			} else {
 				fmt.Fprintf(&builder, "\n")
 			}
@@ -108,7 +108,7 @@ func HandleChristianTexts(g sis.ServerHandle) {
 		fmt.Fprintf(&builder, "\n### Spanish\n")
 		for _, version := range spanishBibleVersions {
 			if version.Id != "" {
-				fmt.Fprintf(&builder, "=> /texts/christian/bible/%s/ %s\n", version.Id, version.Name)
+				fmt.Fprintf(&builder, "=> /scriptures/christian/bible/%s/ %s\n", version.Id, version.Name)
 			} else {
 				fmt.Fprintf(&builder, "\n")
 			}
@@ -116,7 +116,7 @@ func HandleChristianTexts(g sis.ServerHandle) {
 		fmt.Fprintf(&builder, "\n### German\n")
 		for _, version := range germanBibleVersions {
 			if version.Id != "" {
-				fmt.Fprintf(&builder, "=> /texts/christian/bible/%s/ %s\n", version.Id, version.Name)
+				fmt.Fprintf(&builder, "=> /scriptures/christian/bible/%s/ %s\n", version.Id, version.Name)
 			} else {
 				fmt.Fprintf(&builder, "\n")
 			}
@@ -124,7 +124,7 @@ func HandleChristianTexts(g sis.ServerHandle) {
 		fmt.Fprintf(&builder, "\n### Arabic\n")
 		for _, version := range arabicBibleVersions {
 			if version.Id != "" {
-				fmt.Fprintf(&builder, "=> /texts/christian/bible/%s/ %s\n", version.Id, version.Name)
+				fmt.Fprintf(&builder, "=> /scriptures/christian/bible/%s/ %s\n", version.Id, version.Name)
 			} else {
 				fmt.Fprintf(&builder, "\n")
 			}
@@ -132,7 +132,7 @@ func HandleChristianTexts(g sis.ServerHandle) {
 		fmt.Fprintf(&builder, "\n### Italian\n")
 		for _, version := range italianBibleVersions {
 			if version.Id != "" {
-				fmt.Fprintf(&builder, "=> /texts/christian/bible/%s/ %s\n", version.Id, version.Name)
+				fmt.Fprintf(&builder, "=> /scriptures/christian/bible/%s/ %s\n", version.Id, version.Name)
 			} else {
 				fmt.Fprintf(&builder, "\n")
 			}
@@ -140,7 +140,7 @@ func HandleChristianTexts(g sis.ServerHandle) {
 		fmt.Fprintf(&builder, "\n### Modern Hebrew\n")
 		for _, version := range hebrewBibleVersions {
 			if version.Id != "" {
-				fmt.Fprintf(&builder, "=> /texts/christian/bible/%s/ %s\n", version.Id, version.Name)
+				fmt.Fprintf(&builder, "=> /scriptures/christian/bible/%s/ %s\n", version.Id, version.Name)
 			} else {
 				fmt.Fprintf(&builder, "\n")
 			}
@@ -148,7 +148,7 @@ func HandleChristianTexts(g sis.ServerHandle) {
 		fmt.Fprintf(&builder, "\n### Greek\n")
 		for _, version := range greekBibleVersions {
 			if version.Id != "" {
-				fmt.Fprintf(&builder, "=> /texts/christian/bible/%s/ %s\n", version.Id, version.Name)
+				fmt.Fprintf(&builder, "=> /scriptures/christian/bible/%s/ %s\n", version.Id, version.Name)
 			} else {
 				fmt.Fprintf(&builder, "\n")
 			}
@@ -164,10 +164,10 @@ Tags: #bible #new #old #testament #septuagint #pentateuch
 `, builder.String()))
 	})
 
-	g.AddRoute("/texts/christian/bible/esv/", func(request sis.Request) {
+	g.AddRoute("/scriptures/christian/bible/esv/", func(request sis.Request) {
 		var builder strings.Builder
 		for _, book := range asvBooks {
-			fmt.Fprintf(&builder, "=> /texts/christian/bible/esv/%s %s\n", url.PathEscape(book.Name+" 1"), book.Name)
+			fmt.Fprintf(&builder, "=> /scriptures/christian/bible/esv/%s %s\n", url.PathEscape(book.Name+" 1"), book.Name)
 		}
 
 		request.Gemini(fmt.Sprintf(`# ESV Bible
@@ -184,7 +184,7 @@ Users may not copy or download more than 500 verses of the ESV Bible or more tha
 `, builder.String()))
 	})
 
-	g.AddRoute("/texts/christian/bible/esv/:text", func(request sis.Request) {
+	g.AddRoute("/scriptures/christian/bible/esv/:text", func(request sis.Request) {
 		text := request.GetParam("text")
 		resp := GetPassages(text)
 		var builder strings.Builder
@@ -198,18 +198,18 @@ Users may not copy or download more than 500 verses of the ESV Bible or more tha
 `, resp.Canonical, builder.String()))
 	})
 
-	g.AddRoute("/texts/christian/bible/:id", func(request sis.Request) {
+	g.AddRoute("/scriptures/christian/bible/:id", func(request sis.Request) {
 		versionId := request.GetParam("id")
 		version := GetBibleVersion(versionId, apiKey)
 		books := GetBooks(versionId, apiKey)
 		var builder strings.Builder
 		for _, book := range books {
-			fmt.Fprintf(&builder, "=> /texts/christian/bible/%s/%s %s\n", versionId, book.Id, book.Name)
+			fmt.Fprintf(&builder, "=> /scriptures/christian/bible/%s/%s %s\n", versionId, book.Id, book.Name)
 		}
 
 		request.Gemini(fmt.Sprintf(`# %s
 
-=> /texts/christian Bible Versions
+=> /scriptures/christian Bible Versions
 
 %s
 
@@ -219,19 +219,19 @@ Copyright: %s
 => https://scripture.api.bible Powered by API.Bible`, version.Name, builder.String(), version.Description, version.Copyright))
 	})
 
-	g.AddRoute("/texts/christian/bible/:id/:book", func(request sis.Request) {
+	g.AddRoute("/scriptures/christian/bible/:id/:book", func(request sis.Request) {
 		versionId := request.GetParam("id")
 		bookId := request.GetParam("book")
 		version := GetBibleVersion(versionId, apiKey)
 		book := GetBook(versionId, bookId, apiKey, true)
 		var builder strings.Builder
 		for _, chapter := range book.Chapters {
-			fmt.Fprintf(&builder, "=> /texts/christian/bible/%s/chapter/%s Chapter %s\n", versionId, chapter.Id, chapter.Number)
+			fmt.Fprintf(&builder, "=> /scriptures/christian/bible/%s/chapter/%s Chapter %s\n", versionId, chapter.Id, chapter.Number)
 		}
 
 		request.Gemini(fmt.Sprintf(`# %s: %s
 
-=> /texts/christian/bible/%s Books
+=> /scriptures/christian/bible/%s Books
 
 %s
 
@@ -240,7 +240,7 @@ Copyright: %s
 => https://scripture.api.bible Powered by API.Bible`, version.Abbreviation, book.Name, versionId, builder.String(), version.Copyright))
 	})
 
-	g.AddRoute("/texts/christian/bible/:id/chapter/:chapter", func(request sis.Request) {
+	g.AddRoute("/scriptures/christian/bible/:id/chapter/:chapter", func(request sis.Request) {
 		versionId := request.GetParam("id")
 		chapterId := request.GetParam("chapter")
 		version := GetBibleVersion(versionId, apiKey)
@@ -248,17 +248,17 @@ Copyright: %s
 		var builder strings.Builder
 		fmt.Fprintf(&builder, "%s", chapter.Content)
 		/*for _, chapter := range book.Chapters {
-			fmt.Fprintf(&builder, "=> /texts/christian/bible/%s/%s/%s Chapter %s\n", versionId, book.Id, chapter.Id, chapter.Number)
+			fmt.Fprintf(&builder, "=> /scriptures/christian/bible/%s/%s/%s Chapter %s\n", versionId, book.Id, chapter.Id, chapter.Number)
 		}*/
 
 		request.Gemini(fmt.Sprintf(`# %s: %s
 
-=> /texts/christian/bible/%s/%s Chapters
+=> /scriptures/christian/bible/%s/%s Chapters
 
 %s
 
-=> /texts/christian/bible/%s/chapter/%s Previous
-=> /texts/christian/bible/%s/chapter/%s Next
+=> /scriptures/christian/bible/%s/chapter/%s Previous
+=> /scriptures/christian/bible/%s/chapter/%s Next
 
 %s
 

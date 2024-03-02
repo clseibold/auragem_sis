@@ -107,13 +107,13 @@ func HandleIslamicTexts(g sis.ServerHandle) {
 
 	versionNames["arabic"] = "Qur'an"
 
-	g.AddRoute("/texts/islam", func(request sis.Request) {
+	g.AddRoute("/scriptures/islam", func(request sis.Request) {
 		var builder strings.Builder
-		fmt.Fprintf(&builder, "## Qur'an Versions\n\n=> /texts/islam/quran/arabic Arabic\n")
+		fmt.Fprintf(&builder, "## Qur'an Versions\n\n=> /scriptures/islam/quran/arabic/ Arabic\n")
 		fmt.Fprintf(&builder, "### English\n")
 		for _, version := range englishQuranVersions {
 			if version.Identifier != "" {
-				fmt.Fprintf(&builder, "=> /texts/islam/quran/%s %s\n", version.Identifier, version.Name)
+				fmt.Fprintf(&builder, "=> /scriptures/islam/quran/%s/ %s\n", version.Identifier, version.Name)
 			} else {
 				fmt.Fprintf(&builder, "\n")
 			}
@@ -121,7 +121,7 @@ func HandleIslamicTexts(g sis.ServerHandle) {
 		fmt.Fprintf(&builder, "\n### Spanish\n")
 		for _, version := range spanishQuranVersions {
 			if version.Identifier != "" {
-				fmt.Fprintf(&builder, "=> /texts/islam/quran/%s %s\n", version.Identifier, version.Name)
+				fmt.Fprintf(&builder, "=> /scriptures/islam/quran/%s/ %s\n", version.Identifier, version.Name)
 			} else {
 				fmt.Fprintf(&builder, "\n")
 			}
@@ -129,7 +129,7 @@ func HandleIslamicTexts(g sis.ServerHandle) {
 		fmt.Fprintf(&builder, "\n### German\n")
 		for _, version := range germanQuranVersions {
 			if version.Identifier != "" {
-				fmt.Fprintf(&builder, "=> /texts/islam/quran/%s %s\n", version.Identifier, version.Name)
+				fmt.Fprintf(&builder, "=> /scriptures/islam/quran/%s/ %s\n", version.Identifier, version.Name)
 			} else {
 				fmt.Fprintf(&builder, "\n")
 			}
@@ -137,7 +137,7 @@ func HandleIslamicTexts(g sis.ServerHandle) {
 		fmt.Fprintf(&builder, "\n### Russian\n")
 		for _, version := range russianQuranVersions {
 			if version.Identifier != "" {
-				fmt.Fprintf(&builder, "=> /texts/islam/quran/%s %s\n", version.Identifier, version.Name)
+				fmt.Fprintf(&builder, "=> /scriptures/islam/quran/%s/ %s\n", version.Identifier, version.Name)
 			} else {
 				fmt.Fprintf(&builder, "\n")
 			}
@@ -145,7 +145,7 @@ func HandleIslamicTexts(g sis.ServerHandle) {
 		fmt.Fprintf(&builder, "\n### French\n")
 		for _, version := range frenchQuranVersions {
 			if version.Identifier != "" {
-				fmt.Fprintf(&builder, "=> /texts/islam/quran/%s %s\n", version.Identifier, version.Name)
+				fmt.Fprintf(&builder, "=> /scriptures/islam/quran/%s/ %s\n", version.Identifier, version.Name)
 			} else {
 				fmt.Fprintf(&builder, "\n")
 			}
@@ -153,7 +153,7 @@ func HandleIslamicTexts(g sis.ServerHandle) {
 		fmt.Fprintf(&builder, "\n### Farsi\n")
 		for _, version := range farsiQuranVersions {
 			if version.Identifier != "" {
-				fmt.Fprintf(&builder, "=> /texts/islam/quran/%s %s\n", version.Identifier, version.Name)
+				fmt.Fprintf(&builder, "=> /scriptures/islam/quran/%s/ %s\n", version.Identifier, version.Name)
 			} else {
 				fmt.Fprintf(&builder, "\n")
 			}
@@ -169,16 +169,16 @@ Tags: #quran #qur'an #koran #القرآن
 `, builder.String()))
 	})
 
-	g.AddRoute("/texts/islam/quran/:version", func(request sis.Request) {
+	g.AddRoute("/scriptures/islam/quran/:version", func(request sis.Request) {
 		versionId := request.GetParam("version")
 		var builder strings.Builder
 		for _, surah := range quranSurahs {
-			fmt.Fprintf(&builder, "=> /texts/islam/quran/%s/%d Surah %d: %s (%s)\n", versionId, surah.Number, surah.Number, surah.EnglishNameTranslation, surah.EnglishName)
+			fmt.Fprintf(&builder, "=> /scriptures/islam/quran/%s/%d/ Surah %d: %s (%s)\n", versionId, surah.Number, surah.Number, surah.EnglishNameTranslation, surah.EnglishName)
 		}
 
 		request.Gemini(fmt.Sprintf(`# %s
 
-=> /texts/islam Qur'an Versions
+=> /scriptures/islam Qur'an Versions
 
 %s
 
@@ -186,7 +186,7 @@ Tags: #quran #qur'an #koran #القرآن
 `, versionNames[versionId], builder.String()))
 	})
 
-	g.AddRoute("/texts/islam/quran/:version/:surah", func(request sis.Request) {
+	g.AddRoute("/scriptures/islam/quran/:version/:surah", func(request sis.Request) {
 		versionId := request.GetParam("version")
 		surahNumber := request.GetParam("surah")
 
@@ -201,15 +201,15 @@ Tags: #quran #qur'an #koran #القرآن
 			fmt.Fprintf(&builder, "\n\n")
 		}
 		if surah.Number > 1 {
-			fmt.Fprintf(&builder, "=> /texts/islam/quran/%s/%d Previous\n", versionId, surah.Number-1)
+			fmt.Fprintf(&builder, "=> /scriptures/islam/quran/%s/%d/ Previous\n", versionId, surah.Number-1)
 		}
 		if surah.Number < len(quranSurahs) {
-			fmt.Fprintf(&builder, "=> /texts/islam/quran/%s/%d Next\n", versionId, surah.Number+1)
+			fmt.Fprintf(&builder, "=> /scriptures/islam/quran/%s/%d/ Next\n", versionId, surah.Number+1)
 		}
 
 		request.Gemini(fmt.Sprintf(`# %s, Surah %d: %s (%s)
 
-=> /texts/islam/quran/%s Surahs
+=> /scriptures/islam/quran/%s/ Surahs
 
 %s
 
