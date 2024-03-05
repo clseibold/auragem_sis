@@ -132,7 +132,7 @@ func getChannelVideos(request sis.Request, service *youtube.Service, channelId s
 
 	for _, item := range response2.Items {
 		date := strings.Split(item.Snippet.PublishedAt, "T")[0]
-		fmt.Fprintf(&builder, "=> /youtube/video/%s %s %s\n", item.Snippet.ResourceId.VideoId, date, html.UnescapeString(item.Snippet.Title))
+		fmt.Fprintf(&builder, "=> /youtube/video/%s/ %s %s\n", item.Snippet.ResourceId.VideoId, date, html.UnescapeString(item.Snippet.Title))
 	}
 
 	request.Gemini(fmt.Sprintf(template, html.UnescapeString(channel.Snippet.Title), channel.Id, builder.String()))

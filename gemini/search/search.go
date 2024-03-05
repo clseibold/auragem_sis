@@ -1290,7 +1290,7 @@ func langTagToText(tag language.Tag) string {
 func buildPageResults(builder *strings.Builder, pages []Page, useHighlight bool, showScores bool) {
 	for _, page := range pages {
 		publishDateString := ""
-		if page.PublishDate.Year() > 0001 {
+		if page.PublishDate.Year() > 1800 && page.PublishDate.Year() < time.Now().Year() {
 			publishDateString = fmt.Sprintf("Published on %s • ", page.PublishDate.Format("2006-01-02"))
 		}
 
