@@ -13,8 +13,8 @@ import (
 func searchYoutube(request sis.Request, service *youtube.Service, query string, rawQuery string, currentPage string) {
 	template := `# Search
 
-=> /youtube Home
-=> /youtube/search New Search
+=> /youtube/ Home
+=> /youtube/search/ New Search
 %s`
 
 	var call *youtube.SearchListCall
@@ -32,21 +32,21 @@ func searchYoutube(request sis.Request, service *youtube.Service, query string, 
 
 	var builder strings.Builder
 	if response.PrevPageToken != "" {
-		fmt.Fprintf(&builder, "=> /youtube/search/%s?%s Previous Page\n", response.PrevPageToken, rawQuery)
+		fmt.Fprintf(&builder, "=> /youtube/search/%s/?%s Previous Page\n", response.PrevPageToken, rawQuery)
 	}
 	if response.NextPageToken != "" {
-		fmt.Fprintf(&builder, "=> /youtube/search/%s?%s Next Page\n", response.NextPageToken, rawQuery)
+		fmt.Fprintf(&builder, "=> /youtube/search/%s/?%s Next Page\n", response.NextPageToken, rawQuery)
 	}
 	fmt.Fprintf(&builder, "\n## %d/%d Results for '%s'\n\n", response.PageInfo.ResultsPerPage, response.PageInfo.TotalResults, query)
 
 	for _, item := range response.Items {
 		switch item.Id.Kind {
 		case "youtube#video":
-			fmt.Fprintf(&builder, "=> /youtube/video/%s Video: %s\nUploaded by %s\n\n", item.Id.VideoId, html.UnescapeString(item.Snippet.Title), html.UnescapeString(item.Snippet.ChannelTitle))
+			fmt.Fprintf(&builder, "=> /youtube/video/%s/ Video: %s\nUploaded by %s\n\n", item.Id.VideoId, html.UnescapeString(item.Snippet.Title), html.UnescapeString(item.Snippet.ChannelTitle))
 		case "youtube#channel":
-			fmt.Fprintf(&builder, "=> /youtube/channel/%s Channel: %s\n\n", item.Id.ChannelId, html.UnescapeString(item.Snippet.Title))
+			fmt.Fprintf(&builder, "=> /youtube/channel/%s/ Channel: %s\n\n", item.Id.ChannelId, html.UnescapeString(item.Snippet.Title))
 		case "youtube#playlist":
-			fmt.Fprintf(&builder, "=> /youtube/playlist/%s Playlist: %s\n\n", item.Id.PlaylistId, html.UnescapeString(item.Snippet.Title))
+			fmt.Fprintf(&builder, "=> /youtube/playlist/%s/ Playlist: %s\n\n", item.Id.PlaylistId, html.UnescapeString(item.Snippet.Title))
 		}
 	}
 
@@ -56,7 +56,7 @@ func searchYoutube(request sis.Request, service *youtube.Service, query string, 
 func getChannelPlaylists(request sis.Request, service *youtube.Service, channelId string, currentPage string) {
 	template := `# Playlists for '%s'
 
-=> /youtube/channel/%s ChannelPage
+=> /youtube/channel/%s/ ChannelPage
 %s`
 
 	var call *youtube.PlaylistsListCall
@@ -73,15 +73,20 @@ func getChannelPlaylists(request sis.Request, service *youtube.Service, channelI
 
 	var builder strings.Builder
 	if response.PrevPageToken != "" {
-		fmt.Fprintf(&builder, "=> /youtube/channel/%s/playlists/%s Previous Page\n", channelId, response.PrevPageToken)
+		fmt.Fprintf(&builder, "=> /youtube/channel/%s/playlists/%s/ Previous Page\n", channelId, response.PrevPageToken)
 	}
 	if response.NextPageToken != "" {
-		fmt.Fprintf(&builder, "=> /youtube/channel/%s/playlists/%s Next Page\n", channelId, response.NextPageToken)
+		fmt.Fprintf(&builder, "=> /youtube/channel/%s/playlists/%s/ Next Page\n", channelId, response.NextPageToken)
 	}
 	fmt.Fprintf(&builder, "\n")
 
+	if len(response.Items) == 0 {
+		request.TemporaryFailure("This channel doesn't have any playlists.\n")
+		return
+	}
+
 	for _, item := range response.Items {
-		fmt.Fprintf(&builder, "=> /youtube/playlist/%s %s\n", item.Id, html.UnescapeString(item.Snippet.Title))
+		fmt.Fprintf(&builder, "=> /youtube/playlist/%s/ %s\n", item.Id, html.UnescapeString(item.Snippet.Title))
 	}
 
 	request.Gemini(fmt.Sprintf(template, html.UnescapeString(response.Items[0].Snippet.ChannelTitle), response.Items[0].Snippet.ChannelId, builder.String()))
@@ -90,7 +95,7 @@ func getChannelPlaylists(request sis.Request, service *youtube.Service, channelI
 func getChannelVideos(request sis.Request, service *youtube.Service, channelId string, currentPage string) {
 	template := `# Uploads for '%s'
 
-=> /youtube/channel/%s Channel Page
+=> /youtube/channel/%s/ Channel Page
 %s`
 
 	call := service.Channels.List([]string{"id", "snippet", "contentDetails"}).Id(channelId).MaxResults(1)
@@ -118,10 +123,10 @@ func getChannelVideos(request sis.Request, service *youtube.Service, channelId s
 
 	var builder strings.Builder
 	if response2.PrevPageToken != "" {
-		fmt.Fprintf(&builder, "=> /youtube/channel/%s/videos/%s Previous Page\n", channelId, response2.PrevPageToken)
+		fmt.Fprintf(&builder, "=> /youtube/channel/%s/videos/%s/ Previous Page\n", channelId, response2.PrevPageToken)
 	}
 	if response2.NextPageToken != "" {
-		fmt.Fprintf(&builder, "=> /youtube/channel/%s/videos/%s Next Page\n", channelId, response2.NextPageToken)
+		fmt.Fprintf(&builder, "=> /youtube/channel/%s/videos/%s/ Next Page\n", channelId, response2.NextPageToken)
 	}
 	fmt.Fprintf(&builder, "\n")
 
@@ -163,7 +168,7 @@ func getChannelActivity(request sis.Request, service *youtube.Service, channelId
 	var builder strings.Builder
 	for _, item := range response2.Items {
 		date := strings.Split(item.Snippet.PublishedAt, "T")[0]
-		fmt.Fprintf(&builder, "=> /youtube/video/%s %s %s\n", item.Snippet.ResourceId.VideoId, date, html.UnescapeString(item.Snippet.Title))
+		fmt.Fprintf(&builder, "=> /youtube/video/%s/ %s %s\n", item.Snippet.ResourceId.VideoId, date, html.UnescapeString(item.Snippet.Title))
 	}
 
 	request.Gemini(fmt.Sprintf(template, html.UnescapeString(channel.Snippet.Title), builder.String()))
@@ -172,7 +177,7 @@ func getChannelActivity(request sis.Request, service *youtube.Service, channelId
 func getPlaylistVideos(request sis.Request, service *youtube.Service, playlistId string, currentPage string) {
 	template := `# Playlist: %s
 
-=> /youtube/channel/%s Created by %s
+=> /youtube/channel/%s/ Created by %s
 %s`
 
 	call_pl := service.Playlists.List([]string{"id", "snippet"}).Id(playlistId).MaxResults(1)
@@ -204,15 +209,15 @@ func getPlaylistVideos(request sis.Request, service *youtube.Service, playlistId
 
 	var builder strings.Builder
 	if response.PrevPageToken != "" {
-		fmt.Fprintf(&builder, "=> /youtube/playlist/%s/%s Previous Page\n", playlistId, response.PrevPageToken)
+		fmt.Fprintf(&builder, "=> /youtube/playlist/%s/%s/ Previous Page\n", playlistId, response.PrevPageToken)
 	}
 	if response.NextPageToken != "" {
-		fmt.Fprintf(&builder, "=> /youtube/playlist/%s/%s Next Page\n", playlistId, response.NextPageToken)
+		fmt.Fprintf(&builder, "=> /youtube/playlist/%s/%s/ Next Page\n", playlistId, response.NextPageToken)
 	}
 	fmt.Fprintf(&builder, "\n")
 
 	for _, item := range response.Items {
-		fmt.Fprintf(&builder, "=> /youtube/video/%s %s\nUploaded by %s\n\n", item.Snippet.ResourceId.VideoId, html.UnescapeString(item.Snippet.Title), html.UnescapeString(item.Snippet.ChannelTitle))
+		fmt.Fprintf(&builder, "=> /youtube/video/%s/ %s\nUploaded by %s\n\n", item.Snippet.ResourceId.VideoId, html.UnescapeString(item.Snippet.Title), html.UnescapeString(item.Snippet.ChannelTitle))
 	}
 
 	request.Gemini(fmt.Sprintf(template, playlistTitle, playlist.Snippet.ChannelId, html.UnescapeString(playlist.Snippet.ChannelTitle), builder.String()))

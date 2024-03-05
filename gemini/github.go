@@ -37,10 +37,11 @@ Welcome to the AuraGem Github proxy!
 
 	g.AddRoute("/github/search/:page", func(request sis.Request) {
 		//query, err2 := c.QueryString()
-		query := request.Query()
-		/*if err2 != nil {
-			return err2
-		} else*/if query == "" {
+		query, err := request.Query()
+		if err != nil {
+			request.TemporaryFailure(err.Error())
+			return
+		} else if query == "" {
 			request.RequestInput("Search Query:")
 			//return c.NoContent(gig.StatusInput, "Search Query:")
 		} else {
@@ -49,10 +50,11 @@ Welcome to the AuraGem Github proxy!
 	})
 	g.AddRoute("/github/search", func(request sis.Request) {
 		//query, err2 := c.QueryString()
-		query := request.Query()
-		/*if err2 != nil {
-			return err2
-		} else*/if query == "" {
+		query, err := request.Query()
+		if err != nil {
+			request.TemporaryFailure(err.Error())
+			return
+		} else if query == "" {
 			request.RequestInput("Search Query:")
 			//return c.NoContent(gig.StatusInput, "Search Query:")
 		} else {

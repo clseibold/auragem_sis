@@ -11,10 +11,10 @@ require (
 	github.com/juju/ratelimit v1.0.2
 	github.com/kkdai/youtube/v2 v2.10.0
 	github.com/krayzpipes/cronticker v0.0.1
-	github.com/nakagami/firebirdsql v0.9.7
+	github.com/nakagami/firebirdsql v0.9.8
 	github.com/rs/zerolog v1.32.0
 	github.com/spf13/cobra v1.8.0
-	gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240302022225-4fda49689589
+	gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240305011400-a0904eef49b4
 	golang.org/x/net v0.21.0
 	golang.org/x/oauth2 v0.17.0
 	golang.org/x/text v0.14.0

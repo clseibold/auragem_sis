@@ -48,12 +48,11 @@ func HandleChat(s sis.ServerHandle) {
 	//var usersMap cmap.ConcurrentMap = cmap.New() // Store pointers??
 
 	s.AddRoute("/chat/", func(request sis.Request) {
-		query := request.Query()
-		/*if err != nil {
-			request.TemporaryFailure("")
+		query, err := request.Query()
+		if err != nil {
+			request.TemporaryFailure(err.Error())
 			return
-		} else */
-		if query == "" {
+		} else if query == "" {
 			request.RequestInput("Username? ")
 			return
 		} else {
@@ -137,14 +136,13 @@ func HandleChat(s sis.ServerHandle) {
 			request.Redirect("/chat/")
 		}
 		if request.Upload {
-			if request.DataSize > 5*1024*1024 { // 5 MiB max
-				request.TemporaryFailure("Too big.")
-				return
-			}
 			//mimetype, hasMimetype := c.Get("mime").(string)
 			mimetype := request.DataMime
 			if mimetype != "text/gemini" && mimetype != "text/plain" && mimetype != "" {
 				request.TemporaryFailure("Can only upload text/gemini messages at the moment. File upload is coming soon.")
+				return
+			} else if request.DataSize > 1024*8 { // 8 KB max
+				request.TemporaryFailure("Message too long.")
 				return
 			}
 			data, read_err := request.GetUploadData()
@@ -153,11 +151,12 @@ func HandleChat(s sis.ServerHandle) {
 			}
 			message = string(data)
 		} else {
-			query := request.Query()
-			/*if err != nil {
-				return c.NoContent(gig.StatusTemporaryFailure, "")
-			} else*/
-			if query == "" {
+			request.SetSpartanQueryLimit(1024 * 8) // For proxying to Spartan
+			query, err := request.Query()
+			if err != nil {
+				request.TemporaryFailure(err.Error())
+				return
+			} else if query == "" {
 				request.RequestInput("Message: ")
 				//return c.NoContent(gig.StatusInput, "Message: ")
 				return

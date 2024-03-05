@@ -221,6 +221,7 @@ Current song playing: %s by %s
 				(*totalClientsConnected) -= 1
 				return //err
 			}
+			//time.Sleep(1 * time.Second)
 		}
 	})
 }

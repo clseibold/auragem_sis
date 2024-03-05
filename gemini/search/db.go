@@ -8,12 +8,13 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	_ "time/tzdata"
 	"unicode/utf8"
 	// "strconv"
 )
 
 func getRecent(conn *sql.DB) []Page {
-	q := `SELECT FIRST 50 id, url, scheme, domainid, contenttype, charset, language, linecount, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages ORDER BY date_added DESC`
+	q := `SELECT FIRST 50 id, url, scheme, domainid, contenttype, charset, language, linecount, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE hidden=false ORDER BY date_added DESC`
 
 	rows, rows_err := conn.QueryContext(context.Background(), q)
 
@@ -26,8 +27,16 @@ func getRecent(conn *sql.DB) []Page {
 			if scan_err == nil {
 				pages = append(pages, page)
 			} else {
-				panic(scan_err)
+				prevPage := Page{}
+				if len(pages) > 0 {
+					prevPage = pages[len(pages)-1]
+				}
+				panic(fmt.Errorf("scan error after page %v; %s", prevPage, scan_err.Error()))
 			}
+		}
+
+		if err := rows.Err(); err != nil {
+			panic(err)
 		}
 	}
 
@@ -55,6 +64,10 @@ func getCapsules(conn *sql.DB) []Domain {
 				panic(scan_err)
 			}
 		}
+
+		if err := rows.Err(); err != nil {
+			panic(err)
+		}
 	}
 
 	return capsules
@@ -77,6 +90,10 @@ func getTags(conn *sql.DB) []Tag {
 			} else {
 				panic(scan_err)
 			}
+		}
+
+		if err := rows.Err(); err != nil {
+			panic(err)
 		}
 	}
 
@@ -102,8 +119,16 @@ func getPagesOfTag(conn *sql.DB, name string) []Page {
 				}
 				pages = append(pages, page)
 			} else {
-				panic(scan_err)
+				prevPage := Page{}
+				if len(pages) > 0 {
+					prevPage = pages[len(pages)-1]
+				}
+				panic(fmt.Errorf("scan error after page %v; %s", prevPage, scan_err.Error()))
 			}
+		}
+
+		if err := rows.Err(); err != nil {
+			panic(err)
 		}
 	}
 
@@ -111,7 +136,7 @@ func getPagesOfTag(conn *sql.DB, name string) []Page {
 }
 
 func getMimetypeFiles(conn *sql.DB, mimetype string) []Page {
-	q := `SELECT FIRST 300 id, url, scheme, domainid, contenttype, charset, language, linecount, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE contenttype=?`
+	q := `SELECT FIRST 300 id, url, scheme, domainid, contenttype, charset, language, linecount, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE contenttype=? AND hidden=false`
 
 	rows, rows_err := conn.QueryContext(context.Background(), q, mimetype)
 
@@ -124,8 +149,16 @@ func getMimetypeFiles(conn *sql.DB, mimetype string) []Page {
 			if scan_err == nil {
 				pages = append(pages, page)
 			} else {
-				panic(scan_err)
+				prevPage := Page{}
+				if len(pages) > 0 {
+					prevPage = pages[len(pages)-1]
+				}
+				panic(fmt.Errorf("scan error after page %v; %s", prevPage, scan_err.Error()))
 			}
+		}
+
+		if err := rows.Err(); err != nil {
+			panic(err)
 		}
 	}
 
@@ -139,7 +172,7 @@ type MimetypeListItem struct {
 
 func getMimetypes(conn *sql.DB) []MimetypeListItem {
 	var mimetypes []MimetypeListItem = make([]MimetypeListItem, 0, 50)
-	rows, rows_err := conn.QueryContext(context.Background(), "SELECT contenttype, COUNT(*) FROM pages GROUP BY contenttype ORDER BY COUNT(*) DESC")
+	rows, rows_err := conn.QueryContext(context.Background(), "SELECT contenttype, COUNT(*) FROM pages WHERE hidden=false GROUP BY contenttype ORDER BY COUNT(*) DESC")
 	if rows_err == nil {
 		defer rows.Close()
 		for rows.Next() {
@@ -151,13 +184,17 @@ func getMimetypes(conn *sql.DB) []MimetypeListItem {
 				panic(scan_err)
 			}
 		}
+
+		if err := rows.Err(); err != nil {
+			panic(err)
+		}
 	}
 
 	return mimetypes
 }
 
 func getFeeds(conn *sql.DB) []Page {
-	rows, rows_err := conn.QueryContext(context.Background(), "SELECT id, COUNT(*) OVER () as total, url, scheme, domainid, contenttype, charset, language, linecount, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE feed = true")
+	rows, rows_err := conn.QueryContext(context.Background(), "SELECT COUNT(*) OVER () as total, id, url, scheme, domainid, contenttype, charset, language, linecount, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE feed = true AND hidden = false")
 
 	var pages []Page = nil
 	if rows_err == nil {
@@ -172,8 +209,16 @@ func getFeeds(conn *sql.DB) []Page {
 				}
 				pages = append(pages, page)
 			} else {
-				panic(scan_err)
+				prevPage := Page{}
+				if len(pages) > 0 {
+					prevPage = pages[len(pages)-1]
+				}
+				panic(fmt.Errorf("scan error after page %v; %s", prevPage, scan_err.Error()))
 			}
+		}
+
+		if err := rows.Err(); err != nil {
+			panic(err)
 		}
 	}
 
@@ -181,7 +226,7 @@ func getFeeds(conn *sql.DB) []Page {
 }
 
 func getPagesWithPublishDate(conn *sql.DB) []Page {
-	rows, rows_err := conn.QueryContext(context.Background(), "SELECT COUNT(*) OVER () as total, id, url, scheme, domainid, contenttype, charset, language, linecount, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE publishdate != ? ORDER BY publishdate DESC", time.Time{})
+	rows, rows_err := conn.QueryContext(context.Background(), "SELECT COUNT(*) OVER () as total, id, url, scheme, domainid, contenttype, charset, language, linecount, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE publishdate <> ? AND hidden = false ORDER BY publishdate DESC", time.Time{})
 
 	var pages []Page = nil
 	if rows_err == nil {
@@ -196,8 +241,16 @@ func getPagesWithPublishDate(conn *sql.DB) []Page {
 				}
 				pages = append(pages, page)
 			} else {
-				panic(scan_err)
+				prevPage := Page{}
+				if len(pages) > 0 {
+					prevPage = pages[len(pages)-1]
+				}
+				panic(fmt.Errorf("scan error after page %v; %s", prevPage, scan_err.Error()))
 			}
+		}
+
+		if err := rows.Err(); err != nil {
+			panic(err)
 		}
 	}
 
@@ -207,8 +260,8 @@ func getPagesWithPublishDate(conn *sql.DB) []Page {
 // TODO: Allow for different languages
 // NOTE: Blank language fields are considered English
 func getPagesWithPublishDateFromLastYear(conn *sql.DB, results int, skip int) ([]Page, int) {
-	query := fmt.Sprintf("SELECT FIRST %d SKIP %d COUNT(*) OVER () totalCount, id, url, scheme, domainid, contenttype, charset, language, linecount, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE publishdate > dateadd(-1 year to ?) AND (language = '' OR language SIMILAR TO 'en%%') ORDER BY publishdate DESC", results, skip)
-	rows, rows_err := conn.QueryContext(context.Background(), query, time.Now().UTC())
+	query := fmt.Sprintf("SELECT FIRST %d SKIP %d COUNT(*) OVER () totalCount, id, url, scheme, domainid, contenttype, charset, language, linecount, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE publishdate > dateadd(-1 year to ?) AND publishdate < dateadd(1 day to ?) AND (language = '' OR language SIMILAR TO 'en%%') AND hidden = false ORDER BY publishdate DESC", results, skip)
+	rows, rows_err := conn.QueryContext(context.Background(), query, time.Now().UTC(), time.Now().UTC())
 
 	var pages []Page = make([]Page, 0, results)
 	var totalCount int
@@ -220,64 +273,92 @@ func getPagesWithPublishDateFromLastYear(conn *sql.DB, results int, skip int) ([
 			if scan_err == nil {
 				pages = append(pages, page)
 			} else {
-				panic(scan_err)
+				prevPage := Page{}
+				if len(pages) > 0 {
+					prevPage = pages[len(pages)-1]
+				}
+				panic(fmt.Errorf("scan error after page %v; %s", prevPage, scan_err.Error()))
 			}
+		}
+
+		if err := rows.Err(); err != nil {
+			panic(err)
 		}
 	}
 
 	return pages, totalCount
 }
 
-func getAudioFiles(conn *sql.DB, page int64) []Page {
+// Returns []Page, totalResultsCount, and whether there's a next page
+func getAudioFiles(conn *sql.DB, page int64) ([]Page, int64, bool) {
 	var results int64 = 30
 	skip := (page - 1) * results
-	q := fmt.Sprintf(`SELECT FIRST %d SKIP %d id, url, scheme, domainid, contenttype, charset, language, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE contenttype IN ('audio/mpeg', 'audio/mp3', 'audio/ogg', 'audio/flac', 'audio/mid', 'audio/m4a', 'audio/x-flac')`, results, skip)
+	q := fmt.Sprintf(`SELECT FIRST %d SKIP %d COUNT(*) OVER () totalCount, id, url, scheme, domainid, contenttype, charset, language, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE contenttype IN ('audio/mpeg', 'audio/mp3', 'audio/ogg', 'audio/flac', 'audio/mid', 'audio/m4a', 'audio/x-flac') AND hidden = false`, results, skip)
 
 	rows, rows_err := conn.QueryContext(context.Background(), q)
 
 	var pages []Page = make([]Page, 0, results)
+	var totalCount int64
 	if rows_err == nil {
 		defer rows.Close()
 		for rows.Next() {
 			var page Page
-			scan_err := rows.Scan(&page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
+			scan_err := rows.Scan(&totalCount, &page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
 			if scan_err == nil {
 				pages = append(pages, page)
 			} else {
-				panic(scan_err)
+				prevPage := Page{}
+				if len(pages) > 0 {
+					prevPage = pages[len(pages)-1]
+				}
+				panic(fmt.Errorf("scan error after page %v; %s", prevPage, scan_err.Error()))
 			}
+		}
+
+		if err := rows.Err(); err != nil {
+			panic(err)
 		}
 	}
 
-	return pages
+	return pages, totalCount, skip+results < totalCount
 }
 
-func getImageFiles(conn *sql.DB, page int64) []Page {
+// Returns []Page, totalResultsCount, and whether there's a next page
+func getImageFiles(conn *sql.DB, page int64) ([]Page, int64, bool) {
 	var results int64 = 30
 	skip := (page - 1) * results
-	q := fmt.Sprintf(`SELECT FIRST %d SKIP %d id, url, scheme, domainid, contenttype, charset, language, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE contenttype IN ('image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 'image/webp', 'image/svg+xml', 'image/vnd.mozilla.apng')`, results, skip)
+	q := fmt.Sprintf(`SELECT FIRST %d SKIP %d COUNT(*) OVER () totalCount, id, url, scheme, domainid, contenttype, charset, language, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE contenttype IN ('image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 'image/webp', 'image/svg+xml', 'image/vnd.mozilla.apng') AND hidden = false`, results, skip)
 
 	rows, rows_err := conn.QueryContext(context.Background(), q)
 
 	var pages []Page = make([]Page, 0, results)
+	var totalCount int64
 	if rows_err == nil {
 		defer rows.Close()
 		for rows.Next() {
 			var page Page
-			scan_err := rows.Scan(&page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
+			scan_err := rows.Scan(&totalCount, &page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
 			if scan_err == nil {
 				pages = append(pages, page)
 			} else {
-				panic(scan_err)
+				prevPage := Page{}
+				if len(pages) > 0 {
+					prevPage = pages[len(pages)-1]
+				}
+				panic(fmt.Errorf("scan error after page %v; %s", prevPage, scan_err.Error()))
 			}
+		}
+
+		if err := rows.Err(); err != nil {
+			panic(err)
 		}
 	}
 
-	return pages
+	return pages, totalCount, skip+results < totalCount
 }
 
 func getTwtxtFiles(conn *sql.DB) []Page {
-	q := `SELECT COUNT(*) OVER () as total, id, url, scheme, domainid, contenttype, charset, language, linecount, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE url LIKE '%twtxt.txt' OR url LIKE '%tw.txt'`
+	q := `SELECT COUNT(*) OVER () as total, id, url, scheme, domainid, contenttype, charset, language, linecount, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE (url LIKE '%twtxt.txt' OR url LIKE '%tw.txt') AND hidden = false`
 
 	rows, rows_err := conn.QueryContext(context.Background(), q)
 
@@ -294,8 +375,16 @@ func getTwtxtFiles(conn *sql.DB) []Page {
 				}
 				pages = append(pages, page)
 			} else {
-				panic(scan_err)
+				prevPage := Page{}
+				if len(pages) > 0 {
+					prevPage = pages[len(pages)-1]
+				}
+				panic(fmt.Errorf("scan error after page %v; %s", prevPage, scan_err.Error()))
 			}
+		}
+
+		if err := rows.Err(); err != nil {
+			panic(err)
 		}
 	}
 
@@ -303,7 +392,7 @@ func getTwtxtFiles(conn *sql.DB) []Page {
 }
 
 func getSecurityTxtFiles(conn *sql.DB) []PageWithDomain {
-	q := `SELECT COUNT(*) OVER () as total, pages.id, pages.url, pages.scheme, pages.domainid, pages.contenttype, pages.charset, pages.language, pages.linecount, pages.title, pages.prompt, pages.size, pages.hash, pages.feed, pages.publishdate, pages.indextime, pages.album, pages.artist, pages.albumartist, pages.composer, pages.track, pages.disc, pages.copyright, pages.crawlindex, pages.date_added, pages.last_successful_visit, pages.hidden, domains.id, domains.domain, domains.title, domains.port, domains.has_robots, domains.has_security, domains.has_favicon, domains.favicon, domains.crawlindex, domains.date_added FROM pages INNER JOIN domains ON domains.ID = pages.domainid WHERE pages.url LIKE '%security.txt'`
+	q := `SELECT COUNT(*) OVER () as total, pages.id, pages.url, pages.scheme, pages.domainid, pages.contenttype, pages.charset, pages.language, pages.linecount, pages.title, pages.prompt, pages.size, pages.hash, pages.feed, pages.publishdate, pages.indextime, pages.album, pages.artist, pages.albumartist, pages.composer, pages.track, pages.disc, pages.copyright, pages.crawlindex, pages.date_added, pages.last_successful_visit, pages.hidden, domains.id, domains.domain, domains.title, domains.port, domains.has_robots, domains.has_security, domains.has_favicon, domains.favicon, domains.crawlindex, domains.date_added FROM pages INNER JOIN domains ON domains.ID = pages.domainid WHERE pages.url LIKE '%security.txt' AND hidden = false`
 
 	rows, rows_err := conn.QueryContext(context.Background(), q)
 
@@ -321,8 +410,16 @@ func getSecurityTxtFiles(conn *sql.DB) []PageWithDomain {
 				}
 				pages = append(pages, PageWithDomain{page, domain})
 			} else {
-				panic(scan_err)
+				prevPage := Page{}
+				if len(pages) > 0 {
+					prevPage = pages[len(pages)-1].page
+				}
+				panic(fmt.Errorf("scan error after page %v; %s", prevPage, scan_err.Error()))
 			}
+		}
+
+		if err := rows.Err(); err != nil {
+			panic(err)
 		}
 	}
 

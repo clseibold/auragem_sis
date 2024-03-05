@@ -72,7 +72,7 @@ In order to register, create and enable a client certificate and then head over 
 => /music/quota How the Quota System Works
 => gemini://transjovian.org/titan About Titan
 
-=> /music/public_radio Public Radio
+=> /music/public_radio/ Public Radio
 
 ## Features
 
@@ -456,11 +456,11 @@ Upload an mp3 music file to this page with Titan. It will then be automatically 
 			request.RequestClientCert("Please enable a certificate")
 			return
 		} else {
-			query := request.Query()
-			/*if err2 != nil {
-				return err2
-			} else*/
-			if query == "" {
+			query, err := request.Query()
+			if err != nil {
+				request.TemporaryFailure(err.Error())
+				return
+			} else if query == "" {
 				request.RequestInput("Enter a username:")
 				return
 			} else {
@@ -490,7 +490,12 @@ Upload an mp3 music file to this page with Titan. It will then be automatically 
 	})
 
 	s.AddRoute("/music/admin/genre", func(request sis.Request) {
-		genre_string := request.Query()
+		genre_string, err := request.Query()
+		if err != nil {
+			request.TemporaryFailure(err.Error())
+			return
+		}
+
 		cert := request.UserCert
 		if cert == nil {
 			request.RequestClientCert("Please enable a certificate")
@@ -544,7 +549,12 @@ Upload an mp3 music file to this page with Titan. It will then be automatically 
 
 	s.AddRoute("/music/manage/delete/:hash", func(request sis.Request) {
 		hash := request.GetParam("hash")
-		query := request.Query()
+		query, err := request.Query()
+		if err != nil {
+			request.TemporaryFailure(err.Error())
+			return
+		}
+
 		cert := request.UserCert
 		if cert == nil {
 			request.RequestClientCert("Please enable a certificate")

@@ -122,6 +122,7 @@ func (rb *RadioBuf) NewReader(old_fileChangeIndex int64, station *RadioStation) 
 	if err != nil {
 		return nil, 0, 0, err
 	}
+	//bufferedReader := bufio.NewReader(f)
 	return f, rb.fileChangeIndex, bitrate, nil
 }
 

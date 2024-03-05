@@ -167,7 +167,7 @@ Tags: #bible #new #old #testament #septuagint #pentateuch
 	g.AddRoute("/scriptures/christian/bible/esv/", func(request sis.Request) {
 		var builder strings.Builder
 		for _, book := range asvBooks {
-			fmt.Fprintf(&builder, "=> /scriptures/christian/bible/esv/%s %s\n", url.PathEscape(book.Name+" 1"), book.Name)
+			fmt.Fprintf(&builder, "=> /scriptures/christian/bible/esv/%s/ %s\n", url.PathEscape(book.Name+" 1"), book.Name)
 		}
 
 		request.Gemini(fmt.Sprintf(`# ESV Bible
@@ -204,12 +204,12 @@ Users may not copy or download more than 500 verses of the ESV Bible or more tha
 		books := GetBooks(versionId, apiKey)
 		var builder strings.Builder
 		for _, book := range books {
-			fmt.Fprintf(&builder, "=> /scriptures/christian/bible/%s/%s %s\n", versionId, book.Id, book.Name)
+			fmt.Fprintf(&builder, "=> /scriptures/christian/bible/%s/%s/ %s\n", versionId, book.Id, book.Name)
 		}
 
 		request.Gemini(fmt.Sprintf(`# %s
 
-=> /scriptures/christian Bible Versions
+=> /scriptures/christian/ Bible Versions
 
 %s
 
@@ -226,12 +226,12 @@ Copyright: %s
 		book := GetBook(versionId, bookId, apiKey, true)
 		var builder strings.Builder
 		for _, chapter := range book.Chapters {
-			fmt.Fprintf(&builder, "=> /scriptures/christian/bible/%s/chapter/%s Chapter %s\n", versionId, chapter.Id, chapter.Number)
+			fmt.Fprintf(&builder, "=> /scriptures/christian/bible/%s/chapter/%s/ Chapter %s\n", versionId, chapter.Id, chapter.Number)
 		}
 
 		request.Gemini(fmt.Sprintf(`# %s: %s
 
-=> /scriptures/christian/bible/%s Books
+=> /scriptures/christian/bible/%s/ Books
 
 %s
 
@@ -253,12 +253,12 @@ Copyright: %s
 
 		request.Gemini(fmt.Sprintf(`# %s: %s
 
-=> /scriptures/christian/bible/%s/%s Chapters
+=> /scriptures/christian/bible/%s/%s/ Chapters
 
 %s
 
-=> /scriptures/christian/bible/%s/chapter/%s Previous
-=> /scriptures/christian/bible/%s/chapter/%s Next
+=> /scriptures/christian/bible/%s/chapter/%s/ Previous
+=> /scriptures/christian/bible/%s/chapter/%s/ Next
 
 %s
 

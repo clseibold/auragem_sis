@@ -1,7 +1,7 @@
 # AuraGem YouTube Proxy
 
-Welcome to the AuraGem YouTube Proxy for Gemini!
+Welcome to the AuraGem YouTube Proxy!
 
-=> /youtube/search Search
+=> /youtube/search/ Search
 => / AuraGem Home
 => gemini://kwiecien.us/gemcast/20210425.gmi See This Proxy Featured on Gemini Radio

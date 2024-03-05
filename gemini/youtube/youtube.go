@@ -41,7 +41,7 @@ func HandleYoutube(s sis.ServerHandle) {
 	videoDownloadRoute := getVideoDownloadRouteFunc()
 
 	s.AddRoute("/cgi-bin/youtube.cgi", func(request sis.Request) {
-		request.Redirect("/youtube") // TODO: Temporary Redirect
+		request.Redirect("/youtube/") // TODO: Temporary Redirect
 	})
 	s.AddRoute("/youtube", indexRoute)
 	s.AddRoute("/youtube/search", searchRoute)
@@ -55,17 +55,28 @@ func HandleYoutube(s sis.ServerHandle) {
 }
 
 func indexRoute(request sis.Request) {
-	index, _ := content.ReadFile("index.gmi")
-	request.Gemini(string(index))
+	request.Gemini("# AuraGem YouTube Proxy\n\nWelcome to the AuraGem YouTube Proxy!\n\n")
+	request.PromptLine("/youtube/search/", "Search")
+	request.Gemini("=> / AuraGem Home\n")
+	request.Gemini("=> gemini://kwiecien.us/gemcast/20210425.gmi See This Proxy Featured on Gemini Radio\n")
 }
 func getSearchRouteFunc(service *youtube.Service) sis.RequestHandler {
 	return func(request sis.Request) {
-		query := request.Query()
+		query, err := request.RawQuery()
+		if err != nil {
+			request.TemporaryFailure(err.Error())
+			return
+		}
 
 		if query == "" {
 			request.RequestInput("Search Query:")
 		} else {
-			rawQuery := request.RawQuery()
+			rawQuery, err := request.RawQuery()
+			if err != nil {
+				request.TemporaryFailure(err.Error())
+				return
+			}
+
 			page := request.GetParam("page")
 			if page == "" {
 				searchYoutube(request, service, query, rawQuery, "")
@@ -136,7 +147,7 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 
 			_, transcript_err := client.GetTranscript(ytd_vid)
 			if !errors.Is(transcript_err, ytd.ErrTranscriptDisabled) {
-				fmt.Fprintf(&captionsBuilder, "=> /youtube/video/%s/transcript View Video Transcript\n\n", video.Id)
+				fmt.Fprintf(&captionsBuilder, "=> /youtube/video/%s/transcript/ View Video Transcript\n\n", video.Id)
 			}
 
 			// Captions
@@ -161,7 +172,7 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 
 ## Description
 %s
-=> /youtube/channel/%s Uploaded by %s
+=> /youtube/channel/%s/ Uploaded by %s
 `, html.UnescapeString(video.Snippet.Title), downloadFormatsBuilder.String() /*video.Id, */, video.Id, captionsBuilder.String(), html.UnescapeString(video.Snippet.Description), video.Snippet.ChannelId, html.UnescapeString(video.Snippet.ChannelTitle)))
 	}
 }
@@ -275,6 +286,9 @@ func getVideoDownloadRouteFunc() sis.RequestHandler {
 			return
 		}
 		ipsDownloading[request.IPHash()] = struct{}{}
+		defer func() {
+			delete(ipsDownloading, request.IPHash())
+		}()
 		desiredMaxQuality := request.GetParam("quality")
 
 		idStr := request.GetParam("id")
@@ -369,7 +383,6 @@ func getVideoDownloadRouteFunc() sis.RequestHandler {
 		//err2 := c.Stream(format.MimeType, rc)
 		rc.Close()
 
-		delete(ipsDownloading, request.IPHash())
 		//url, err := client.GetStreamURL(video, format)
 
 		//return err2
@@ -381,17 +394,17 @@ func handleChannelPage(g sis.ServerHandle, service *youtube.Service) {
 	g.AddRoute("/youtube/channel/:id", func(request sis.Request) {
 		template := `# Channel: %s
 
-=> /youtube/channel/%s/videos All Videos
-=> /youtube/channel/%s/playlists Playlists
-=> /youtube/channel/%s/communityposts Community Posts
-=> /youtube/channel/%s/activity Gemini Sub Activity Feed
+=> /youtube/channel/%s/videos/ All Videos
+=> /youtube/channel/%s/playlists/ Playlists
+=> /youtube/channel/%s/communityposts/ Community Posts
+=> /youtube/channel/%s/activity/ Gemini Sub Activity Feed
 
 ## About
 %s
 
 ## Recent Videos
 
-=> /youtube/channel/%s/videos All Videos
+=> /youtube/channel/%s/videos/ All Videos
 `
 		call := service.Channels.List([]string{"id", "snippet", "contentDetails"}).Id(request.GetParam("id")).MaxResults(1)
 		response, err := call.Do()

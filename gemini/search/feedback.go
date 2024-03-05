@@ -66,7 +66,13 @@ func searchFeedbackPage(request sis.Request) {
 		request.Redirect("gemini://%s:%s/search/feedback.gmi", request.Server.Hostname(), request.Server.Port())
 		return
 	} else {
-		request.FileMimetype("text/gemini", "searchfeedback.gmi")
+		fileData, err := request.Server.FS().ReadFile("searchfeedback.gmi")
+		if err != nil {
+			request.TemporaryFailure(err.Error())
+			return
+		}
+		//request.FileMimetype("text/gemini", "auragem_gemini/searchfeedback.gmi")
+		request.TextWithMimetype("text/gemini", string(fileData))
 		return
 	}
 }

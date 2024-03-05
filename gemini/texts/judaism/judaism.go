@@ -28,8 +28,11 @@ func HandleJewishTexts(g sis.ServerHandle) {
 	//indexMap := make(map[string]int)
 
 	g.AddRoute("/scriptures/jewish/", func(request sis.Request) {
-		query := request.Query()
-		if query == "" {
+		query, err := request.Query()
+		if err != nil {
+			request.TemporaryFailure(err.Error())
+			return
+		} else if query == "" {
 			handleIndex(index, request)
 		} else {
 			handleCategory(index, query, request)

@@ -43,7 +43,7 @@ ORDER BY GROUPED_SCORE DESC, s.publishdate DESC`*/
 // FTS.FTS$ID as fts_id
 var fts_searchQuery string = `
 select FIRST %%first%% SKIP %%skip%% COUNT(*) OVER () totalCount, (FTS.FTS$SCORE) as GROUPED_SCORE, P.ID, P.URL, P.SCHEME, P.DOMAINID, P.CONTENTTYPE, P.CHARSET, P.LANGUAGE, P.LINECOUNT, P.TITLE, P.PROMPT, P.SIZE, P.HASH, P.FEED, P.PUBLISHDATE, P.INDEXTIME, P.ALBUM, P.ARTIST, P.ALBUMARTIST, P.COMPOSER, P.TRACK, P.DISC, P.COPYRIGHT, P.CRAWLINDEX, P.DATE_ADDED, P.LAST_SUCCESSFUL_VISIT, P.HIDDEN
-    FROM FTS$SEARCH('FTS_PAGE_ID_EN', '%%query%%') FTS
+    FROM FTS$SEARCH('FTS_PAGE_ID_EN', '%%query%% HIDDEN:false') FTS
     JOIN PAGES P ON P.ID = FTS.FTS$ID
 	ORDER BY GROUPED_SCORE DESC, P.publishdate DESC, CHAR_LENGTH(P.URL) ASC
 `
@@ -57,6 +57,7 @@ FROM (select FTS.FTS$ID as fts_id, FTS.FTS$SCORE as SCORE,
     JOIN AUDIOTRANSCRIPTS A ON A.ID = FTS.FTS$ID
     JOIN PAGES P ON A.PAGEID = P.ID
 	) s
+WHERE s.HIDDEN = false
 GROUP BY HIGHLIGHT, ID, URL, SCHEME, DOMAINID, CONTENTTYPE, CHARSET, LANGUAGE, LINECOUNT, TITLE, PROMPT, SIZE, HASH, FEED, PUBLISHDATE, INDEXTIME, ALBUM, ARTIST, ALBUMARTIST, COMPOSER, TRACK, DISC, COPYRIGHT, CRAWLINDEX, DATE_ADDED, LAST_SUCCESSFUL_VISIT, HIDDEN
 ORDER BY GROUPED_SCORE DESC
 `
@@ -133,30 +134,28 @@ func HandleSearchEngine(s sis.ServerHandle) {
 	})
 	// TODO: Removed Tag Index (=> /search/tags 🏷️ Tag Index)
 	s.AddRoute("/search/", func(request sis.Request) {
-		request.Gemini(`# AuraGem Search
+		request.Gemini("# AuraGem Search\n\n")
+		request.PromptLine("/search/s/", "🔍 Search")
+		request.Gemini(`=> /search/random/ 🎲 Goto Random Capsule
+=> /search/backlinks/ Check Backlinks
 
-=> /search/s 🔍 Search
-=> /search/random 🎲 Goto Random Capsule
-=> /search/backlinks Check Backlinks (Coming Soon)
-
-=> /search/features About and Features
-=> /search/stats 📈 Statistics
+=> /search/features/ About and Features
+=> /search/stats/ 📈 Statistics
 => /search/feedback.gmi 🖊️ Give Feedback On Search Results
-=> /search/add_capsule Missing your capsule? Add it to AuraGem Search
+=> /search/add_capsule/ Missing your capsule? Add it to AuraGem Search
 
-=> /search/capsules 🪐 List of Capsules
-=> /search/mimetype Mimetypes
-=> /search/recent 50 Most Recently Indexed
+=> /search/capsules/ 🪐 List of Capsules
+=> /search/mimetype/ Mimetypes
+=> /search/recent/ 50 Most Recently Indexed
 
-=> /search/yearposts 📌 Posts From The Past Year
-=> /search/feeds 🗃 Indexed Feeds
-=> /search/audio 🎵 Indexed Audio Files
-=> /search/images 🖼️ Indexed Image Files
-=> /search/twtxt 📝 Indexed Twtxt Files
-=> /search/security 📃 Indexed Security.txt Files
-=> /search/index Full Index
+=> /search/yearposts/ 📌 Posts From The Past Year
+=> /search/feeds/ 🗃 Indexed Feeds
+=> /search/audio/ 🎵 Indexed Audio Files
+=> /search/images/ 🖼️ Indexed Image Files
+=> /search/twtxt/ 📝 Indexed Twtxt Files
+=> /search/security/ 📃 Indexed Security.txt Files
 
-=> /search/configure_default Configure Default Search Engine in Lagrange
+=> /search/configure_default/ Configure Default Search Engine in Lagrange
 
 Note that AuraGem Search does not ensure or rank based on the popularity or accuracy of the information within any of the pages listed in these search results. One cannot presume that information published within Geminispace is or is not for ill-intent or misinformation, even if it's popular or well-linked, so one must use their best judgement in determining the trustworthiness of such content themselves.
 
@@ -240,7 +239,7 @@ Note that some of the information in the above posts have been recently updated 
 
 One of the first priorities with AuraGem Search was to have extraction of file metadata for as many files as possible. Audio files were one of the first to get this feature. PDFs and Djvu files were supposed to be next, and support was added for them on 2022-07-19, but the feature was buggy and never worked, unfortunately. As you can see in the below post, I chose to go with Keyword Extraction (which was later removed and replaced with simple mentions and tags extraction) instead of Full Text Searching on page contents. Part of this was to save space, and part of it was to respect copyright. However, I am rethinking this approach now that the Stats page can determine how large the text-only portion of geminispace is (no more than 5GB total).
 => /devlog/20220719.gmi 2022-07-19 AuraGem Search Engine Update
-=> /search/stats Stats Page
+=> /search/stats/ Stats Page
 
 In the above article, you can see that I start to play with the notion of different types of searches. I think this idea remains important today:
 > Another problem that the above process would not catch are names and proper nouns. These are often very important words that people would want to search for (e.g. Mathematics, C++, Celine Dion, FTS). I do not have an easy method for this atm.
@@ -276,7 +275,7 @@ When I type "Station", I want an exact match for Station itself. However, when I
 	var lastCacheTime time.Time
 	s.AddRoute("/search/stats", func(request sis.Request) {
 		currentTime := time.Now()
-		if totalSizeCache == -1 || (lastCrawlCache == time.Time{}) || lastCacheTime.Add(refreshCacheEvery).Before(currentTime) {
+		if totalSizeCache == -1 || lastCacheTime.Add(refreshCacheEvery).Before(currentTime) {
 			row := conn.QueryRowContext(context.Background(), "SELECT COUNT(*), MAX(LAST_SUCCESSFUL_VISIT), SUM(SIZE) FROM pages")
 			row.Scan(&pagesCountCache, &lastCrawlCache, &totalSizeCache)
 			// Convert totalSize to GB
@@ -327,7 +326,7 @@ Total Size of Text Files: %.3f GB (%.2f%% of Geminispace)
 Number of Domains with SlowDown responses: %d
 Number of Domains that responded with an empty META field: %d
 
-=> /search/mimetype Mimetypes with Counts
+=> /search/mimetype/ Mimetypes with Counts
 
 `, lastCrawlCache.Format("2006-01-02"), pagesCountCache, domainsCount, feedCount, totalSize, totalSizeText, totalSizeText/totalSize*100.0, slowdowncount, emptyMetaCount))
 	})
@@ -335,11 +334,11 @@ Number of Domains that responded with an empty META field: %d
 	handleSearchFeedback(s)
 
 	s.AddRoute("/search/add_capsule", func(request sis.Request) {
-		query := request.Query()
-		/*if err2 != nil {
-			return err2
-		} else */
-		if query == "" {
+		query, err := request.Query()
+		if err != nil {
+			request.TemporaryFailure(err.Error())
+			return
+		} else if query == "" {
 			request.RequestInput("Capsule:")
 			return
 		} else {
@@ -368,11 +367,11 @@ Number of Domains that responded with an empty META field: %d
 	})
 
 	s.AddRoute("/search/backlinks", func(request sis.Request) {
-		query := request.Query()
-		/*if err2 != nil {
-			return err2
-		} else*/
-		if query == "" {
+		query, err := request.Query()
+		if err != nil {
+			request.TemporaryFailure(err.Error())
+			return
+		} else if query == "" {
 			request.RequestInput("Gemini URL:")
 			return
 		} else {
@@ -398,11 +397,11 @@ Number of Domains that responded with an empty META field: %d
 	})
 
 	s.AddRoute("/search/s", func(request sis.Request) {
-		query := request.Query()
-		/*if err2 != nil {
-			return err2
-		} else*/
-		if query == "" {
+		query, err := request.Query()
+		if err != nil {
+			request.TemporaryFailure(err.Error())
+			return
+		} else if query == "" {
 			request.RequestInput("Search Query:")
 			return
 		} else {
@@ -420,11 +419,11 @@ Number of Domains that responded with an empty META field: %d
 			return
 		}
 
-		query := request.Query()
-		/*if err2 != nil {
-			return err2
-		} else*/
-		if query == "" {
+		query, err := request.Query()
+		if err != nil {
+			request.TemporaryFailure(err.Error())
+			return
+		} else if query == "" {
 			request.RequestInput("Search Query:")
 			return
 		} else {
@@ -435,11 +434,11 @@ Number of Domains that responded with an empty META field: %d
 
 	// Debug searching - shows the Score numbers
 	s.AddRoute("/search/debug_s", func(request sis.Request) {
-		query := request.Query()
-		/*if err2 != nil {
-			return err2
-		} else*/
-		if query == "" {
+		query, err := request.Query()
+		if err != nil {
+			request.TemporaryFailure(err.Error())
+			return
+		} else if query == "" {
 			request.RequestInput("Search Query:")
 			return
 		} else {
@@ -457,11 +456,11 @@ Number of Domains that responded with an empty META field: %d
 			return
 		}
 
-		query := request.Query()
-		/*if err2 != nil {
-			return err2
-		} else*/
-		if query == "" {
+		query, err := request.Query()
+		if err != nil {
+			request.TemporaryFailure(err.Error())
+			return
+		} else if query == "" {
 			request.RequestInput("Search Query:")
 			return
 		} else {
@@ -479,7 +478,7 @@ Number of Domains that responded with an empty META field: %d
 		request.Gemini(fmt.Sprintf(`# 50 Most Recently Indexed
 
 => /search/ Home
-=> /search/s Search
+=> /search/s/ Search
 
 %s
 `, builder.String()))
@@ -500,7 +499,7 @@ Number of Domains that responded with an empty META field: %d
 		request.Gemini(fmt.Sprintf(`# List of Capsules
 
 => /search/ Home
-=> /search/s Search
+=> /search/s/ Search
 
 %s
 `, builder.String()))
@@ -517,7 +516,7 @@ Number of Domains that responded with an empty META field: %d
 		request.Gemini(fmt.Sprintf(`# Tag Index
 
 => /search/ Home
-=> /search/s Search
+=> /search/s/ Search
 
 %s
 `, builder.String()))
@@ -532,7 +531,7 @@ Number of Domains that responded with an empty META field: %d
 		request.Gemini(fmt.Sprintf(`# Tag: %s
 
 => /search/ Home
-=> /search/s Search
+=> /search/s/ Search
 
 %s
 `, request.GetParam("name"), builder.String()))
@@ -547,7 +546,7 @@ Number of Domains that responded with an empty META field: %d
 		request.Gemini(fmt.Sprintf(`# Indexed Feeds
 
 => /search/ Home
-=> /search/s Search
+=> /search/s/ Search
 
 %s
 `, builder.String()))
@@ -565,7 +564,7 @@ Number of Domains that responded with an empty META field: %d
 
 		resultsStart := skip + 1
 		resultsEnd := Min(totalResultsCount, skip+results) // + 1 - 1
-		hasNextPage := resultsEnd < totalResultsCount
+		hasNextPage := resultsEnd < totalResultsCount && totalResultsCount != 0
 		hasPrevPage := resultsStart > results
 
 		var builder strings.Builder
@@ -575,15 +574,15 @@ Number of Domains that responded with an empty META field: %d
 			fmt.Fprintf(&builder, "\n=> /search/yearposts/%d Previous Page\n", page-1)
 		}
 		if hasNextPage && !hasPrevPage {
-			fmt.Fprintf(&builder, "\n=> /search/yearposts/%d Next Page\n", page+1)
+			fmt.Fprintf(&builder, "\n=> /search/yearposts/%d/ Next Page\n", page+1)
 		} else if hasNextPage && hasPrevPage {
-			fmt.Fprintf(&builder, "=> /search/yearposts/%d Next Page\n", page+1)
+			fmt.Fprintf(&builder, "=> /search/yearposts/%d/ Next Page\n", page+1)
 		}
 
 		request.Gemini(fmt.Sprintf(`# Posts From The Past Year
 
 => /search/ Home
-=> /search/s Search
+=> /search/s/ Search
 
 Note: Currently tries to list only posts that are in English.
 
@@ -606,7 +605,7 @@ Note: Currently tries to list only posts that are in English.
 
 		resultsStart := skip + 1
 		resultsEnd := Min(totalResultsCount, skip+results) // + 1 - 1
-		hasNextPage := resultsEnd < totalResultsCount
+		hasNextPage := resultsEnd < totalResultsCount && totalResultsCount != 0
 		hasPrevPage := resultsStart > results
 
 		var builder strings.Builder
@@ -616,15 +615,15 @@ Note: Currently tries to list only posts that are in English.
 			fmt.Fprintf(&builder, "\n=> /search/yearposts/%d Previous Page\n", page-1)
 		}
 		if hasNextPage && !hasPrevPage {
-			fmt.Fprintf(&builder, "\n=> /search/yearposts/%d Next Page\n", page+1)
+			fmt.Fprintf(&builder, "\n=> /search/yearposts/%d/ Next Page\n", page+1)
 		} else if hasNextPage && hasPrevPage {
-			fmt.Fprintf(&builder, "=> /search/yearposts/%d Next Page\n", page+1)
+			fmt.Fprintf(&builder, "=> /search/yearposts/%d/ Next Page\n", page+1)
 		}
 
 		request.Gemini(fmt.Sprintf(`# Posts From The Past Year
 
 => /search/ Home
-=> /search/s Search
+=> /search/s/ Search
 
 Note: Currently tries to list only posts that are in English.
 
@@ -638,7 +637,7 @@ Note: Currently tries to list only posts that are in English.
 		if parse_err != nil {
 			return c.NoContent(gig.StatusBadRequest, "Page Number Error")
 		}*/
-		pages := getAudioFiles(conn, 1)
+		pages, _, _ := getAudioFiles(conn, 1)
 
 		var builder strings.Builder
 		buildPageResults(&builder, pages, false, false)
@@ -659,11 +658,11 @@ Note: Currently tries to list only posts that are in English.
 		request.Gemini(fmt.Sprintf(`# Indexed Audio Files
 
 => /search/ Home
-=> /search/audio/s Search Audio Transcripts (WIP)
+=> /search/audio/s/ Search Audio Transcripts (WIP)
 
 %s
 
-=> /search/audio/2 Next Page
+=> /search/audio/2/ Next Page
 `, builder.String()))
 	})
 
@@ -674,7 +673,7 @@ Note: Currently tries to list only posts that are in English.
 			request.BadRequest("Page Number Error")
 			return
 		}
-		pages := getAudioFiles(conn, page_int)
+		pages, _, hasNextPage := getAudioFiles(conn, page_int)
 
 		var builder strings.Builder
 		buildPageResults(&builder, pages, false, false)
@@ -682,25 +681,27 @@ Note: Currently tries to list only posts that are in English.
 		// Handle pagination
 		fmt.Fprintf(&builder, "\n")
 		if page_int > 1 {
-			fmt.Fprintf(&builder, "=> /search/audio/%d Prev Page\n", page_int-1)
+			fmt.Fprintf(&builder, "=> /search/audio/%d/ Prev Page\n", page_int-1)
 		}
-		fmt.Fprintf(&builder, "=> /search/audio/%d Next Page\n", page_int+1)
+		if hasNextPage {
+			fmt.Fprintf(&builder, "=> /search/audio/%d/ Next Page\n", page_int+1)
+		}
 
 		request.Gemini(fmt.Sprintf(`# Indexed Audio Files
 
 => /search/ Home
-=> /search/audio/s Search Audio Transcripts (WIP)
+=> /search/audio/s/ Search Audio Transcripts (WIP)
 
 %s
 `, builder.String()))
 	})
 
 	s.AddRoute("/search/audio/s", func(request sis.Request) {
-		query := request.Query()
-		/*if err2 != nil {
-			return err2
-		} else */
-		if query == "" {
+		query, err := request.Query()
+		if err != nil {
+			request.TemporaryFailure(err.Error())
+			return
+		} else if query == "" {
 			request.RequestInput("Audio Search Query:")
 			return
 		} else {
@@ -717,11 +718,11 @@ Note: Currently tries to list only posts that are in English.
 			return
 		}
 
-		query := request.Query()
-		/*if err2 != nil {
-			return err2
-		} else */
-		if query == "" {
+		query, err := request.Query()
+		if err != nil {
+			request.TemporaryFailure(err.Error())
+			return
+		} else if query == "" {
 			request.RequestInput("Audio Search Query:")
 			return
 		} else {
@@ -732,7 +733,7 @@ Note: Currently tries to list only posts that are in English.
 	})
 
 	s.AddRoute("/search/images", func(request sis.Request) {
-		pages := getImageFiles(conn, 1)
+		pages, _, _ := getImageFiles(conn, 1)
 
 		var builder strings.Builder
 		buildPageResults(&builder, pages, false, false)
@@ -753,11 +754,11 @@ Note: Currently tries to list only posts that are in English.
 		request.Gemini(fmt.Sprintf(`# Indexed Image Files
 
 => /search/ Home
-=> /search/s Search
+=> /search/s/ Search
 
 %s
 
-=> /search/images/2 Next Page
+=> /search/images/2/ Next Page
 `, builder.String()))
 	})
 
@@ -768,7 +769,11 @@ Note: Currently tries to list only posts that are in English.
 			request.BadRequest("Page Number Error")
 			return
 		}
-		pages := getImageFiles(conn, page_int)
+		pages, _, hasNextPage := getImageFiles(conn, page_int)
+		if len(pages) == 0 {
+			request.NotFound("Page not found.")
+			return
+		}
 
 		var builder strings.Builder
 		buildPageResults(&builder, pages, false, false)
@@ -776,14 +781,16 @@ Note: Currently tries to list only posts that are in English.
 		// Handle pagination
 		fmt.Fprintf(&builder, "\n")
 		if page_int > 1 {
-			fmt.Fprintf(&builder, "=> /search/images/%d Prev Page\n", page_int-1)
+			fmt.Fprintf(&builder, "=> /search/images/%d/ Prev Page\n", page_int-1)
 		}
-		fmt.Fprintf(&builder, "=> /search/images/%d Next Page\n", page_int+1)
+		if hasNextPage {
+			fmt.Fprintf(&builder, "=> /search/images/%d/ Next Page\n", page_int+1)
+		}
 
 		request.Gemini(fmt.Sprintf(`# Indexed Image Files
 
 => /search/ Home
-=> /search/s Search
+=> /search/s/ Search
 
 %s
 `, builder.String()))
@@ -791,6 +798,10 @@ Note: Currently tries to list only posts that are in English.
 
 	s.AddRoute("/search/twtxt", func(request sis.Request) {
 		pages := getTwtxtFiles(conn)
+		if len(pages) == 0 {
+			request.NotFound("Page not found.")
+			return
+		}
 
 		var builder strings.Builder
 		buildPageResults(&builder, pages, false, false)
@@ -813,6 +824,10 @@ Note: Currently tries to list only posts that are in English.
 
 	s.AddRoute("/search/security", func(request sis.Request) {
 		pages := getSecurityTxtFiles(conn)
+		if len(pages) == 0 {
+			request.NotFound("Page not found.")
+			return
+		}
 
 		var builder strings.Builder
 		for _, page := range pages {
@@ -826,33 +841,37 @@ Note: Currently tries to list only posts that are in English.
 		request.Gemini(fmt.Sprintf(`# Indexed Security.txt Files
 
 => /search/ Home
-=> /search/s Search
+=> /search/s/ Search
 
 %s
 `, builder.String()))
 	})
 
 	s.AddRoute("/search/mimetype", func(request sis.Request) {
-		query := request.Query()
-		/*if err2 != nil {
-			return err2
-		} else*/
-		if query == "" {
+		query, err := request.Query()
+		if err != nil {
+			request.TemporaryFailure(err.Error())
+			return
+		} else if query == "" {
 			mimetypesList := getMimetypes(conn)
 			var mimetypes strings.Builder
 			for _, item := range mimetypesList {
-				fmt.Fprintf(&mimetypes, "=> /search/mimetype?%s %s (%d)\n", url.QueryEscape(item.mimetype), item.mimetype, item.count)
+				fmt.Fprintf(&mimetypes, "=> /search/s/?%s %s (%d)\n", url.QueryEscape("CONTENTTYPE:("+item.mimetype+")"), item.mimetype, item.count)
 			}
 
 			request.Gemini(fmt.Sprintf(`# Mimetypes
 
 => /search/ Home
-=> /search/s Search
+=> /search/s/ Search
 
 %s
 `, mimetypes.String()))
 		} else {
 			pages := getMimetypeFiles(conn, query)
+			if len(pages) == 0 {
+				request.NotFound("Page not found.")
+				return
+			}
 
 			var builder strings.Builder
 			buildPageResults(&builder, pages, false, false)
@@ -860,8 +879,8 @@ Note: Currently tries to list only posts that are in English.
 			request.Gemini(fmt.Sprintf(`# Indexed of Mimetype '%s'
 
 => /search/ Home
-=> /search/s Search
-=> /search/mimetype Mimetypes
+=> /search/s/ Search
+=> /search/mimetype/ Mimetypes
 
 %s
 `, query, builder.String()))
@@ -910,6 +929,10 @@ ORDER BY r.CROSSHOST ASC`
 				panic(scan_err)
 			}
 		}
+
+		if err := rows.Err(); err != nil {
+			panic(err)
+		}
 	} else {
 		panic(rows_err)
 	}
@@ -929,7 +952,11 @@ ORDER BY r.CROSSHOST ASC`
 
 func handleSearch(request sis.Request, conn *sql.DB, query string, page int, showScores bool) {
 	//rawQuery := c.URL().RawQuery
-	rawQuery := request.RawQuery()
+	rawQuery, err := request.RawQuery()
+	if err != nil {
+		request.TemporaryFailure(err.Error())
+		return
+	}
 	results := 30
 	skip := (page - 1) * results
 
@@ -981,8 +1008,15 @@ func handleSearch(request sis.Request, conn *sql.DB, query string, page int, sho
 			if scan_err == nil {
 				pages = append(pages, page)
 			} else {
-				panic(scan_err)
+				prevPage := Page{}
+				if len(pages) > 0 {
+					prevPage = pages[len(pages)-1]
+				}
+				panic(fmt.Errorf("scan error after page %v; %s", prevPage, scan_err.Error()))
 			}
+		}
+		if err := rows.Err(); err != nil {
+			panic(err)
 		}
 	} else {
 		panic(rows_err)
@@ -990,33 +1024,28 @@ func handleSearch(request sis.Request, conn *sql.DB, query string, page int, sho
 
 	resultsStart := skip + 1
 	resultsEnd := Min(totalResultsCount, skip+results) // + 1 - 1
-	hasNextPage := resultsEnd < totalResultsCount
+	hasNextPage := resultsEnd < totalResultsCount && totalResultsCount != 0
 	hasPrevPage := resultsStart > results
+
+	request.Gemini(fmt.Sprintf("# AuraGem Search - Results %d-%d/%d\n", resultsStart, resultsEnd, totalResultsCount))
+	request.Gemini("\n=> /search/ Home\n")
+	request.PromptLine("/search/s/", "New Search")
 
 	var builder strings.Builder
 	buildPageResults(&builder, pages, false, showScores)
 
+	request.Gemini(fmt.Sprintf("\nQuery: '%s'\nTime Taken: %v\n\n%s\n", query, timeTaken, builder.String()))
+
 	if hasPrevPage {
-		fmt.Fprintf(&builder, "\n=> /search/s/%d?%s Previous Page\n", page-1, rawQuery)
+		request.Gemini(fmt.Sprintf("\n=> /search/s/%d/?%s Previous Page\n", page-1, rawQuery))
 	}
 	if hasNextPage && !hasPrevPage {
-		fmt.Fprintf(&builder, "\n=> /search/s/%d?%s Next Page\n", page+1, rawQuery)
+		request.Gemini(fmt.Sprintf("\n=> /search/s/%d/?%s Next Page\n", page+1, rawQuery))
 	} else if hasNextPage && hasPrevPage {
-		fmt.Fprintf(&builder, "=> /search/s/%d?%s Next Page\n", page+1, rawQuery)
+		request.Gemini(fmt.Sprintf("=> /search/s/%d/?%s Next Page\n", page+1, rawQuery))
 	}
 
-	request.Gemini(fmt.Sprintf(`# AuraGem Search - Results %d-%d/%d
-
-=> /search/ Home
-=> /search/s New Search
-
-Query: '%s'
-Time Taken: %v
-
-%s
-
-Note that AuraGem Search does not ensure or rank based on the popularity or accuracy of the information within any of the pages listed in these search results. One cannot presume that information published within Geminispace is or is not for ill-intent or misinformation, even if it's popular or well-linked, so one must use their best judgement in determining the trustworthiness of such content themselves.
-`, resultsStart, resultsEnd, totalResultsCount, query, timeTaken, builder.String()))
+	request.Gemini("\nNote that AuraGem Search does not ensure or rank based on the popularity or accuracy of the information within any of the pages listed in these search results. One cannot presume that information published within Geminispace is or is not for ill-intent or misinformation, even if it's popular or well-linked, so one must use their best judgement in determining the trustworthiness of such content themselves.\n")
 }
 
 func handleSearchIndex(request sis.Request, conn *sql.DB) {
@@ -1051,6 +1080,10 @@ func handleSearchIndex(request sis.Request, conn *sql.DB) {
 				panic(scan_err)
 			}
 		}
+		if err := rows.Err(); err != nil {
+			panic(err)
+		}
+
 		max_results = totalResultsCount
 	} else {
 		panic(rows_err)
@@ -1075,7 +1108,11 @@ func handleSearchIndex(request sis.Request, conn *sql.DB) {
 }
 
 func handleAudioSearch(request sis.Request, conn *sql.DB, query string, page int) {
-	rawQuery := request.RawQuery()
+	rawQuery, err := request.RawQuery()
+	if err != nil {
+		request.TemporaryFailure(err.Error())
+		return
+	}
 	results := 30
 	skip := (page - 1) * results
 
@@ -1103,31 +1140,35 @@ func handleAudioSearch(request sis.Request, conn *sql.DB, query string, page int
 				panic(scan_err)
 			}
 		}
+
+		if err := rows.Err(); err != nil {
+			panic(err)
+		}
 	} else {
 		panic(rows_err)
 	}
 
 	resultsStart := skip + 1
 	resultsEnd := Min(totalResultsCount, skip+results) // + 1 - 1
-	hasNextPage := resultsEnd < totalResultsCount
+	hasNextPage := resultsEnd < totalResultsCount && totalResultsCount != 0
 	hasPrevPage := resultsStart > results
 
 	var builder strings.Builder
 	buildPageResults(&builder, pages, true, false)
 
 	if hasPrevPage {
-		fmt.Fprintf(&builder, "\n=> /search/audio/s/%d?%s Previous Page\n", page-1, rawQuery)
+		fmt.Fprintf(&builder, "\n=> /search/audio/s/%d/?%s Previous Page\n", page-1, rawQuery)
 	}
 	if hasNextPage && !hasPrevPage {
-		fmt.Fprintf(&builder, "\n=> /search/audio/s/%d?%s Next Page\n", page+1, rawQuery)
+		fmt.Fprintf(&builder, "\n=> /search/audio/s/%d/?%s Next Page\n", page+1, rawQuery)
 	} else if hasNextPage && hasPrevPage {
-		fmt.Fprintf(&builder, "=> /search/audio/s/%d?%s Next Page\n", page+1, rawQuery)
+		fmt.Fprintf(&builder, "=> /search/audio/s/%d/?%s Next Page\n", page+1, rawQuery)
 	}
 
 	request.Gemini(fmt.Sprintf(`# AuraGem Audio Search - Results %d-%d/%d
 
 => /search/ Home
-=> /search/audio/s New Audio Search
+=> /search/audio/s/ New Audio Search
 
 Query: '%s'
 Time Taken: %v
