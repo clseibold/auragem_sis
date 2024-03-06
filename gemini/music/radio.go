@@ -170,7 +170,7 @@ func handleRadioService(s sis.ServerHandle, conn *sql.DB) {
 			fmt.Fprintf(&builder, "=> /music/public_radio/%s/ %s Station\n", url.PathEscape(station.Name), station.Name)
 		}
 		request.Gemini(fmt.Sprintf(`# AuraGem Music: Public Radio
-This is AuraGem Music's public radio that plays public domain and royalty free music.
+This is AuraGem Music's public radio that plays public domain and royalty free music. All music is collected from sources like the Free Music Archive, archive.org, and Chosic, and stored on my server. This radio does not proxy from the web, unlike other radios over on Gopherspace.
 
 ## Radio Stations
 %s

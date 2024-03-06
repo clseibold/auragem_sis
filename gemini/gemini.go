@@ -102,6 +102,8 @@ func RunServer(cmd *cobra.Command, args []string) {
 		request.GophermapLine("7", "Search Geminispace", "/g/search/s/", "", "")
 		request.GophermapLine("1", "Devlog", "/g/devlog/", "", "")
 		request.GophermapLine("1", "Personal Log", "/g/~clseibold/", "", "")
+		request.GophermapLine("0", "My Experience Within the Bitreich IRC", "/on_bitreich.txt", "", "")
+		request.GophermapLine("0", "Freedom of Protocols Initiative", "/freedom_of_protocols_initiative.txt", "", "")
 		request.GophermapLine("i", "", "/", "", "")
 
 		request.GophermapLine("i", "Services/Info", "/", "", "")
@@ -126,8 +128,6 @@ func RunServer(cmd *cobra.Command, args []string) {
 		request.GophermapLine("1", "Cosmic Voyage", "/", "cosmic.voyage", "70")
 		request.GophermapLine("1", "Mozz.Us", "/", "mozz.us", "70")
 		request.GophermapLine("1", "Quux", "/", "gopher.quux.org", "70")
-		request.GophermapLine("1", "Gopher Protocol Extension Project", "/scm/gopher-protocol", "bitreich.org", "70")
-		request.GophermapLine("1", "Gopher Lawn", "/lawn", "bitreich.org", "70")
 		request.GophermapLine("1", "Mateusz' gophre lair", "/", "gopher.viste.fr", "70")
 		request.GophermapLine("i", "", "/", "", "")
 
@@ -137,11 +137,19 @@ func RunServer(cmd *cobra.Command, args []string) {
 		request.GophermapLine("h", "Scholastic Diversity Gemini Server", "URL:gemini://scholasticdiversity.us.to", "", "")
 		request.GophermapLine("i", "", "/", "", "")
 
+		request.GophermapLine("i", "Ways to Contact Me:", "", "", "")
+		request.GophermapLine("i", "IRC: ##misfin on libera.chat", "/", "", "")
+		request.GophermapLine("h", "Email", "URL:mailto:christian.seibold32@outlook.com", "", "")
+		request.GophermapLine("h", "Misfin Mail", "URL:misfin://clseibold@auragem.letz.dev", "", "")
+		request.GophermapLine("i", "", "/", "", "")
+
 		request.GophermapLine("i", "Powered By", "/", "", "")
 		request.GophermapLine("i", "This server is powered by Smallnet Information Services (SIS):", "/", "", "")
 		request.GophermapLine("h", "SIS Project", "URL:https://gitlab.com/clseibold/smallnetinformationservices/", "", "")
+		request.GophermapLine("i", "Note that while SIS docs use the term \"proxying\" to describe requests of one server being handed off to another server of a different protocol, this is not proxying proper. The default document format of the protocol (index gemtext files, gophermaps, and Nex Listings) is translated when needed, but that and links are the only conversions that happen. This form of \"proxying\" all happens internally in the server software and *not* over the network or sockets. It is functionally equivalent to protocol proxying, but works slightly differently.", "/", "", "")
+		request.GophermapLine("i", "", "/", "", "")
 	})
-	gopherServer.AddFile("/about.txt", "./about.txt")
+	gopherServer.AddDirectory("/*", "./")
 	gopherServer.AddProxyRoute("/g/*", "$auragem_gemini/*", '1')
 	gopherServer.AddProxyRoute("/scholasticdiversity/*", "$scholasticdiversity_gemini/*", '1')
 

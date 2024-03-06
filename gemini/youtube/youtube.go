@@ -167,13 +167,16 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 
 %s
 => https://youtube.com/watch?v=%s On YouTube
+=> gopher://auragem.letz.dev/1/g/youtube/video/%s/ On Gopher
+=> spartan://auragem.letz.dev/g/youtube/video/%s/ On Spartan
+=> nex://auragem.letz.dev/gemini/youtube/video/%s/ On Nex
 
 %s
 
 ## Description
 %s
 => /youtube/channel/%s/ Uploaded by %s
-`, html.UnescapeString(video.Snippet.Title), downloadFormatsBuilder.String() /*video.Id, */, video.Id, captionsBuilder.String(), html.UnescapeString(video.Snippet.Description), video.Snippet.ChannelId, html.UnescapeString(video.Snippet.ChannelTitle)))
+`, html.UnescapeString(video.Snippet.Title), downloadFormatsBuilder.String() /*video.Id, */, video.Id, video.Id, video.Id, video.Id, captionsBuilder.String(), html.UnescapeString(video.Snippet.Description), video.Snippet.ChannelId, html.UnescapeString(video.Snippet.ChannelTitle)))
 	}
 }
 

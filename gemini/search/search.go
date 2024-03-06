@@ -43,7 +43,7 @@ ORDER BY GROUPED_SCORE DESC, s.publishdate DESC`*/
 // FTS.FTS$ID as fts_id
 var fts_searchQuery string = `
 select FIRST %%first%% SKIP %%skip%% COUNT(*) OVER () totalCount, (FTS.FTS$SCORE) as GROUPED_SCORE, P.ID, P.URL, P.SCHEME, P.DOMAINID, P.CONTENTTYPE, P.CHARSET, P.LANGUAGE, P.LINECOUNT, P.TITLE, P.PROMPT, P.SIZE, P.HASH, P.FEED, CASE WHEN EXTRACT(YEAR FROM P.PUBLISHDATE) < 1800 THEN TIMESTAMP '01.01.9999 00:00:00.000' ELSE P.PUBLISHDATE END AS PUBLISHDATE, P.INDEXTIME, P.ALBUM, P.ARTIST, P.ALBUMARTIST, P.COMPOSER, P.TRACK, P.DISC, P.COPYRIGHT, P.CRAWLINDEX, P.DATE_ADDED, P.LAST_SUCCESSFUL_VISIT, P.HIDDEN
-    FROM FTS$SEARCH('FTS_PAGE_ID_EN', '%%query%% HIDDEN:false SCHEME:gemini') FTS
+    FROM FTS$SEARCH('FTS_PAGE_ID_EN', '(%%query%%) AND HIDDEN:false AND SCHEME:gemini') FTS
     JOIN PAGES P ON P.ID = FTS.FTS$ID
 	ORDER BY GROUPED_SCORE DESC, PUBLISHDATE DESC, CHAR_LENGTH(P.URL) ASC
 `
@@ -211,11 +211,11 @@ Note that AuraGem Search does not ensure or rank based on the popularity or accu
 * Mp3, Ogg, and Flac file metadata (ID3, MP4, and Ogg/Flac) is indexed.
 * A feed of Posts from Past Year organized based on publication date, from most recent to least recent.
 
-* Filters include "title", "url", "album", "artist", "albumartist", "copyright", and "publishdate", as well as others that are untested. The syntax is "field: term". You can also use groups for filters.
+* Filters include "TITLE", "URL", "ALBUM", "ARTIST", "ALBUMARTIST", "COPYRIGHT", "CONTENTTYPE", "LANGUAGE", and "PUBLISHDATE", as well as others that are untested. The syntax is "field: term". You can also use groups for filters. Field names must be in all capital letters.
 * Wildcards * and ?
 * Fuzzy Searching by placing ~ after a search term
 * Proximity Searching: if you want to search for two words that are within a distance of 10 words of each other, then query with "term_one term_two"~10
-* Range Searching: For searching in ranges of numbers or dates. Can be used with filters, like the publishdate filter. An example of filtering based on a publication date range would be, publishdate:[20220101 to 20231201]
+* Range Searching: For searching in ranges of numbers or dates. Can be used with filters, like the PUBLISHDATE filter. An example of filtering based on a publication date range would be, PUBLISHDATE:[20220101 to 20231201]
 
 * Crawler: Robots.txt is followed, including "Allow", "Disallow", and "Crawl-Delay" directives. The Slow Down gemini status code is also followed.
 * Crawler: 2 second delay between crawling of pages on the same domain.
@@ -1290,7 +1290,7 @@ func langTagToText(tag language.Tag) string {
 func buildPageResults(builder *strings.Builder, pages []Page, useHighlight bool, showScores bool) {
 	for _, page := range pages {
 		publishDateString := ""
-		if page.PublishDate.Year() > 1800 && page.PublishDate.Year() < time.Now().Year() {
+		if page.PublishDate.Year() > 1800 && page.PublishDate.Year() <= time.Now().Year() {
 			publishDateString = fmt.Sprintf("Published on %s • ", page.PublishDate.Format("2006-01-02"))
 		}
 
@@ -1302,7 +1302,7 @@ func buildPageResults(builder *strings.Builder, pages []Page, useHighlight bool,
 		}
 
 		langText := ""
-		if page.Content_type == "text/gemini" || page.Content_type == "" {
+		if page.Content_type == "text/gemini" || page.Content_type == "" || strings.HasPrefix(page.Content_type, "text/") {
 			// NOTE: This will just get the first language listed. In the future, list all languages by splitting on commas
 			tag, _ := language.MatchStrings(languageMatcher, page.Language)
 			langText = fmt.Sprintf("%s • ", langTagToText(tag))

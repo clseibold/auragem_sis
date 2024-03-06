@@ -260,7 +260,7 @@ func getPagesWithPublishDate(conn *sql.DB) []Page {
 // TODO: Allow for different languages
 // NOTE: Blank language fields are considered English
 func getPagesWithPublishDateFromLastYear(conn *sql.DB, results int, skip int) ([]Page, int) {
-	query := fmt.Sprintf("SELECT FIRST %d SKIP %d COUNT(*) OVER () totalCount, id, url, scheme, domainid, contenttype, charset, language, linecount, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE publishdate > dateadd(-1 year to ?) AND publishdate < dateadd(1 day to ?) AND (language = '' OR language SIMILAR TO 'en%%') AND hidden = false ORDER BY publishdate DESC", results, skip)
+	query := fmt.Sprintf("SELECT FIRST %d SKIP %d COUNT(*) OVER () totalCount, id, url, scheme, domainid, contenttype, charset, language, linecount, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE publishdate > dateadd(-1 year to ?) AND publishdate < dateadd(2 day to ?) AND (language = '' OR language LIKE 'en%%') AND hidden = false ORDER BY publishdate DESC", results, skip)
 	rows, rows_err := conn.QueryContext(context.Background(), query, time.Now().UTC(), time.Now().UTC())
 
 	var pages []Page = make([]Page, 0, results)
