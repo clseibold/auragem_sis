@@ -261,7 +261,7 @@ func MakeMigration(name, description string) {
 	filename := fmt.Sprintf("%v_%v.go", safeVersion, name)
 	path := filepath.Join("migration", "migrations", filename)
 
-	err := os.WriteFile(path, []byte(result), 0644)
+	err := os.WriteFile(path, []byte(result), 0600)
 	if err != nil {
 		panic(fmt.Errorf("failed to write migration file: %w", err))
 	}

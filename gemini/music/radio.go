@@ -7,6 +7,7 @@ import (
 	"math"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -80,7 +81,7 @@ func (rb *RadioBuf) NewSong(conn *sql.DB, songsPlayed []int64, station *RadioSta
 	}
 
 	// Open the file.
-	f, err := os.Open(musicDirectory + file.Filename)
+	f, err := os.Open(filepath.Join(musicDirectory, file.Filename))
 	if err != nil {
 		fmt.Printf("Failed to open.\n")
 		return MusicFile{}, true, "", err // TODO: This locks forever
@@ -115,7 +116,7 @@ func (rb *RadioBuf) NewReader(old_fileChangeIndex int64, station *RadioStation) 
 		rb.readCond.Wait()
 		//fmt.Printf("%s Station: Received Broadcast (%d==%d)\n", station.Name, old_fileChangeIndex, rb.fileChangeIndex)
 	}
-	f, err := os.Open(musicDirectory + rb.currentMusicFile.Filename)
+	f, err := os.Open(filepath.Join(musicDirectory, rb.currentMusicFile.Filename))
 	bitrate := rb.bitrate
 	rb.RUnlock()
 	f.Seek(rb.currentFileLocation, io.SeekStart)

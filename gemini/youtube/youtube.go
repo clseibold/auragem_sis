@@ -14,7 +14,7 @@ import (
 
 	//"log"
 
-	ytd "github.com/kkdai/youtube/v2"
+	ytd "github.com/clseibold/youtube/v2"
 	"gitlab.com/clseibold/auragem_sis/config"
 	sis "gitlab.com/clseibold/smallnetinformationservices"
 	"google.golang.org/api/option"
@@ -145,7 +145,7 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 				}
 			}
 
-			_, transcript_err := client.GetTranscript(ytd_vid)
+			_, transcript_err := client.GetTranscript(ytd_vid, "en")
 			if !errors.Is(transcript_err, ytd.ErrTranscriptDisabled) {
 				fmt.Fprintf(&captionsBuilder, "=> /youtube/video/%s/transcript/ View Video Transcript\n\n", video.Id)
 			}
@@ -202,7 +202,7 @@ func handleCaptionDownload(s sis.ServerHandle) {
 		}
 
 		time.Sleep(time.Millisecond * 120)
-		transcript, err := client.GetTranscript(video)
+		transcript, err := client.GetTranscript(video, "en")
 		if err != nil {
 			request.TemporaryFailure("Video doesn't have a transcript.\n")
 			return

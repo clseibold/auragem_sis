@@ -3,13 +3,13 @@ module gitlab.com/clseibold/auragem_sis
 go 1.22.0
 
 require (
+	github.com/clseibold/youtube/v2 v2.10.2-0.20240307001954-15aa838690ca
 	github.com/dhowden/tag v0.0.0-20240122214204-713ab0e94639
 	github.com/efarrer/iothrottler v0.0.3
 	github.com/gammazero/deque v0.2.1
 	github.com/go-stack/stack v1.8.1
 	github.com/google/go-github/v60 v60.0.0
 	github.com/juju/ratelimit v1.0.2
-	github.com/kkdai/youtube/v2 v2.10.0
 	github.com/krayzpipes/cronticker v0.0.1
 	github.com/nakagami/firebirdsql v0.9.8
 	github.com/rs/zerolog v1.32.0
@@ -45,6 +45,7 @@ require (
 	github.com/googleapis/gax-go/v2 v2.12.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
+	github.com/kkdai/youtube/v2 v2.10.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/orcaman/concurrent-map/v2 v2.0.1 // indirect

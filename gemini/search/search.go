@@ -1284,11 +1284,18 @@ func langTagToText(tag language.Tag) string {
 		return "Italian"
 	}
 
-	return "English"
+	return ""
 }
 
 func buildPageResults(builder *strings.Builder, pages []Page, useHighlight bool, showScores bool) {
 	for _, page := range pages {
+		typeText := ""
+		if page.Prompt != "" {
+			typeText = "Input Prompt • "
+		} else if page.Feed {
+			typeText = "Gemsub Feed • "
+		}
+
 		publishDateString := ""
 		if page.PublishDate.Year() > 1800 && page.PublishDate.Year() <= time.Now().Year() {
 			publishDateString = fmt.Sprintf("Published on %s • ", page.PublishDate.Format("2006-01-02"))
@@ -1305,7 +1312,10 @@ func buildPageResults(builder *strings.Builder, pages []Page, useHighlight bool,
 		if page.Content_type == "text/gemini" || page.Content_type == "" || strings.HasPrefix(page.Content_type, "text/") {
 			// NOTE: This will just get the first language listed. In the future, list all languages by splitting on commas
 			tag, _ := language.MatchStrings(languageMatcher, page.Language)
-			langText = fmt.Sprintf("%s • ", langTagToText(tag))
+			str := langTagToText(tag)
+			if str != "" {
+				langText = fmt.Sprintf("%s • ", str)
+			}
 		}
 
 		size := float64(page.Size)
@@ -1330,10 +1340,10 @@ func buildPageResults(builder *strings.Builder, pages []Page, useHighlight bool,
 
 		if page.Title == "" {
 			fmt.Fprintf(builder, "=> %s %s%s\n", page.Url, page.Url, score)
-			fmt.Fprintf(builder, "%s%s%s%d Lines • %.1f %s\n", publishDateString, langText, artist, page.Linecount, size, sizeLabel)
+			fmt.Fprintf(builder, "%s%s%s%s%d Lines • %.1f %s\n", typeText, publishDateString, langText, artist, page.Linecount, size, sizeLabel)
 		} else {
 			fmt.Fprintf(builder, "=> %s %s%s\n", page.Url, page.Title, score)
-			fmt.Fprintf(builder, "%s%s%s%d Lines • %.1f %s • %s\n", publishDateString, langText, artist, page.Linecount, size, sizeLabel, page.Url)
+			fmt.Fprintf(builder, "%s%s%s%s%d Lines • %.1f %s • %s\n", typeText, publishDateString, langText, artist, page.Linecount, size, sizeLabel, page.Url)
 		}
 		if useHighlight {
 			fmt.Fprintf(builder, "> %s\n", page.Highlight)

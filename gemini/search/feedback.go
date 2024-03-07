@@ -59,7 +59,7 @@ func searchFeedbackPage(request sis.Request) {
 			return
 		}
 
-		err = request.Server.FS().WriteFile("searchfeedback.gmi", data, 0644)
+		err = request.Server.FS().WriteFile("searchfeedback.gmi", data, 0600)
 		if err != nil {
 			return //err
 		}

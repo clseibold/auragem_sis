@@ -74,7 +74,7 @@ func radioService(conn *sql.DB, file_buffer *bytes.Buffer, file_buffer_mutex *sy
 		}
 		lastFileId = file.Id
 
-		openFile, err := os.OpenFile(musicDirectory+file.Filename, os.O_RDONLY, 0644)
+		openFile, err := os.OpenFile(musicDirectory+file.Filename, os.O_RDONLY, 0600)
 		if err != nil {
 			fmt.Printf("Failed to open file '%s': %v\n", musicDirectory+file.Filename, err)
 			continue

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/dhowden/tag"
 	"github.com/efarrer/iothrottler"
@@ -45,7 +46,7 @@ func SMB_WriteFile(filename string, data []byte) {
 	}
 	defer fs.Umount()
 
-	write_err := fs.WriteFile(musicDirectory_SMB+filename, data, 0644)
+	write_err := fs.WriteFile(musicDirectory_SMB+filename, data, 0600)
 	if write_err != nil {
 		panic(write_err)
 	}
@@ -96,7 +97,7 @@ func StreamFile(request sis.Request, music_file MusicFile) error {
 	throttlePool := iothrottler.NewIOThrottlerPool(iothrottler.Bandwidth(music_file.CbrKbps * 1000 / 8 * 2))
 	defer throttlePool.ReleasePool()
 
-	file, err := os.OpenFile(musicDirectory+music_file.Filename, os.O_RDONLY, 0644)
+	file, err := os.OpenFile(filepath.Join(musicDirectory, music_file.Filename), os.O_RDONLY, 0600)
 	if err != nil {
 		panic(err)
 	}
@@ -130,7 +131,7 @@ func StreamMultipleFiles(request sis.Request, musicFiles []MusicFile) error {
 	first := true
 	streamBuffer := make([]byte, 96*1000/8) // Assume 96 kbps (min bitrate for mp3 files)
 	for _, music_file := range musicFiles {
-		openFile, err := os.OpenFile(musicDirectory+music_file.Filename, os.O_RDONLY, 0644)
+		openFile, err := os.OpenFile(filepath.Join(musicDirectory, music_file.Filename), os.O_RDONLY, 0600)
 		if err != nil {
 			panic(err)
 		}
@@ -190,10 +191,10 @@ func StreamRandomFiles(request sis.Request, conn *sql.DB, user MusicUser) error 
 		}
 		lastFileId = file.Id
 
-		openFile, err := os.OpenFile(musicDirectory+file.Filename, os.O_RDONLY, 0644)
+		openFile, err := os.OpenFile(filepath.Join(musicDirectory, file.Filename), os.O_RDONLY, 0600)
 		if err != nil {
 			//panic(err)
-			fmt.Printf("Filed to open file '%s': %v\n", musicDirectory+file.Filename, err)
+			fmt.Printf("Filed to open file '%s': %v\n", filepath.Join(musicDirectory, file.Filename), err)
 			continue
 		}
 

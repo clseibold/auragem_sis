@@ -143,7 +143,7 @@ In order to save space, AuraGem Music deduplicates songs by taking the hash of t
 					request.NotFound("File not found. Your library may be empty.")
 					return
 				}
-				openFile, err := os.Open(musicDirectory + file.Filename)
+				openFile, err := os.Open(filepath.Join(musicDirectory, file.Filename))
 				if err != nil {
 					panic(err)
 				}
@@ -268,7 +268,7 @@ Upload an mp3 music file to this page with Titan. It will then be automatically 
 					}
 
 					// Write out the file
-					write_err := os.WriteFile(musicDirectory+hash+".mp3", file, 0644)
+					write_err := os.WriteFile(musicDirectory+hash+".mp3", file, 0600)
 					if write_err != nil {
 						//return c.NoContent(gig.StatusPermanentFailure, "Failed to store file.")
 						panic(write_err)

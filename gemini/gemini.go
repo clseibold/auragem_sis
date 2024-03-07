@@ -245,8 +245,8 @@ Lastly, this guestbook is append-only. Any edits made to already-existing conten
 		//return c.NoContent(gig.StatusPermanentFailure, "You edited a portion of the document that already existed. Only appends are allowed. Your edit is rejected.")
 	}
 
-	err := request.Server.FS().WriteFile("guestbook.gmi", data, 0644)
-	//err := os.WriteFile(filepath.Join(request.Server.Directory, "gemini", "guestbook.gmi"), data, 0644)
+	err := request.Server.FS().WriteFile("guestbook.gmi", data, 0600)
+	//err := os.WriteFile(filepath.Join(request.Server.Directory, "gemini", "guestbook.gmi"), data, 0600)
 	if err != nil {
 		fmt.Printf("Write failed: %s\n", err.Error())
 		return
