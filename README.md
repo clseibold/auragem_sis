@@ -13,7 +13,7 @@ Lastly, to handle Full-Text Search for the Search Engine, install the udr plugin
 ## License Info
 This capsule is currently licensed as MIT. Below is a list of libraries that are used and their licenses.
 
-* [clseibold/smallnetinformationservices] - BSD-2 Clause - My Server Software
+* [clseibold/smallnetinformationservices](https://gitlab.com/clseibold/smallnetinformationservices) - BSD-2 Clause - My Server Software
 
 * [nakagami/firebirdsql](https://github.com/nakagami/firebirdsql) - [MIT](https://opensource.org/licenses/MIT)
 * [google/go-github](github.com/google/go-github/) - Used for github proxy
