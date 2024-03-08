@@ -47,9 +47,8 @@ func RunServer(cmd *cobra.Command, args []string) {
 
 	// ----- AuraGem Servers -----
 
-	// TODO: Pointers are not stable! Use a new ServerID struct with methods instead.
 	geminiServer := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "auragem_gemini", Hostname: "auragem.letz.dev"})
-	geminiServer.AddCertificate("auragem.pem")
+	//geminiServer.AddCertificate("auragem.pem")
 	context.GetPortListener("0.0.0.0", "1965").AddCertificate("auragem.letz.dev", "auragem.pem")
 
 	geminiServer.AddDirectory("/*", "./")
@@ -78,7 +77,7 @@ func RunServer(cmd *cobra.Command, args []string) {
 
 	// ----- Scholastic Diversity stuff -----
 	scholasticdiversity_gemini := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "scholasticdiversity_gemini", Hostname: "scholasticdiversity.us.to"})
-	scholasticdiversity_gemini.AddCertificate("scholasticdiversity.pem")
+	//scholasticdiversity_gemini.AddCertificate("scholasticdiversity.pem")
 	context.GetPortListener("0.0.0.0", "1965").AddCertificate("scholasticdiversity.us.to", "scholasticdiversity.pem")
 	scholasticdiversity_gemini.AddDirectory("/*", "./")
 
