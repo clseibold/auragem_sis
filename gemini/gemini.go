@@ -181,16 +181,6 @@ This server is powered by Smallnet Information Services (SIS):
 	})
 	spartanServer.AddProxyRoute("/g/*", "$auragem_gemini/*", '1')
 
-	//gopherServer.AddProxyRoute("/devlog/*", "$auragem_gemini/devlog/*", '1')
-	//gopherServer.AddProxyRoute("/~clseibold/*", "$auragem_gemini/~clseibold/*", '1')
-	//gopherServer.AddProxyRoute("/misfin-server/*", "$auragem_gemini/misfin-server/*", '1')
-
-	// Proxy public_radio stuff to gopherserver
-	//gopherServer.AddProxyRoute("/public_radio/", "$auragem_gemini/music/public_radio/", '1')
-	//gopherServer.AddProxyRoute("/public_radio/:station_name", "$auragem_gemini/music/public_radio/$station_name", '1')
-	//gopherServer.AddProxyRoute("/public_radio/:station_name/schedule_feed", "$auragem_gemini/public_radio/$station_name/schedule_feed", '1')
-	//gopherServer.AddProxyRoute("/stream/public_radio/:station_name", "$auragem_gemini/stream/public_radio/$station_name", 's')
-
 	context.Start()
 }
 
