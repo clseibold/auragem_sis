@@ -2,17 +2,19 @@ package config
 
 var GithubToken = ""
 var WeatherApiKey = ""
-var YoutubeApiKey = ""
-var APIBibleApiKey = ""
-var ESVAPIKey = ""
+var YoutubeApiKey = "" // Google Development API Key
+var APIBibleApiKey = "" // api.bible
+var ESVAPIKey = "" // esv.org
 var TwitchClientSecret = ""
 var OpenAiKey = ""
 
-var SMBPassword = ""
+// Music DB
 var MusicServer = "localhost"
 var MusicDirectory = ""
 var MusicSongQuota = 500
 var GlobalSongQuota float64 = 58000
+
+var AdminCertHash = ""
 
 var MusicConfig = PonixConfig{
 	Env: Dev,
@@ -22,17 +24,6 @@ var MusicConfig = PonixConfig{
 		Hostname: "localhost",
 		Port:     3050,
 		DbName:   "music",
-	},
-}
-
-var LifeKeptConfig = PonixConfig{
-	Env: Dev,
-	Firebird: FirebirdConfig{
-		User:     "gemini",
-		Password: "password",
-		Hostname: "localhost",
-		Port:     3050,
-		DbName:   "lifekept",
 	},
 }
 

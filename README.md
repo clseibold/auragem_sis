@@ -2,6 +2,14 @@
 
 Search Engine, Star Wars Database, Weather, Music Storage, etc.
 
+## Setting It Up
+
+Set up by copying `config/config.go.example` to `config/config.go` and setting up your DB info. Create databases in Firebird for music and search, and set the locations in the config.go file.
+
+To create the database tables, run `auragem_sis migrate search` and `auragem_sis migrate music`. For other databases, run the same command using the database's name.
+
+Lastly, to handle Full-Text Search, install the udr plugin for firebird and run the queries in `migration/migrations/fts.sql`
+
 ## License Info
 This capsule is currently licensed as MIT. Below is a list of libraries that are used and their licenses.
 
