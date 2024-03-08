@@ -8,7 +8,7 @@ Set up by copying `config/config.go.example` to `config/config.go` and setting u
 
 To create the database tables, run `auragem_sis migrate search` and `auragem_sis migrate music`. For other databases, run the same command using the database's name.
 
-Lastly, to handle Full-Text Search for the Search Engine, install the udr plugin for firebird and run the queries in `migration/migrations/fts.sql`. Start the server by running `auragem_sis`.
+Lastly, to handle Full-Text Search for the Search Engine, install the udr lucene plugin for firebird and run the queries in `migration/migrations/fts.sql`. Start the server by running `auragem_sis`.
 
 ## License Info
 This capsule is currently licensed as MIT. Below is a list of libraries that are used and their licenses.
