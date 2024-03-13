@@ -454,7 +454,7 @@ func addSeedToDb(conn *sql.DB, seed Seed) (Seed, error) {
 	if !u.IsAbs() { // Check if Absolute URL
 		return Seed{}, URLRelative
 	}
-	if u.Scheme != "gemini" { // Make sure scheme is gemini
+	if u.Scheme != "gemini" && u.Scheme != "nex" { // Make sure scheme is gemini or nex
 		return Seed{}, URLNotGemini
 	}
 	seed.Url = _getHostname(u)
