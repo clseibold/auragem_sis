@@ -348,7 +348,7 @@ Number of Domains that responded with an empty META field: %d
 				return
 			}
 			queryUrl.Fragment = "" // Strip the fragment
-			if queryUrl.Scheme != "gemini" || !queryUrl.IsAbs() {
+			if (queryUrl.Scheme != "gemini" && queryUrl.Scheme != "nex") || !queryUrl.IsAbs() {
 				request.Redirect("/search/add_capsule")
 				return
 			}
