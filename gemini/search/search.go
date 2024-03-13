@@ -43,7 +43,13 @@ ORDER BY GROUPED_SCORE DESC, s.publishdate DESC`*/
 // FTS.FTS$ID as fts_id
 var fts_searchQuery string = `
 select FIRST %%first%% SKIP %%skip%% COUNT(*) OVER () totalCount, (FTS.FTS$SCORE) as GROUPED_SCORE, P.ID, P.URL, P.SCHEME, P.DOMAINID, P.CONTENTTYPE, P.CHARSET, P.LANGUAGE, P.LINECOUNT, P.TITLE, P.PROMPT, P.SIZE, P.HASH, P.FEED, CASE WHEN EXTRACT(YEAR FROM P.PUBLISHDATE) < 1800 THEN TIMESTAMP '01.01.9999 00:00:00.000' ELSE P.PUBLISHDATE END AS PUBLISHDATE, P.INDEXTIME, P.ALBUM, P.ARTIST, P.ALBUMARTIST, P.COMPOSER, P.TRACK, P.DISC, P.COPYRIGHT, P.CRAWLINDEX, P.DATE_ADDED, P.LAST_SUCCESSFUL_VISIT, P.HIDDEN
-    FROM FTS$SEARCH('FTS_PAGE_ID_EN', '(%%query%%) AND HIDDEN:false AND SCHEME:gemini') FTS
+    FROM FTS$SEARCH('FTS_PAGE_ID_EN', '(%%query%%) AND HIDDEN:false') FTS
+    JOIN PAGES P ON P.ID = FTS.FTS$ID
+	ORDER BY GROUPED_SCORE DESC, PUBLISHDATE DESC, CHAR_LENGTH(P.URL) ASC
+`
+var fts_searchQuery_protocol string = `
+select FIRST %%first%% SKIP %%skip%% COUNT(*) OVER () totalCount, (FTS.FTS$SCORE) as GROUPED_SCORE, P.ID, P.URL, P.SCHEME, P.DOMAINID, P.CONTENTTYPE, P.CHARSET, P.LANGUAGE, P.LINECOUNT, P.TITLE, P.PROMPT, P.SIZE, P.HASH, P.FEED, CASE WHEN EXTRACT(YEAR FROM P.PUBLISHDATE) < 1800 THEN TIMESTAMP '01.01.9999 00:00:00.000' ELSE P.PUBLISHDATE END AS PUBLISHDATE, P.INDEXTIME, P.ALBUM, P.ARTIST, P.ALBUMARTIST, P.COMPOSER, P.TRACK, P.DISC, P.COPYRIGHT, P.CRAWLINDEX, P.DATE_ADDED, P.LAST_SUCCESSFUL_VISIT, P.HIDDEN
+    FROM FTS$SEARCH('FTS_PAGE_ID_EN', '(%%query%%) AND HIDDEN:false AND SCHEME:%%protocol%%') FTS
     JOIN PAGES P ON P.ID = FTS.FTS$ID
 	ORDER BY GROUPED_SCORE DESC, PUBLISHDATE DESC, CHAR_LENGTH(P.URL) ASC
 `
@@ -971,7 +977,7 @@ func handleSearch(request sis.Request, conn *sql.DB, query string, page int, sho
 	queryFiltered = strings.Replace(queryFiltered, "Project gemini", "\"Project gemini\"", 1)
 	//queryFiltered = strings.Replace(queryFiltered, "gemini", "\"gemini protocol\"", 1) // TODO: Doesn't work well yet
 
-	actualQuery := strings.Replace(fts_searchQuery, `%%query%%`, queryFiltered, 2)
+	actualQuery := strings.Replace(fts_searchQuery, `%%query%%`, queryFiltered, 2) // TODO: Support for protocol-specific searching.
 	actualQuery = strings.Replace(actualQuery, `%%first%%`, strconv.Itoa(results), 1)
 	actualQuery = strings.Replace(actualQuery, `%%skip%%`, strconv.Itoa(skip), 1)
 
