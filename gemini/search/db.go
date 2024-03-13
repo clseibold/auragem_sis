@@ -442,7 +442,7 @@ func addSeedToDb(conn *sql.DB, seed Seed) (Seed, error) {
 		return Seed{}, URLTooLong
 	}
 	// Make sure URL has gemini:// scheme
-	if !strings.HasPrefix(seed.Url, "gemini://") && !strings.Contains(seed.Url, "://") && !strings.HasPrefix(seed.Url, ".") && !strings.HasPrefix(seed.Url, "/") {
+	if !strings.HasPrefix(seed.Url, "gemini://") && !strings.HasPrefix(seed.Url, "nex://") && !strings.Contains(seed.Url, "://") && !strings.HasPrefix(seed.Url, ".") && !strings.HasPrefix(seed.Url, "/") {
 		seed.Url = "gemini://" + seed.Url
 	}
 
