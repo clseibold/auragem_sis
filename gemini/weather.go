@@ -22,7 +22,7 @@ func handleWeather(g sis.ServerHandle) {
 	g.AddRoute("/weather/", func(request sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{PublishDate: publishDate, UpdateDate: time.Now(), Language: "en", Abstract: "# Weather\n"})
 		if request.ScrollMetadataRequested {
-			request.SendAbstract("")
+			_ = request.SendAbstract("")
 			return
 		}
 		iqAirResponse := getNearestLocation(request)
@@ -46,9 +46,9 @@ Powered by IQAir
 // Gets nearest city location using IP Address geolocation
 // http://api.airvisual.com/v2/nearest_city?key={{YOUR_API_KEY}}
 func getNearestLocation(request sis.Request) IQAirResponse {
-	url := "http://api.airvisual.com/v2/nearest_city?key=" + apiKey + "&x-forwarded-for=" + request.IP
+	url := "https://api.airvisual.com/v2/nearest_city?key=" + apiKey + "&x-forwarded-for=" + request.IP
 	if !IsPublicIP(net.ParseIP(request.IP)) {
-		url = "http://api.airvisual.com/v2/nearest_city?key=" + apiKey
+		url = "https://api.airvisual.com/v2/nearest_city?key=" + apiKey
 	}
 	fmt.Printf("IP: %s\n", request.IP)
 
