@@ -1,0 +1,27 @@
+# AuraGem Music
+
+Welcome to the new AuraGem Music Service, where you can upload a limited number of mp3s over Titan and listen to your private music library over Scroll. This service is also available over Gemini+Titan.
+
+Note: Remember to make sure your certificate is selected on this page if you've already registered.
+
+In order to register, create and enable a client certificate and then head over to the Register Cert page:
+
+=> /music/register Register Cert
+=> /music/quota How the Quota System Works
+=> gemini://transjovian.org/titan About Titan
+
+=> /music/public_radio/ Public Radio
+
+## Features
+
+* Upload MP3s
+* Music organized by Artist and Album
+* Stream a full album or a particular artist's songs
+* "Shuffled stream" - infinite stream of random songs from user's private library
+* Delete songs from library
+
+## The Legality of AuraGem Music
+
+AuraGem Music is currently not a distribution platform. Instead, it hosts a user's personal collection of music for their own consumption. Therefore, the music a user uploads is only visible to that person and will not be distributed to others. Uploading music that the user has bought is legitimate. However, the user is solely responsible for any pirated content that they have uploaded.
+
+=> gemini://auragem.letz.dev/music/ Via Gemini

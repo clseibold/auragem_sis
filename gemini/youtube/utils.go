@@ -54,6 +54,7 @@ func searchYoutube(request sis.Request, service *youtube.Service, query string, 
 }
 
 func getChannelPlaylists(request sis.Request, service *youtube.Service, channelId string, currentPage string) {
+	request.SetNoLanguage()
 	template := `# Playlists for '%s'
 
 => /youtube/channel/%s/ ChannelPage
@@ -106,6 +107,7 @@ func getChannelVideos(request sis.Request, service *youtube.Service, channelId s
 	}
 
 	channel := response.Items[0]
+	request.SetLanguage(channel.Snippet.DefaultLanguage)
 	uploadsPlaylistId := channel.ContentDetails.RelatedPlaylists.Uploads
 	time.Sleep(time.Millisecond * 120)
 
@@ -153,6 +155,7 @@ func getChannelActivity(request sis.Request, service *youtube.Service, channelId
 	}
 
 	channel := response.Items[0]
+	request.SetLanguage(channel.Snippet.DefaultLanguage)
 	uploadsPlaylistId := channel.ContentDetails.RelatedPlaylists.Uploads
 
 	time.Sleep(time.Millisecond * 120)
@@ -191,6 +194,7 @@ func getPlaylistVideos(request sis.Request, service *youtube.Service, playlistId
 
 	playlist := response_pl.Items[0]
 	playlistTitle := playlist.Snippet.Title
+	request.SetLanguage(playlist.Snippet.DefaultLanguage)
 
 	time.Sleep(time.Millisecond * 120)
 	var call *youtube.PlaylistItemsListCall

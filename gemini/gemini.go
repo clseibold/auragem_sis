@@ -11,13 +11,15 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"gitlab.com/clseibold/auragem_sis/gemini/ask"
 	"gitlab.com/clseibold/auragem_sis/gemini/chat"
 	"gitlab.com/clseibold/auragem_sis/gemini/music"
 	"gitlab.com/clseibold/auragem_sis/gemini/search"
+	"gitlab.com/clseibold/auragem_sis/gemini/starwars"
 	"gitlab.com/clseibold/auragem_sis/gemini/textgame"
 	"gitlab.com/clseibold/auragem_sis/gemini/textola"
 	"gitlab.com/clseibold/auragem_sis/gemini/texts"
-	youtube "gitlab.com/clseibold/auragem_sis/gemini/youtube"
+	"gitlab.com/clseibold/auragem_sis/gemini/youtube"
 	sis "gitlab.com/clseibold/smallnetinformationservices"
 	// "gitlab.com/clseibold/auragem_sis/lifekept"
 	/*"gitlab.com/clseibold/auragem_sis/ask"
@@ -32,54 +34,48 @@ var GeminiCommand = &cobra.Command{
 }
 
 func RunServer(cmd *cobra.Command, args []string) {
-	//f, _ := os.Create("access.log")
-	//gig.DefaultWriter = io.MultiWriter(f, os.Stdout)
-
 	context, err := sis.InitSIS("./SIS/")
+	if err != nil {
+		panic(err)
+	}
 	context.AdminServer().BindAddress = "0.0.0.0"
 	context.AdminServer().Hostname = "auragem.letz.dev"
 	context.AdminServer().AddCertificate("auragem.pem")
 	context.SaveConfiguration()
 	context.GetPortListener("0.0.0.0", "1995").AddCertificate("auragem.letz.dev", "auragem.pem")
-	if err != nil {
-		panic(err)
-	}
 
-	// ----- AuraGem Servers -----
+	setupAuraGem(context)
+	setupScholasticDiversity(context)
+	setupScrollProtocol(context)
 
-	geminiServer := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "auragem_gemini", Hostname: "auragem.letz.dev"})
+	context.Start()
+}
+
+func setupAuraGem(context *sis.SISContext) {
+	geminiServer := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "auragem_gemini", Hostname: "auragem.letz.dev", DefaultLanguage: "en"})
 	context.GetPortListener("0.0.0.0", "1965").AddCertificate("auragem.letz.dev", "auragem.pem")
 
 	geminiServer.AddDirectory("/*", "./")
 	geminiServer.AddFile("/.well-known/security.txt", "./security.txt")
 	geminiServer.AddProxyRoute("/nex/*", "$auragem_nex/*", '1')
-
-	// Guestbook via Titan
 	geminiServer.AddUploadRoute("/guestbook.gmi", handleGuestbook)
 
-	handleDevlog(geminiServer)
+	// Proxies
 	youtube.HandleYoutube(geminiServer)
-	handleWeather(geminiServer)
 	handleGithub(geminiServer)
+	// twitch.HandleTwitch(geminiServer)
+
+	// Services
+	handleDevlog(geminiServer)
+	handleWeather(geminiServer)
 	textgame.HandleTextGame(geminiServer)
 	chat.HandleChat(geminiServer)
 	textola.HandleTextola(geminiServer)
 	music.HandleMusic(geminiServer)
 	search.HandleSearchEngine(geminiServer)
-	// twitch.HandleTwitch(geminiServer)
-	// ask.HandleAsk(geminiServer)
+	starwars.HandleStarWars(geminiServer)
+	ask.HandleAsk(geminiServer)
 
-	nexServer := context.AddServer(sis.Server{Type: sis.ServerType_Nex, Name: "auragem_nex", Hostname: "auragem.letz.dev"})
-	nexServer.AddDirectory("/*", "./")
-	nexServer.AddProxyRoute("/gemini/*", "$auragem_gemini/*", '1')
-	nexServer.AddProxyRoute("/scholasticdiversity/*", "$scholasticdiversity_gemini/*", '1')
-
-	// ----- Scholastic Diversity stuff -----
-	scholasticdiversity_gemini := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "scholasticdiversity_gemini", Hostname: "scholasticdiversity.us.to"})
-	context.GetPortListener("0.0.0.0", "1965").AddCertificate("scholasticdiversity.us.to", "scholasticdiversity.pem")
-	scholasticdiversity_gemini.AddDirectory("/*", "./")
-
-	texts.HandleTexts(scholasticdiversity_gemini)
 	// Add "/texts/" redirect from auragem gemini server to scholastic diversity gemini server
 	geminiServer.AddRoute("/texts/*", func(request sis.Request) {
 		unescaped, err := url.PathUnescape(request.GlobString)
@@ -90,95 +86,47 @@ func RunServer(cmd *cobra.Command, args []string) {
 		request.Redirect("gemini://scholasticdiversity.us.to/scriptures/%s", unescaped)
 	})
 
-	gopherServer := context.AddServer(sis.Server{Type: sis.ServerType_Gopher, Name: "gopher", Hostname: "auragem.letz.dev"})
-	gopherServer.AddRoute("/", func(request sis.Request) {
-		request.GophermapLine("i", "                             AuraGem Gopher Server", "/", "", "")
-		request.GophermapLine("i", "", "/", "", "")
-		request.GophermapLine("0", "About this server", "/about.txt", "", "")
-		request.GophermapLine("i", "", "/", "", "")
-		request.GophermapLine("7", "Search Geminispace", "/g/search/s/", "", "")
-		request.GophermapLine("1", "Devlog", "/g/devlog/", "", "")
-		request.GophermapLine("1", "Personal Log", "/g/~clseibold/", "", "")
-		request.GophermapLine("0", "My Experience Within the Bitreich IRC", "/on_bitreich.txt", "", "")
-		request.GophermapLine("0", "Freedom of Protocols Initiative", "/freedom_of_protocols_initiative.txt", "", "")
-		request.GophermapLine("i", "", "/", "", "")
+	scrollServer := context.AddServer(sis.Server{Type: sis.ServerType_Scroll, Name: "auragem_scroll", Hostname: "auragem.letz.dev", DefaultLanguage: "en"})
+	context.GetPortListener("0.0.0.0", "5699").AddCertificate("auragem.letz.dev", "auragem.pem")
+	scrollServer.AddProxyRoute("/*", "$auragem_gemini/*", '1')
 
-		request.GophermapLine("i", "Services/Info", "/", "", "")
-		request.GophermapLine("1", "AuraGem Public Radio", "/g/music/public_radio/", "", "")
-		request.GophermapLine("1", "Search Engine Homepage", "/g/search/", "", "")
-		request.GophermapLine("1", "YouTube Proxy", "/g/youtube/", "", "")
-		request.GophermapLine("1", "Scholastic Diversity", "/scholasticdiversity/", "", "")
-		request.GophermapLine("i", "", "/", "", "")
+	nexServer := context.AddServer(sis.Server{Type: sis.ServerType_Nex, Name: "auragem_nex", Hostname: "auragem.letz.dev", DefaultLanguage: "en"})
+	nexServer.AddDirectory("/*", "./")
+	nexServer.AddProxyRoute("/gemini/*", "$auragem_gemini/*", '1')
+	nexServer.AddProxyRoute("/scholasticdiversity/*", "$scholasticdiversity_gemini/*", '1')
+	nexServer.AddProxyRoute("/scrollprotocol/*", "$scrollprotocol_gemini/*", '1')
 
-		request.GophermapLine("i", "Software", "/", "", "")
-		request.GophermapLine("1", "Misfin-Server", "/g/misfin-server/", "", "")
-		request.GophermapLine("i", "", "/", "", "")
+	spartanServer := context.AddServer(sis.Server{Type: sis.ServerType_Spartan, Name: "spartan", Hostname: "auragem.letz.dev", DefaultLanguage: "en"})
+	spartanServer.AddFile("/", "./index.gmi")
+	spartanServer.AddProxyRoute("/*", "$auragem_gemini/*", '1')
 
-		request.GophermapLine("i", "Links", "/", "", "")
-		request.GophermapLine("1", "Gopher Starting Point", "/iOS/gopher", "forthworks.com", "70")
-		request.GophermapLine("7", "Search Via Veronica-2", "/v2/vs", "gopher.floodgap.com", "70")
-		request.GophermapLine("7", "Search Via Quarry", "/quarry", "gopher.icu", "70")
-		request.GophermapLine("1", "Gopherpedia", "/", "gopherpedia.com", "70")
-		request.GophermapLine("1", "Bongusta Phlog Aggregator", "/bongusta", "i-logout.cz", "70")
-		request.GophermapLine("1", "Moku Pona Phlog Aggregator", "/moku-pona", "gopher.black", "70")
-		request.GophermapLine("1", "Mare Tranquillitatis People's Circumlunar Zaibatsu", "/", "zaibatsu.circumlunar.space", "70")
-		request.GophermapLine("1", "Cosmic Voyage", "/", "cosmic.voyage", "70")
-		request.GophermapLine("1", "Mozz.Us", "/", "mozz.us", "70")
-		request.GophermapLine("1", "Quux", "/", "gopher.quux.org", "70")
-		request.GophermapLine("1", "Mateusz' gophre lair", "/", "gopher.viste.fr", "70")
-		request.GophermapLine("i", "", "/", "", "")
-
-		request.GophermapLine("i", "Sister Sites", "/", "", "")
-		request.GophermapLine("h", "AuraGem Gemini Server", "URL:gemini://auragem.letz.dev", "", "")
-		request.GophermapLine("h", "AuraGem Nex Server", "URL:nex://auragem.letz.dev", "", "")
-		request.GophermapLine("h", "Scholastic Diversity Gemini Server", "URL:gemini://scholasticdiversity.us.to", "", "")
-		request.GophermapLine("i", "", "/", "", "")
-
-		request.GophermapLine("i", "Ways to Contact Me:", "", "", "")
-		request.GophermapLine("i", "IRC: ##misfin on libera.chat", "/", "", "")
-		request.GophermapLine("h", "Email", "URL:mailto:christian.seibold32@outlook.com", "", "")
-		request.GophermapLine("h", "Misfin Mail", "URL:misfin://clseibold@auragem.letz.dev", "", "")
-		request.GophermapLine("i", "", "/", "", "")
-
-		request.GophermapLine("i", "Powered By", "/", "", "")
-		request.GophermapLine("i", "This server is powered by Smallnet Information Services (SIS):", "/", "", "")
-		request.GophermapLine("h", "SIS Project", "URL:https://gitlab.com/clseibold/smallnetinformationservices/", "", "")
-		request.GophermapLine("i", "Note that while SIS docs use the term \"proxying\" to describe requests of one server being handed off to another server of a different protocol, this is not proxying proper. The default document format of the protocol (index gemtext files, gophermaps, and Nex Listings) is translated when needed, but that and links are the only conversions that happen. This form of \"proxying\" all happens internally in the server software and *not* over the network or sockets. It is functionally equivalent to protocol proxying, but works slightly differently.", "/", "", "")
-		request.GophermapLine("i", "", "/", "", "")
-	})
+	gopherServer := context.AddServer(sis.Server{Type: sis.ServerType_Gopher, Name: "gopher", Hostname: "auragem.letz.dev", DefaultLanguage: "en"})
 	gopherServer.AddDirectory("/*", "./")
 	gopherServer.AddProxyRoute("/g/*", "$auragem_gemini/*", '1')
 	gopherServer.AddProxyRoute("/scholasticdiversity/*", "$scholasticdiversity_gemini/*", '1')
+	gopherServer.AddProxyRoute("/scrollprotocol/*", "$scrollprotocol_scroll/*", '1')
+}
 
-	spartanServer := context.AddServer(sis.Server{Type: sis.ServerType_Spartan, Name: "spartan", Hostname: "auragem.letz.dev"})
-	spartanServer.AddRoute("/", func(request sis.Request) {
-		request.Gemini(`# AuraGem Spartan Server
+func setupScholasticDiversity(context *sis.SISContext) {
+	scholasticdiversity_gemini := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "scholasticdiversity_gemini", Hostname: "scholasticdiversity.us.to", DefaultLanguage: "en"})
+	context.GetPortListener("0.0.0.0", "1965").AddCertificate("scholasticdiversity.us.to", "scholasticdiversity.pem")
+	scholasticdiversity_gemini.AddDirectory("/*", "./")
 
-=: /g/search/s/ 🔍 Search
-=> /g/devlog/ Devlog
-=> /g/~clseibold/ Personal Log
-=> /g/music/public_radio/ AuraGem Public Radio
+	texts.HandleTexts(scholasticdiversity_gemini)
 
-## Software
-=> /g/misfin-server/ Misfin-Server
+	scholasticdiversity_scroll := context.AddServer(sis.Server{Type: sis.ServerType_Scroll, Name: "scholasticdiversity_scroll", Hostname: "scholasticdiversity.us.to", DefaultLanguage: "en"})
+	context.GetPortListener("0.0.0.0", "5699").AddCertificate("scholasticdiversity.us.to", "scholasticdiversity.pem")
+	scholasticdiversity_scroll.AddProxyRoute("/*", "$scholasticdiversity_gemini/*", '1')
+}
 
-## Other
-=> /g/search/ Search Engine Homepage
-=> /g/youtube/ YouTube Proxy
+func setupScrollProtocol(context *sis.SISContext) {
+	scrollProtocol_scroll := context.AddServer(sis.Server{Type: sis.ServerType_Scroll, Name: "scrollprotocol_scroll", Hostname: "scrollprotocol.us.to", DefaultLanguage: "en"})
+	context.GetPortListener("0.0.0.0", "5699").AddCertificate("scrollprotocol.us.to", "scrollprotocol.pem")
+	scrollProtocol_scroll.AddDirectory("/*", "/")
 
-## Sister Sites
-=> gemini://auragem.letz.dev/ AuraGem Gemini Server
-=> nex://auragem.letz.dev/ AuraGem Nex Server
-=> gemini://scholasticdiversity.us.to/ Scholastic Diversity
-
-## Powered By
-This server is powered by Smallnet Information Services (SIS):
-=> https://gitlab.com/clseibold/smallnetinformationservices/ SIS Project
-`)
-	})
-	spartanServer.AddProxyRoute("/g/*", "$auragem_gemini/*", '1')
-
-	context.Start()
+	scrollProtocol_gemini := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "scrollprotocol_gemini", Hostname: "scrollprotocol.us.to", DefaultLanguage: "en"})
+	context.GetPortListener("0.0.0.0", "1965").AddCertificate("scrollprotocol.us.to", "scrollprotocol.pem")
+	scrollProtocol_gemini.AddProxyRoute("/*", "$scrollprotocol_scroll/*", '1')
 }
 
 func handleGuestbook(request sis.Request) {

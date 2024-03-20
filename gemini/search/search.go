@@ -1,8 +1,6 @@
 package search
 
 // TODO: Add Favicons text to database and have crawler look for favicon.txt file
-// TODO: Also add language to pages table in database
-// TODO: Line count of pages in database
 // TOOD: track Hashtags and Mentions (mentions can start with @ or ~)
 
 import (
@@ -139,7 +137,15 @@ func HandleSearchEngine(s sis.ServerHandle) {
 		request.Redirect("/search/")
 	})
 	// TODO: Removed Tag Index (=> /search/tags 🏷️ Tag Index)
+	publishDate, _ := time.ParseInLocation(time.RFC3339, "2021-07-01T00:00:00", time.Local)
+	updateDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-13T00:00:00", time.Local)
 	s.AddRoute("/search/", func(request sis.Request) {
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search\n"})
+		if request.ScrollMetadataRequested {
+			request.SendAbstract("")
+			return
+		}
+
 		request.Gemini("# AuraGem Search\n\n")
 		request.PromptLine("/search/s/", "🔍 Search")
 		request.Gemini(`=> /search/random/ 🎲 Goto Random Capsule
@@ -194,6 +200,12 @@ Note that AuraGem Search does not ensure or rank based on the popularity or accu
 	})
 
 	s.AddRoute("/search/configure_default", func(request sis.Request) {
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# Configure Default Search Engine in Lagrange\n"})
+		if request.ScrollMetadataRequested {
+			request.SendAbstract("")
+			return
+		}
+
 		request.Gemini(`# Configure Default Search Engine in Lagrange
 
 1. Go to File -> Preferences -> General
@@ -203,6 +215,12 @@ Note that AuraGem Search does not ensure or rank based on the popularity or accu
 	})
 
 	s.AddRoute("/search/features", func(request sis.Request) {
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search Features\n"})
+		if request.ScrollMetadataRequested {
+			request.SendAbstract("")
+			return
+		}
+
 		request.Gemini(`# AuraGem Search Features
 
 ## Current State of Features
@@ -281,12 +299,19 @@ When I type "Station", I want an exact match for Station itself. However, when I
 	var lastCacheTime time.Time
 	s.AddRoute("/search/stats", func(request sis.Request) {
 		currentTime := time.Now()
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: currentTime, Abstract: "# AuraGem Search Stats\n"})
+		if request.ScrollMetadataRequested {
+			request.SendAbstract("")
+			return
+		}
+
 		if totalSizeCache == -1 || lastCacheTime.Add(refreshCacheEvery).Before(currentTime) {
 			row := conn.QueryRowContext(context.Background(), "SELECT COUNT(*), MAX(LAST_SUCCESSFUL_VISIT), SUM(SIZE) FROM pages")
 			row.Scan(&pagesCountCache, &lastCrawlCache, &totalSizeCache)
 			// Convert totalSize to GB
 			lastCacheTime = currentTime
 		}
+
 		totalSize := totalSizeCache
 		totalSize /= 1024 // Bytes to KB
 		totalSize /= 1024 // KB to MB
@@ -348,6 +373,12 @@ Number of Domains that responded with an empty META field: %d
 			request.RequestInput("Capsule:")
 			return
 		} else {
+			request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Add Capsule to Index\n"})
+			if request.ScrollMetadataRequested {
+				request.SendAbstract("")
+				return
+			}
+
 			queryUrl, parse_err := url.Parse(query)
 			if parse_err != nil {
 				request.Redirect("/search/add_capsule")
@@ -381,6 +412,12 @@ Number of Domains that responded with an empty META field: %d
 			request.RequestInput("Gemini URL:")
 			return
 		} else {
+			request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Backlinks\n"})
+			if request.ScrollMetadataRequested {
+				request.SendAbstract("")
+				return
+			}
+
 			// Check that gemini url in query string is correct
 			queryUrl, parse_err := url.Parse(query)
 			if parse_err != nil {
@@ -411,6 +448,12 @@ Number of Domains that responded with an empty META field: %d
 			request.RequestInput("Search Query:")
 			return
 		} else {
+			request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - '" + query + "'\n"})
+			if request.ScrollMetadataRequested {
+				request.SendAbstract("")
+				return
+			}
+
 			// Page 1
 			handleSearch(request, conn, query, 1, false)
 			return
@@ -433,6 +476,12 @@ Number of Domains that responded with an empty META field: %d
 			request.RequestInput("Search Query:")
 			return
 		} else {
+			request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - '" + query + "' Page " + pageStr + "\n"})
+			if request.ScrollMetadataRequested {
+				request.SendAbstract("")
+				return
+			}
+
 			handleSearch(request, conn, query, page, false)
 			return
 		}
@@ -476,6 +525,12 @@ Number of Domains that responded with an empty META field: %d
 	})
 
 	s.AddRoute("/search/recent", func(request sis.Request) {
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - 50 Most Recently Indexed\n"})
+		if request.ScrollMetadataRequested {
+			request.SendAbstract("")
+			return
+		}
+
 		pages := getRecent(conn)
 
 		var builder strings.Builder
@@ -491,6 +546,12 @@ Number of Domains that responded with an empty META field: %d
 	})
 
 	s.AddRoute("/search/capsules", func(request sis.Request) {
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - List of Capsules\n"})
+		if request.ScrollMetadataRequested {
+			request.SendAbstract("")
+			return
+		}
+
 		capsules := getCapsules(conn)
 
 		var builder strings.Builder
@@ -512,6 +573,12 @@ Number of Domains that responded with an empty META field: %d
 	})
 
 	s.AddRoute("/search/tags", func(request sis.Request) {
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Tag Index\n"})
+		if request.ScrollMetadataRequested {
+			request.SendAbstract("")
+			return
+		}
+
 		tags := getTags(conn)
 
 		var builder strings.Builder
@@ -544,6 +611,12 @@ Number of Domains that responded with an empty META field: %d
 	})
 
 	s.AddRoute("/search/feeds", func(request sis.Request) {
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Indexed Feeds\n"})
+		if request.ScrollMetadataRequested {
+			request.SendAbstract("")
+			return
+		}
+
 		pages := getFeeds(conn)
 
 		var builder strings.Builder
@@ -558,10 +631,13 @@ Number of Domains that responded with an empty META field: %d
 `, builder.String()))
 	})
 
-	s.AddRoute("/search/test", func(request sis.Request) {
-		request.Redirect("/search/yearposts")
-	})
 	s.AddRoute("/search/yearposts", func(request sis.Request) {
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Posts From The Past Year\n"})
+		if request.ScrollMetadataRequested {
+			request.SendAbstract("")
+			return
+		}
+
 		page := 1
 		results := 40
 		skip := (page - 1) * results
@@ -598,6 +674,12 @@ Note: Currently tries to list only posts that are in English.
 
 	s.AddRoute("/search/yearposts/:page", func(request sis.Request) {
 		pageStr := request.GetParam("page")
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Posts From The Past Year, Page " + pageStr + "\n"})
+		if request.ScrollMetadataRequested {
+			request.SendAbstract("")
+			return
+		}
+
 		page, err := strconv.Atoi(pageStr)
 		if err != nil {
 			request.BadRequest("Couldn't parse int.")
@@ -638,11 +720,12 @@ Note: Currently tries to list only posts that are in English.
 	})
 
 	s.AddRoute("/search/audio", func(request sis.Request) {
-		/* pageStr := c.Param("page")
-		page_int, parse_err := strconv.ParseInt(pageStr, 10, 64)
-		if parse_err != nil {
-			return c.NoContent(gig.StatusBadRequest, "Page Number Error")
-		}*/
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Indexed Audio Files\n"})
+		if request.ScrollMetadataRequested {
+			request.SendAbstract("")
+			return
+		}
+
 		pages, _, _ := getAudioFiles(conn, 1)
 
 		var builder strings.Builder
@@ -679,6 +762,12 @@ Note: Currently tries to list only posts that are in English.
 			request.BadRequest("Page Number Error")
 			return
 		}
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Indexed Audio Files, Page " + pageStr + "\n"})
+		if request.ScrollMetadataRequested {
+			request.SendAbstract("")
+			return
+		}
+
 		pages, _, hasNextPage := getAudioFiles(conn, page_int)
 
 		var builder strings.Builder
@@ -739,6 +828,12 @@ Note: Currently tries to list only posts that are in English.
 	})
 
 	s.AddRoute("/search/images", func(request sis.Request) {
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Indexed Image Files\n"})
+		if request.ScrollMetadataRequested {
+			request.SendAbstract("")
+			return
+		}
+
 		pages, _, _ := getImageFiles(conn, 1)
 
 		var builder strings.Builder
@@ -775,6 +870,12 @@ Note: Currently tries to list only posts that are in English.
 			request.BadRequest("Page Number Error")
 			return
 		}
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Indexed Image Files, Page " + pageStr + "\n"})
+		if request.ScrollMetadataRequested {
+			request.SendAbstract("")
+			return
+		}
+
 		pages, _, hasNextPage := getImageFiles(conn, page_int)
 		if len(pages) == 0 {
 			request.NotFound("Page not found.")
@@ -803,6 +904,12 @@ Note: Currently tries to list only posts that are in English.
 	})
 
 	s.AddRoute("/search/twtxt", func(request sis.Request) {
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Indexed Twtxt Files\n"})
+		if request.ScrollMetadataRequested {
+			request.SendAbstract("")
+			return
+		}
+
 		pages := getTwtxtFiles(conn)
 		if len(pages) == 0 {
 			request.NotFound("Page not found.")
@@ -829,6 +936,12 @@ Note: Currently tries to list only posts that are in English.
 	})
 
 	s.AddRoute("/search/security", func(request sis.Request) {
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Indexed Security.txt Files\n"})
+		if request.ScrollMetadataRequested {
+			request.SendAbstract("")
+			return
+		}
+
 		pages := getSecurityTxtFiles(conn)
 		if len(pages) == 0 {
 			request.NotFound("Page not found.")
@@ -859,6 +972,12 @@ Note: Currently tries to list only posts that are in English.
 			request.TemporaryFailure(err.Error())
 			return
 		} else if query == "" {
+			request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Mimetypes\n"})
+			if request.ScrollMetadataRequested {
+				request.SendAbstract("")
+				return
+			}
+
 			mimetypesList := getMimetypes(conn)
 			var mimetypes strings.Builder
 			for _, item := range mimetypesList {
@@ -873,6 +992,12 @@ Note: Currently tries to list only posts that are in English.
 %s
 `, mimetypes.String()))
 		} else {
+			request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Indexed of Mimetype '" + query + "'\n"})
+			if request.ScrollMetadataRequested {
+				request.SendAbstract("")
+				return
+			}
+
 			pages := getMimetypeFiles(conn, query)
 			if len(pages) == 0 {
 				request.NotFound("Page not found.")

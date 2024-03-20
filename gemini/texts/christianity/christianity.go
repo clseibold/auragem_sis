@@ -94,6 +94,7 @@ func HandleChristianTexts(g sis.ServerHandle) {
 	asvBooks := GetBooks(englishBibleVersions[0].Id, apiKey)
 
 	g.AddRoute("/scriptures/christian/", func(request sis.Request) {
+		request.SetNoLanguage()
 		var builder strings.Builder
 		fmt.Fprintf(&builder, "## Bible Versions\n")
 		fmt.Fprintf(&builder, "### English\n")
@@ -165,6 +166,7 @@ Tags: #bible #new #old #testament #septuagint #pentateuch
 	})
 
 	g.AddRoute("/scriptures/christian/bible/esv/", func(request sis.Request) {
+		request.SetLanguage("en-US")
 		var builder strings.Builder
 		for _, book := range asvBooks {
 			fmt.Fprintf(&builder, "=> /scriptures/christian/bible/esv/%s/ %s\n", url.PathEscape(book.Name+" 1"), book.Name)
@@ -185,6 +187,7 @@ Users may not copy or download more than 500 verses of the ESV Bible or more tha
 	})
 
 	g.AddRoute("/scriptures/christian/bible/esv/:text", func(request sis.Request) {
+		request.SetLanguage("en-US")
 		text := request.GetParam("text")
 		resp := GetPassages(text)
 		var builder strings.Builder
@@ -201,6 +204,7 @@ Users may not copy or download more than 500 verses of the ESV Bible or more tha
 	g.AddRoute("/scriptures/christian/bible/:id", func(request sis.Request) {
 		versionId := request.GetParam("id")
 		version := GetBibleVersion(versionId, apiKey)
+		request.SetLanguage(version.Language.Id)
 		books := GetBooks(versionId, apiKey)
 		var builder strings.Builder
 		for _, book := range books {
@@ -223,6 +227,7 @@ Copyright: %s
 		versionId := request.GetParam("id")
 		bookId := request.GetParam("book")
 		version := GetBibleVersion(versionId, apiKey)
+		request.SetLanguage(version.Language.Id)
 		book := GetBook(versionId, bookId, apiKey, true)
 		var builder strings.Builder
 		for _, chapter := range book.Chapters {
@@ -244,6 +249,7 @@ Copyright: %s
 		versionId := request.GetParam("id")
 		chapterId := request.GetParam("chapter")
 		version := GetBibleVersion(versionId, apiKey)
+		request.SetLanguage(version.Language.Id)
 		chapter := GetChapter(versionId, chapterId, apiKey)
 		var builder strings.Builder
 		fmt.Fprintf(&builder, "%s", chapter.Content)

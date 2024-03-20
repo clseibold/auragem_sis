@@ -14,7 +14,7 @@ import (
 
 	//"log"
 
-	ytd "github.com/clseibold/youtube/v2"
+	ytd "github.com/kkdai/youtube/v2"
 	"gitlab.com/clseibold/auragem_sis/config"
 	sis "gitlab.com/clseibold/smallnetinformationservices"
 	"google.golang.org/api/option"
@@ -55,6 +55,14 @@ func HandleYoutube(s sis.ServerHandle) {
 }
 
 func indexRoute(request sis.Request) {
+	creationDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-17T11:57:00", time.Local)
+	abstract := "#AuraGem YouTube Proxy\n\nProxies YouTube to Scroll/Gemini. Lets you search and download videos and playlists.\n"
+	request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: creationDate.UTC(), UpdateDate: creationDate.UTC(), Language: "en", Abstract: abstract})
+	if request.ScrollMetadataRequested {
+		request.Scroll(abstract)
+		return
+	}
+
 	request.Gemini("# AuraGem YouTube Proxy\n\nWelcome to the AuraGem YouTube Proxy!\n\n")
 	request.PromptLine("/youtube/search/", "Search")
 	request.Gemini("=> / AuraGem Home\n")
@@ -62,6 +70,7 @@ func indexRoute(request sis.Request) {
 }
 func getSearchRouteFunc(service *youtube.Service) sis.RequestHandler {
 	return func(request sis.Request) {
+		request.SetNoLanguage()
 		query, err := request.RawQuery()
 		if err != nil {
 			request.TemporaryFailure(err.Error())
@@ -74,6 +83,13 @@ func getSearchRouteFunc(service *youtube.Service) sis.RequestHandler {
 			rawQuery, err := request.RawQuery()
 			if err != nil {
 				request.TemporaryFailure(err.Error())
+				return
+			}
+
+			abstract := fmt.Sprintf("# AuraGem YouTube Proxy Search - Query %s\n", rawQuery)
+			request.SetScrollMetadataResponse(sis.ScrollMetadata{Language: "en", Abstract: abstract})
+			if request.ScrollMetadataRequested {
+				request.Scroll(abstract)
 				return
 			}
 
@@ -90,7 +106,7 @@ func getSearchRouteFunc(service *youtube.Service) sis.RequestHandler {
 func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 	return func(request sis.Request) {
 		id := request.GetParam("id")
-		call := service.Videos.List([]string{"id", "snippet"}).Id(id).MaxResults(1)
+		call := service.Videos.List([]string{"id", "snippet", "status"}).Id(id).MaxResults(1)
 		response, err := call.Do()
 		if err != nil {
 			//log.Fatalf("Error: %v", err) // TODO
@@ -101,7 +117,23 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 			request.TemporaryFailure("Video not found.")
 			return
 		}
-		video := response.Items[0] // TODO: Error if video is not found
+		video := response.Items[0]
+
+		lang := request.Server.DefaultLanguage()
+		if video.Snippet.DefaultLanguage != "" {
+			lang = video.Snippet.DefaultLanguage
+		}
+		publishDate := video.Snippet.PublishedAt
+		if video.Status.PrivacyStatus == "private" {
+			publishDate = video.Status.PublishAt
+		}
+		publishDateParsed, _ := time.Parse(time.RFC3339, publishDate)
+		abstract := fmt.Sprintf("# Video - %s\n%s\n", html.UnescapeString(video.Snippet.Title), html.UnescapeString(video.Snippet.Description))
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: html.UnescapeString(video.Snippet.ChannelTitle), PublishDate: publishDateParsed.UTC(), UpdateDate: publishDateParsed.UTC(), Language: lang, Abstract: abstract})
+		if request.ScrollMetadataRequested {
+			request.Scroll(abstract)
+			return
+		}
 
 		//video.ContentDetails.RegionRestriction.Allowed
 
@@ -202,8 +234,22 @@ func handleCaptionDownload(s sis.ServerHandle) {
 		}
 
 		time.Sleep(time.Millisecond * 120)
-		transcript, err := client.GetTranscript(video, "en")
-		if err != nil {
+
+		// Go through each requested language and try to find a transcript for them. Otherwise, fallback to english.
+		// If still no transcript found, then error out.
+		requestedLanguages := append(request.ScrollRequestedLanguages, "en") // Append fallback language
+		var transcript ytd.VideoTranscript
+		var found bool = false
+		for _, lang := range requestedLanguages {
+			var err error
+			transcript, err = client.GetTranscript(video, lang)
+			if err == nil {
+				request.SetLanguage(lang)
+				found = true
+				break
+			}
+		}
+		if !found {
 			request.TemporaryFailure("Video doesn't have a transcript.\n")
 			return
 		}
@@ -248,6 +294,7 @@ func handleCaptionDownload(s sis.ServerHandle) {
 			if caption.Kind == kind && caption.LanguageCode == lang {
 				captionFound = caption
 				foundCaption = true
+				request.SetLanguage(caption.LanguageCode)
 				break
 			}
 		}
@@ -372,6 +419,15 @@ func getVideoDownloadRouteFunc() sis.RequestHandler {
 			}
 		}
 
+		// Handle Scroll protocol Metadata
+		abstract := fmt.Sprintf("# %s\n%s\n", video.Title, video.Description)
+		// TODO: The language should be a BCP47 string
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: video.Author, PublishDate: video.PublishDate.UTC(), Language: format.LanguageDisplayName(), Abstract: abstract})
+		if request.ScrollMetadataRequested {
+			request.Scroll(abstract)
+			return
+		}
+
 		//format := video.Formats.AudioChannels(2).FindByQuality("hd1080")
 		//.DownloadSeparatedStreams(ctx, "", video, "hd1080", "mp4")
 		//resp, err := client.GetStream(video, format)
@@ -382,7 +438,7 @@ func getVideoDownloadRouteFunc() sis.RequestHandler {
 			return
 			//return c.Gemini("Error: Video Not Found\n%v", err)
 		}
-		request.StreamBuffer(format.MimeType, rc, make([]byte, 2*1024*1024)) // 2 MB Buffer
+		request.StreamBuffer(format.MimeType, rc, make([]byte, 1*1024*1024)) // 1 MB Buffer
 		//err2 := c.Stream(format.MimeType, rc)
 		rc.Close()
 
@@ -417,6 +473,14 @@ func handleChannelPage(g sis.ServerHandle, service *youtube.Service) {
 		}
 
 		channel := response.Items[0]
+
+		// Handle Scroll Protocol Metadata
+		abstract := fmt.Sprintf("# Channel: %s\n%s\n", html.UnescapeString(channel.Snippet.Title), html.UnescapeString(channel.Snippet.Description))
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: html.UnescapeString(channel.Snippet.Title), Language: channel.Snippet.DefaultLanguage, Abstract: abstract})
+		if request.ScrollMetadataRequested {
+			request.Scroll(abstract)
+			return
+		}
 
 		request.Gemini(fmt.Sprintf(template, html.UnescapeString(channel.Snippet.Title), channel.Id, channel.Id, channel.Id, channel.Id, html.UnescapeString(channel.Snippet.Description), channel.Id))
 	})

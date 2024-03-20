@@ -108,6 +108,7 @@ func HandleIslamicTexts(g sis.ServerHandle) {
 	versionNames["arabic"] = "Qur'an"
 
 	g.AddRoute("/scriptures/islam", func(request sis.Request) {
+		request.SetNoLanguage()
 		var builder strings.Builder
 		fmt.Fprintf(&builder, "## Qur'an Versions\n\n=> /scriptures/islam/quran/arabic/ Arabic\n")
 		fmt.Fprintf(&builder, "### English\n")
@@ -191,6 +192,7 @@ Tags: #quran #qur'an #koran #القرآن
 		surahNumber := request.GetParam("surah")
 
 		surah := GetSurah(versionId, surahNumber)
+		request.SetLanguage(surah.Edition.Language)
 
 		var builder strings.Builder
 		for _, ayah := range surah.Ayahs {

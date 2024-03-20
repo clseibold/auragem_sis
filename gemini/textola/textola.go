@@ -172,7 +172,8 @@ func getTextFromSchedule(s sis.ServerHandle) TextolaText {
 }
 
 func HandleTextola(s sis.ServerHandle) {
-	//fmt.Printf("GuestbookText: %s\n", theCaskOfAmontillado)
+	publishDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-19T13:51:00", time.Local)
+	updateDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-19T13:51:00", time.Local)
 	var context *TextolaContext = &TextolaContext{
 		currentText: getTextFromSchedule(s),
 		mutex:       sync.RWMutex{},
@@ -183,6 +184,11 @@ func HandleTextola(s sis.ServerHandle) {
 
 	var connectedClients atomic.Int64
 	s.AddRoute("/textola/", func(request sis.Request) {
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{PublishDate: publishDate, UpdateDate: updateDate, Language: "en", Abstract: "# Textola\n"})
+		if request.ScrollMetadataRequested {
+			request.SendAbstract("")
+			return
+		}
 		request.Gemini("# Textola\n\n")
 		limiter := rate.NewLimiter(rate.Every(time.Second), 1)
 

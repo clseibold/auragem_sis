@@ -14,7 +14,7 @@ type AtomPost struct {
 	title string
 }
 
-func GenerateAtomFrom(file string, domain string, baseurl string, authorName string, authorEmail string) string {
+func GenerateAtomFrom(file string, domain string, baseurl string, authorName string, authorEmail string) (string, string, time.Time) {
 	//ISO8601Layout := "2006-01-02T15:04:05Z0700"
 	feedTitle := ""
 	var posts []AtomPost
@@ -79,5 +79,5 @@ func GenerateAtomFrom(file string, domain string, baseurl string, authorName str
 
 	fmt.Fprintf(&builder, `</feed>`)
 
-	return builder.String()
+	return builder.String(), feedTitle, last_updated
 }

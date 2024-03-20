@@ -32,6 +32,11 @@ func searchFeedbackPage(request sis.Request) {
 			return
 		}
 
+		if request.DataSize > 5*1024*1024 {
+			request.TemporaryFailure("Size too large.")
+			return
+		}
+
 		// TODO: Check that the mimetype is gemini or text file
 
 		data, err := request.GetUploadData()
@@ -63,7 +68,7 @@ func searchFeedbackPage(request sis.Request) {
 		if err != nil {
 			return //err
 		}
-		request.Redirect("gemini://%s:%s/search/feedback.gmi", request.Server.Hostname(), request.Server.Port())
+		request.Redirect("%s%s:%s/search/feedback.gmi", request.Server.Scheme(), request.Server.Hostname(), request.Server.Port())
 		return
 	} else {
 		fileData, err := request.Server.FS().ReadFile("searchfeedback.gmi")

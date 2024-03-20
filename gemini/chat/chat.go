@@ -35,6 +35,8 @@ type UserInfo struct {
 }
 
 func HandleChat(s sis.ServerHandle) {
+	publishDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-19T13:51:00", time.Local)
+	updateDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-19T13:51:00", time.Local)
 	context := ChatContext{
 		changeInt: 0,
 		mutex:     sync.RWMutex{},
@@ -65,6 +67,11 @@ func HandleChat(s sis.ServerHandle) {
 		username := request.GetParam("username")
 		if username == "" {
 			request.Redirect("/chat/")
+			return
+		}
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{PublishDate: publishDate, UpdateDate: updateDate, Language: "en", Abstract: "# AuraGem Live Chat\nThis chat is heavily inspired by Mozz's chat, but the UI has been tailored for most gemini browsers. Message history is cleared every 24 hours. This chat makes use of keepalive packets so that clients (that support them) will not timeout.\n"})
+		if request.ScrollMetadataRequested {
+			request.SendAbstract("")
 			return
 		}
 		var builder strings.Builder
@@ -178,9 +185,11 @@ func HandleChat(s sis.ServerHandle) {
 		message = strings.ReplaceAll(message, "\n#", "")
 		message = strings.ReplaceAll(message, "\n-[", "")
 
-		sendChan <- (ChatText{username, message, time.Now(), ""})
+		if !request.ScrollMetadataRequested {
+			sendChan <- (ChatText{username, message, time.Now(), ""})
+		}
 		//return c.NoContent(gig.StatusRedirectTemporary, "gemini://auragem.letz.dev/chat/"+url.PathEscape(username))
-		request.Redirect("gemini://auragem.letz.dev/chat/" + url.PathEscape(username))
+		request.Redirect(request.Server.Scheme() + "auragem.letz.dev/chat/" + url.PathEscape(username))
 	}
 
 	s.AddRoute("/chat/:username/send", sendFunc)

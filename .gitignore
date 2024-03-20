@@ -9,4 +9,4 @@ config/config.go
 main
 main.backup
 SIS/
-
+*.prof

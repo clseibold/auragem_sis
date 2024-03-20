@@ -29,6 +29,15 @@ func setupStation(s sis.ServerHandle, conn *sql.DB, station *RadioStation, total
 	go fakeClient(radioBuffer, station)
 
 	s.AddRoute("/music/public_radio/"+url.PathEscape(station.Name), func(request sis.Request) {
+		creationDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-14T18:07:00", time.Local)
+		creationDate = creationDate.UTC()
+		abstract := fmt.Sprintf("# AuraGem Public Radio - %s Station\n\n%s\nClients Connected: %d\n", station.Name, station.Description, radioBuffer.clientCount)
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: creationDate, UpdateDate: creationDate, Language: "en", Abstract: abstract})
+		if request.ScrollMetadataRequested {
+			request.SendAbstract("")
+			return
+		}
+
 		currentTime := time.Now()
 		radioGenre := GetRadioGenre(currentTime, station)
 
@@ -155,6 +164,15 @@ Current song playing: %s by %s
 	})
 
 	s.AddRoute("/music/public_radio/"+url.PathEscape(station.Name)+"/schedule_feed", func(request sis.Request) {
+		creationDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-14T18:07:00", time.Local)
+		creationDate = creationDate.UTC()
+		abstract := fmt.Sprintf("# AuraGem Public Radio - %s Station Schedule\n", station.Name)
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: creationDate, UpdateDate: time.Now(), Language: "en", Abstract: abstract})
+		if request.ScrollMetadataRequested {
+			request.SendAbstract("")
+			return
+		}
+
 		currentTime := time.Now()
 		current_wd := currentTime.Weekday()
 		program := station.ProgramInfo[current_wd]
@@ -200,6 +218,26 @@ Current song playing: %s by %s
 		request.Redirect("/music/stream/public_radio/" + url.PathEscape(station.Name) + ".mp3")
 	})
 	s.AddRoute("/music/stream/public_radio/"+url.PathEscape(station.Name)+".mp3", func(request sis.Request) {
+		creationDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-14T18:07:00", time.Local)
+		creationDate = creationDate.UTC()
+		abstract := ""
+		if request.ScrollMetadataRequested {
+			currentTime := time.Now()
+			radioGenre := GetRadioGenre(currentTime, station)
+			attribution := ""
+			if radioBuffer.currentMusicFile.Attribution != "" {
+				attribution = "\n" + radioBuffer.currentMusicFile.Attribution
+			}
+
+			abstract = fmt.Sprintf("# AuraGem Public Radio - %s Station\n\n%s\nClients Currently Connected to Station: %d\nCurrent Time and Genre: %s CST (%s)\nCurrent song playing: %s by %s\n%s", station.Name, station.Description, radioBuffer.clientCount, currentTime.Format("03:04 PM"), radioGenre, radioBuffer.currentMusicFile.Title, radioBuffer.currentMusicFile.Artist, attribution)
+		}
+
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: creationDate, UpdateDate: time.Now(), Language: "en", Abstract: abstract})
+		if request.ScrollMetadataRequested {
+			request.SendAbstract("audio/mpeg")
+			return
+		}
+
 		// Station streaming here
 		// Add to client count
 		radioBuffer.clientCount += 1

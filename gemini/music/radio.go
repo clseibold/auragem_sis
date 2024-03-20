@@ -166,6 +166,18 @@ func handleRadioService(s sis.ServerHandle, conn *sql.DB) {
 		request.Redirect("/music/public_radio")
 	})
 	s.AddRoute("/music/public_radio", func(request sis.Request) {
+		creationDate, _ := time.ParseInLocation(time.RFC3339, "2023-09-19T00:00:00", time.Local)
+		updateDate, _ := time.ParseInLocation(time.RFC3339, "2023-11-30T00:00:00", time.Local)
+		abstract := `# AuraGem Music: Public Radio
+
+This is AuraGem Music's public radio that plays public domain and royalty free music. All music is collected from sources like the Free Music Archive, archive.org, and Chosic, and stored on my server. This radio does not proxy from the web, unlike other radios over on Gopherspace.
+`
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: creationDate.UTC(), UpdateDate: updateDate.UTC(), Language: "en", Abstract: abstract})
+		if request.ScrollMetadataRequested {
+			request.SendAbstract("")
+			return
+		}
+
 		var builder strings.Builder
 		for _, station := range radioStations {
 			fmt.Fprintf(&builder, "=> /music/public_radio/%s/ %s Station\n", url.PathEscape(station.Name), station.Name)

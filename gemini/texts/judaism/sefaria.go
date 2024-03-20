@@ -75,7 +75,8 @@ func GetFullIndex() []SefariaIndexCategoryOrText {
 		return []SefariaIndexCategoryOrText{}
 	}
 
-	req.Header.Set("User-Agent", "AuraGem")
+	req.Header.Set("User-Agent", "ScholasticDiversity")
+	req.Header.Set("accept", "application/json")
 	res, getErr := spaceClient.Do(req)
 	if getErr != nil {
 		fmt.Println(err)
@@ -249,7 +250,8 @@ func GetText(ref string, lang string, version string) SefariaText {
 		return SefariaText{}
 	}
 
-	req.Header.Set("User-Agent", "AuraGem")
+	req.Header.Set("User-Agent", "ScholasticDiversity")
+	req.Header.Set("accept", "application/json")
 	res, getErr := spaceClient.Do(req)
 	if getErr != nil {
 		_, filename, line, _ := runtime.Caller(0)
@@ -391,7 +393,7 @@ type SefariaTextLink struct {
 	SourceHeRef       string   `json:"sourceHeRef"`
 	AnchorVerse       int      `json:"anchorVerse"`
 	SourceHasEn       bool     `json:"sourceHasEn"`
-	CompDate          int      `json:"compDate"`
+	CompDate          []int    `json:"compDate"`
 	ErrorMargin       int      `json:"errorMargin"`
 	// AnchorVersion
 	//sourceVersion
@@ -418,7 +420,8 @@ func GetLinks(ref string, lang string, version string) []SefariaTextLink {
 		return []SefariaTextLink{}
 	}
 
-	req.Header.Set("User-Agent", "AuraGem")
+	req.Header.Set("User-Agent", "ScholasticDiversity")
+	req.Header.Set("accept", "application/json")
 	res, getErr := spaceClient.Do(req)
 	if getErr != nil {
 		_, filename, line, _ := runtime.Caller(0)
@@ -487,7 +490,7 @@ func GetCalendars() SefariaCalendarResponse {
 		return SefariaCalendarResponse{}
 	}
 
-	req.Header.Set("User-Agent", "AuraGem")
+	req.Header.Set("User-Agent", "ScholasticDiversity")
 	res, getErr := spaceClient.Do(req)
 	if getErr != nil {
 		fmt.Println(err)
