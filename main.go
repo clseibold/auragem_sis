@@ -22,9 +22,6 @@ const cpuprofile = "./cpu.prof"
 const memprofile = "./mem.prof"
 
 func main() {
-	/*conn, _ := sql.Open("firebirdsql", firebirdConnectionString)
-	defer conn.Close()*/
-
 	if cpuprofile != "" {
 		f, err := os.Create(cpuprofile)
 		if err != nil {
@@ -37,7 +34,10 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	gemini.GeminiCommand.Execute()
+	err := gemini.Command.Execute()
+	if err != nil {
+		panic(err)
+	}
 
 	if memprofile != "" {
 		f, err := os.Create(memprofile)
