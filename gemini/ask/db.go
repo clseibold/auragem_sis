@@ -82,7 +82,7 @@ func GetUserQuestions(conn *sql.DB, user AskUser) []Question {
 
 // With Totals
 func GetTopics(conn *sql.DB) []Topic {
-	query := "SELECT topics.ID, topics.title, topics.description, topics.date_added, COUNT(questions.id) FROM topics LEFT JOIN questions ON questions.topicid=topics.id GROUP BY topics.ID, topics.title, topics.description, topics.date_added ORDER BY topics.ID"
+	query := "SELECT topics.ID, topics.title, topics.description, topics.date_added, COUNT(questions.id) FROM topics LEFT JOIN questions ON questions.topicid=topics.id GROUP BY topics.ID, topics.title, topics.description, topics.date_added ORDER BY topics.\"order\""
 	rows, rows_err := conn.QueryContext(context.Background(), query)
 
 	var topics []Topic
