@@ -103,11 +103,11 @@ func GetTopics(conn *sql.DB) []Topic {
 }
 
 func getTopic(conn *sql.DB, topicid int) (Topic, bool) {
-	query := "SELECT * FROM topics WHERE id=?"
+	query := "SELECT topics.id, topics.title, topics.description, topics.date_added, topics.\"order\" FROM topics WHERE id=?"
 	row := conn.QueryRowContext(context.Background(), query, topicid)
 
 	var topic Topic
-	err := row.Scan(&topic.Id, &topic.Title, &topic.Description, &topic.Date_added)
+	err := row.Scan(&topic.Id, &topic.Title, &topic.Description, &topic.Date_added, &topic.Order)
 	if err == sql.ErrNoRows {
 		return Topic{}, false
 	} else if err != nil {

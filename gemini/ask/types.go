@@ -1,30 +1,30 @@
 package ask
 
 import (
-	"time"
-	"net/url"
 	"database/sql"
+	"net/url"
 	"strings"
+	"time"
 )
 
 type AskUser struct {
-	Id int
-	Username string
+	Id          int
+	Username    string
 	Certificate AskUserCert
-	Language string
-	Timezone string
-	Is_staff bool
-	Is_active bool
+	Language    string
+	Timezone    string
+	Is_staff    bool
+	Is_active   bool
 	Date_joined time.Time
 }
 
 type AskUserCert struct {
-	Id int
-	MemberId int
-	Title string
+	Id          int
+	MemberId    int
+	Title       string
 	Certificate string
-	Is_active bool
-	Date_added time.Time
+	Is_active   bool
+	Date_added  time.Time
 }
 
 func ScanAskUserCert(row *sql.Row) AskUserCert {
@@ -39,24 +39,25 @@ func ScanAskUserCert(row *sql.Row) AskUserCert {
 }
 
 type Topic struct {
-	Id int
-	Title string
+	Id          int
+	Title       string
 	Description string
-	Date_added time.Time
+	Date_added  time.Time
+	Order       int
 
 	QuestionTotal int
 }
 
 type Question struct {
-	Id int
-	TopicId int
-	Title string // Nullable
-	Text string // Nullable
-	Tags string // Nullable
-	MemberId int // Nullable
+	Id         int
+	TopicId    int
+	Title      string // Nullable
+	Text       string // Nullable
+	Tags       string // Nullable
+	MemberId   int    // Nullable
 	Date_added time.Time
 
-	User AskUser
+	User           AskUser
 	SelectedAnswer int
 }
 
@@ -136,7 +137,6 @@ func scanQuestionWithUser(row *sql.Row) (Question, error) {
 	return question, nil
 }
 
-
 func scanQuestionRows(rows *sql.Rows) (Question, error) {
 	question := Question{}
 	var title interface{}
@@ -213,14 +213,14 @@ func scanQuestionRowsWithUser(rows *sql.Rows) (Question, error) {
 }
 
 type Answer struct {
-	Id int
-	QuestionId int // Nullable
-	Text string // Nullable
+	Id         int
+	QuestionId int      // Nullable
+	Text       string   // Nullable
 	Gemlog_url *url.URL // Nullable
-	MemberId int // Nullable
+	MemberId   int      // Nullable
 	Date_added time.Time
 
-	User AskUser
+	User    AskUser
 	Upvotes int
 }
 
@@ -319,14 +319,13 @@ func scanAnswerRows(rows *sql.Rows) (Answer, error) {
 }
 
 type Activity struct {
-	Q Question
-	Activity string
+	Q             Question
+	Activity      string
 	Activity_date time.Time
-	AnswerId int
-	User AskUser
-	TopicTitle string
+	AnswerId      int
+	User          AskUser
+	TopicTitle    string
 }
-
 
 func scanActivityWithUser(rows *sql.Rows) (Activity, error) {
 	activity := Activity{}
@@ -357,25 +356,25 @@ func scanActivityWithUser(rows *sql.Rows) (Activity, error) {
 }
 
 type QuestionComment struct {
-	Id int
+	Id         int
 	QuestionId int
-	Text string
-	MemberId int
+	Text       string
+	MemberId   int
 	Date_added time.Time
 }
 
 type AnswerComment struct {
-	Id int
-	AnswerId int
-	Text string
-	MemberId int
+	Id         int
+	AnswerId   int
+	Text       string
+	MemberId   int
 	Date_added time.Time
 }
 
 type Upvote struct {
-	Id int
-	AnswerId int
-	MemberId int
+	Id         int
+	AnswerId   int
+	MemberId   int
 	Date_added time.Time
 
 	User AskUser
