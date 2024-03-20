@@ -300,9 +300,9 @@ func createAnswerWithText(conn *sql.DB, questionid int, text string, user AskUse
 	row := conn.QueryRowContext(context.Background(), query, questionid, text, user.Id)
 	return scanAnswer(row)
 }
-func createAnswerAsGemlog(conn *sql.DB, questionid int, url string, user AskUser) (Answer, error) {
-	query := "INSERT INTO answers (questionid, gemlog_url, memberid, date_added) VALUES (?, ?, ?, CURRENT_TIMESTAMP) RETURNING id, questionid, text, gemlog_url, memberid, date_added"
-	row := conn.QueryRowContext(context.Background(), query, questionid, url, user.Id)
+func createAnswerAsGemlog(conn *sql.DB, questionid int, url string, user AskUser, text string) (Answer, error) {
+	query := "INSERT INTO answers (questionid, text, gemlog_url, memberid, date_added) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP) RETURNING id, questionid, text, gemlog_url, memberid, date_added"
+	row := conn.QueryRowContext(context.Background(), query, questionid, text, url, user.Id)
 	return scanAnswer(row)
 }
 

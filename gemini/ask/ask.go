@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io"
+	"mime"
 	"net/url"
 	"strconv"
 	"strings"
@@ -1092,8 +1094,18 @@ func getCreateAnswerGemlog(request sis.Request, conn *sql.DB, user AskUser, isRe
 		request.TemporaryFailure("Failed to fetch gemlog at given url.")
 		return
 	}
+	mediatype, _, _ := mime.ParseMediaType(resp.Meta)
+	if mediatype != "text/plain" && mediatype != "text/gemini" && mediatype != "text/nex" && mediatype != "application/gopher-menu" && mediatype != "text/scroll" && mediatype != "text/markdown" {
+		request.TemporaryFailure("Gemlog mimetype not supported. Ask only supports gemtext, nex, gophermenus, scrolltext, markdown, or plain text.")
+		return
+	}
+	textData, read_err := io.ReadAll(resp.Body)
+	if read_err != nil {
+		request.TemporaryFailure("Failed to fetch gemlog at given url.")
+		return
+	}
 
-	_, a_err := createAnswerAsGemlog(conn, question.Id, gemlogUrlNormalized, user)
+	_, a_err := createAnswerAsGemlog(conn, question.Id, gemlogUrlNormalized, user, string(textData))
 	if a_err != nil {
 		return
 	}
