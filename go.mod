@@ -3,6 +3,8 @@ module gitlab.com/clseibold/auragem_sis
 go 1.22.0
 
 require (
+	git.sr.ht/~adnano/go-gemini v0.2.4
+	github.com/clseibold/go-gemini v0.0.0-20240314051634-436d3e54df5c
 	github.com/dhowden/tag v0.0.0-20240122214204-713ab0e94639
 	github.com/efarrer/iothrottler v0.0.3
 	github.com/gammazero/deque v0.2.1
@@ -12,6 +14,7 @@ require (
 	github.com/kkdai/youtube/v2 v2.10.1
 	github.com/krayzpipes/cronticker v0.0.1
 	github.com/nakagami/firebirdsql v0.9.8
+	github.com/rivo/uniseg v0.4.7
 	github.com/rs/zerolog v1.32.0
 	github.com/spf13/cobra v1.8.0
 	gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240321010417-b01010e0aa12
@@ -25,9 +28,7 @@ require (
 require (
 	cloud.google.com/go/compute v1.23.4 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
-	git.sr.ht/~adnano/go-gemini v0.2.4 // indirect
 	github.com/bitly/go-simplejson v0.5.1 // indirect
-	github.com/clseibold/go-gemini v0.0.0-20240314051634-436d3e54df5c // indirect
 	github.com/djherbis/times v1.6.0 // indirect
 	github.com/dlclark/regexp2 v1.11.0 // indirect
 	github.com/dop251/goja v0.0.0-20240220182346-e401ed450204 // indirect
@@ -51,7 +52,6 @@ require (
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/orcaman/concurrent-map/v2 v2.0.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
-	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect

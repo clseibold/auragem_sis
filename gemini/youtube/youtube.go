@@ -71,7 +71,7 @@ func indexRoute(request sis.Request) {
 func getSearchRouteFunc(service *youtube.Service) sis.RequestHandler {
 	return func(request sis.Request) {
 		request.SetNoLanguage()
-		query, err := request.RawQuery()
+		query, err := request.Query()
 		if err != nil {
 			request.TemporaryFailure(err.Error())
 			return
@@ -86,7 +86,7 @@ func getSearchRouteFunc(service *youtube.Service) sis.RequestHandler {
 				return
 			}
 
-			abstract := fmt.Sprintf("# AuraGem YouTube Proxy Search - Query %s\n", rawQuery)
+			abstract := fmt.Sprintf("# AuraGem YouTube Proxy Search - Query %s\n", query)
 			request.SetScrollMetadataResponse(sis.ScrollMetadata{Language: "en", Abstract: abstract})
 			if request.ScrollMetadataRequested {
 				request.Scroll(abstract)
