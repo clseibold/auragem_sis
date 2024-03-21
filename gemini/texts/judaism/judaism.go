@@ -25,7 +25,6 @@ func HandleJewishTexts(g sis.ServerHandle) {
 	//stripTags := bluemonday.StripTagsPolicy()
 
 	index := GetFullIndex()
-	fmt.Printf("Index: %v\n", index)
 	//indexMap := make(map[string]int)
 
 	g.AddRoute("/scriptures/jewish/", func(request sis.Request) {

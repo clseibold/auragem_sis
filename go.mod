@@ -14,7 +14,7 @@ require (
 	github.com/nakagami/firebirdsql v0.9.8
 	github.com/rs/zerolog v1.32.0
 	github.com/spf13/cobra v1.8.0
-	gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240320064032-f24b54ba1726
+	gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240321010417-b01010e0aa12
 	golang.org/x/net v0.22.0
 	golang.org/x/oauth2 v0.18.0
 	golang.org/x/text v0.14.0
