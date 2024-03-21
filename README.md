@@ -18,7 +18,7 @@ This capsule is currently licensed as BSD-3-Clause. Below is a list of libraries
 * [nakagami/firebirdsql](https://github.com/nakagami/firebirdsql) - [MIT](https://opensource.org/licenses/MIT)
 * [google/go-github](https://github.com/google/go-github/) - Used for GitHub proxy
 * [dhowden/tag](https://github.com/dhowden/tag) - [BSD-3 Clause](https://opensource.org/licenses/BSD-2-Clause)
-* [juju/ratelimit](https://github.com/juju/ratelimit) - Used for ratelimiting music streaming to a specific kbps
+* [juju/ratelimit](https://github.com/juju/ratelimit) - Used for rate-limiting music streaming to a specific kbps
 * [kkdai/youtube](https://github.com/kkdai/youtube) - MIT - Used for YouTube proxy
 * [krayzpipes/cronticker](https://github.com/krayzpipes/cronticker) - MIT - Used for gemini live chat, to send a daily system message and clear the chat history.
 
