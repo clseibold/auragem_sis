@@ -68,8 +68,8 @@ func init() {
 		},
 	}
 
-	gemini.GeminiCommand.AddCommand(migrateCommand)
-	gemini.GeminiCommand.AddCommand(makeMigrationCommand)
+	gemini.Command.AddCommand(migrateCommand)
+	gemini.Command.AddCommand(makeMigrationCommand)
 }
 
 func getSortedMigrationVersions(All map[types.MigrationVersion]types.Migration) []types.MigrationVersion { // TODO

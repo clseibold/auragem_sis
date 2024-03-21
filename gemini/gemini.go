@@ -21,14 +21,9 @@ import (
 	"gitlab.com/clseibold/auragem_sis/gemini/texts"
 	"gitlab.com/clseibold/auragem_sis/gemini/youtube"
 	sis "gitlab.com/clseibold/smallnetinformationservices"
-	// "gitlab.com/clseibold/auragem_sis/lifekept"
-	/*"gitlab.com/clseibold/auragem_sis/ask"
-	"gitlab.com/clseibold/auragem_sis/music"
-	"gitlab.com/clseibold/auragem_sis/search"
-	"gitlab.com/clseibold/auragem_sis/starwars"
-	"gitlab.com/clseibold/auragem_sis/twitch"*/)
+	/*"gitlab.com/clseibold/auragem_sis/twitch"*/)
 
-var GeminiCommand = &cobra.Command{
+var Command = &cobra.Command{
 	Short: "Start SIS",
 	Run:   RunServer,
 }
@@ -41,7 +36,10 @@ func RunServer(cmd *cobra.Command, args []string) {
 	context.AdminServer().BindAddress = "0.0.0.0"
 	context.AdminServer().Hostname = "auragem.letz.dev"
 	context.AdminServer().AddCertificate("auragem.pem")
-	context.SaveConfiguration()
+	err = context.SaveConfiguration()
+	if err != nil {
+		panic(err)
+	}
 	context.GetPortListener("0.0.0.0", "1995").AddCertificate("auragem.letz.dev", "auragem.pem")
 
 	setupAuraGem(context)
@@ -76,11 +74,11 @@ func setupAuraGem(context *sis.SISContext) {
 	starwars.HandleStarWars(geminiServer)
 	ask.HandleAsk(geminiServer)
 
-	// Add "/texts/" redirect from auragem gemini server to scholastic diversity gemini server
+	// Add "/texts/" redirect from AuraGem gemini server to scholastic diversity gemini server
 	geminiServer.AddRoute("/texts/*", func(request sis.Request) {
 		unescaped, err := url.PathUnescape(request.GlobString)
 		if err != nil {
-			request.TemporaryFailure(err.Error())
+			_ = request.TemporaryFailure(err.Error())
 			return
 		}
 		request.Redirect("gemini://scholasticdiversity.us.to/scriptures/%s", unescaped)
@@ -141,14 +139,14 @@ Lastly, this guestbook is append-only. Any edits made to already-existing conten
 ---
 `
 	if request.GetParam("token") != "auragemguestbook" {
-		request.TemporaryFailure("A token is required.")
+		_ = request.TemporaryFailure("A token is required.")
 		return
 		//return c.NoContent(gig.StatusPermanentFailure, "A token is required.")
 	} else if request.DataSize > 5*1024*1024 { // 5 MB max size
-		request.TemporaryFailure("Size too large.")
+		_ = request.TemporaryFailure("Size too large.")
 		return
 	} else if request.DataMime != "text/plain" && request.DataMime != "text/gemini" {
-		request.TemporaryFailure("Wrong mime type.")
+		_ = request.TemporaryFailure("Wrong mime type.")
 		return
 	}
 
@@ -157,17 +155,17 @@ Lastly, this guestbook is append-only. Any edits made to already-existing conten
 		return
 	}
 	if !utf8.ValidString(string(data)) {
-		request.TemporaryFailure("Not a valid UTF-8 text file.")
+		_ = request.TemporaryFailure("Not a valid UTF-8 text file.")
 		return
 		//return c.NoContent(gig.StatusPermanentFailure, "Not a valid UTF-8 text file.")
 	}
 	if ContainsCensorWords(string(data)) {
-		request.TemporaryFailure("Profanity or slurs were detected. Your edit is rejected.")
+		_ = request.TemporaryFailure("Profanity or slurs were detected. Your edit is rejected.")
 		return
 		//return c.NoContent(gig.StatusPermanentFailure, "Profanity or slurs were detected. Your edit is rejected.")
 	}
 	if !strings.HasPrefix(string(data), guestbookPrefix) {
-		request.TemporaryFailure("You edited the start of the document above \"---\". Your edit is rejected.")
+		_ = request.TemporaryFailure("You edited the start of the document above \"---\". Your edit is rejected.")
 		return
 		//return c.NoContent(gig.StatusPermanentFailure, "You edited the start of the document above \"---\". Your edit is rejected.")
 	}
@@ -175,7 +173,7 @@ Lastly, this guestbook is append-only. Any edits made to already-existing conten
 	fileBefore, _ := request.Server.FS().ReadFile("guestbook.gmi")
 	//fileBefore, _ := os.ReadFile(filepath.Join(request.Server.Directory, "gemini", "guestbook.gmi"))
 	if !strings.HasPrefix(string(data), string(fileBefore)) {
-		request.TemporaryFailure("You edited a portion of the document that already existed. Only appends are allowed. Your edit is rejected.")
+		_ = request.TemporaryFailure("You edited a portion of the document that already existed. Only appends are allowed. Your edit is rejected.")
 		return
 		//return c.NoContent(gig.StatusPermanentFailure, "You edited a portion of the document that already existed. Only appends are allowed. Your edit is rejected.")
 	}
@@ -193,7 +191,7 @@ Lastly, this guestbook is append-only. Any edits made to already-existing conten
 func CensorWords(str string) string {
 	wordCensors := []string{"fuck", "kill", "die", "damn", "ass", "shit", "stupid", "faggot", "fag", "whore", "cock", "cunt", "motherfucker", "fucker", "asshole", "nigger", "abbie", "abe", "abie", "abid", "abeed", "ape", "armo", "nazi", "ashke-nazi", "אשכנאצי", "bamboula", "barbarian", "beaney", "beaner", "bohunk", "boerehater", "boer-hater", "burrhead", "burr-head", "chode", "chad", "penis", "vagina", "porn", "bbc", "stealthing", "bbw", "Hentai", "milf", "dilf", "tummysticks", "heeb", "hymie", "kike", "jidan", "sheeny", "shylock", "zhyd", "yid", "shyster", "smouch"}
 
-	var result string = str
+	var result = str
 	for _, forbiddenWord := range wordCensors {
 		replacement := strings.Repeat("*", len(forbiddenWord))
 		result = strings.Replace(result, forbiddenWord, replacement, -1)

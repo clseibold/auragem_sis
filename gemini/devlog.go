@@ -3,7 +3,7 @@ package gemini
 import (
 	"time"
 
-	utils "gitlab.com/clseibold/auragem_sis/gemini/utils"
+	"gitlab.com/clseibold/auragem_sis/gemini/utils"
 	sis "gitlab.com/clseibold/smallnetinformationservices"
 )
 
@@ -13,9 +13,9 @@ func handleDevlog(s sis.ServerHandle) {
 		atom, feedTitle, lastUpdate := utils.GenerateAtomFrom("SIS/auragem_gemini/devlog/index.gmi", "gemini://auragem.letz.dev", "gemini://auragem.letz.dev/devlog", "Christian Lee Seibold", "christian.seibold32@outlook.com")
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: lastUpdate, Language: "en", Abstract: "# " + feedTitle + "\n"})
 		if request.ScrollMetadataRequested {
-			request.SendAbstract("text/xml")
+			_ = request.SendAbstract("text/xml")
 			return
 		}
-		request.TextWithMimetype("text/xml", atom)
+		_ = request.TextWithMimetype("text/xml", atom)
 	})
 }
