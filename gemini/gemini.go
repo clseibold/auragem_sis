@@ -120,7 +120,7 @@ func setupScholasticDiversity(context *sis.SISContext) {
 func setupScrollProtocol(context *sis.SISContext) {
 	scrollProtocol_scroll := context.AddServer(sis.Server{Type: sis.ServerType_Scroll, Name: "scrollprotocol_scroll", Hostname: "scrollprotocol.us.to", DefaultLanguage: "en"})
 	context.GetPortListener("0.0.0.0", "5699").AddCertificate("scrollprotocol.us.to", "scrollprotocol.pem")
-	scrollProtocol_scroll.AddDirectory("/*", "/")
+	scrollProtocol_scroll.AddDirectory("/*", "./")
 
 	scrollProtocol_gemini := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "scrollprotocol_gemini", Hostname: "scrollprotocol.us.to", DefaultLanguage: "en"})
 	context.GetPortListener("0.0.0.0", "1965").AddCertificate("scrollprotocol.us.to", "scrollprotocol.pem")
