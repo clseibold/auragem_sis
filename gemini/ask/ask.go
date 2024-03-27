@@ -47,7 +47,7 @@ func HandleAsk(s sis.ServerHandle) {
 
 		if cert == nil {
 			if query == "register" || query != "" {
-				request.Redirect("Please enable a certificate.")
+				request.RequestClientCert("Please enable a certificate.")
 				return
 			} else {
 				getHomepage(request, conn)
@@ -187,7 +187,7 @@ func HandleAsk(s sis.ServerHandle) {
 		cert := request.UserCert
 
 		if cert == nil {
-			request.Redirect("Please enable a certificate.")
+			request.RequestClientCert("Please enable a certificate.")
 			return
 		} else {
 			user, isRegistered := GetUser(conn, request.UserCertHash_Gemini())
@@ -331,7 +331,7 @@ func HandleAsk(s sis.ServerHandle) {
 
 		if cert == nil {
 			//return getQuestionPage(c, conn, (AskUser{}), false)
-			request.Redirect("Certificate required.")
+			request.TemporaryFailure("Certificate required.")
 			return
 		} else {
 			user, isRegistered := GetUser(conn, request.UserCertHash_Gemini())
@@ -445,7 +445,7 @@ func HandleAsk(s sis.ServerHandle) {
 		query = strings.ToLower(query)
 
 		if cert == nil {
-			request.Redirect("Please enable a certificate.")
+			request.RequestClientCert("Please enable a certificate.")
 			return
 		} else {
 			user, isRegistered := GetUser(conn, request.UserCertHash_Gemini())
@@ -470,7 +470,7 @@ func HandleAsk(s sis.ServerHandle) {
 		query = strings.ToLower(query)
 
 		if cert == nil {
-			request.Redirect("Please enable a certificate.")
+			request.RequestClientCert("Please enable a certificate.")
 			return
 		} else {
 			user, isRegistered := GetUser(conn, request.UserCertHash_Gemini())
