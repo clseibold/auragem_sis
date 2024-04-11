@@ -4,13 +4,7 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="facaf9ad-d4b5-41f3-bc54-e8b99f4d1b6e" name="Changes" comment="Update SIS dependency.">
-      <changelist_data name="Christian Lee Seibold" email="christian.seibold32@outlook.com" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gemini/ask/ask.go" beforeDir="false" afterPath="$PROJECT_DIR$/gemini/ask/ask.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
-    </list>
+    <list default="true" id="facaf9ad-d4b5-41f3-bc54-e8b99f4d1b6e" name="Changes" comment="Update SIS and fix bug with AuraGem Ask." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -112,7 +106,8 @@
     <MESSAGE value="Security fix: Accidentally exposed root directory via the scrollprotocol capsule/scrollrey." />
     <MESSAGE value="Goland IDE settings updates." />
     <MESSAGE value="Update SIS dependency." />
-    <option name="LAST_COMMIT_MESSAGE" value="Update SIS dependency." />
+    <MESSAGE value="Update SIS and fix bug with AuraGem Ask." />
+    <option name="LAST_COMMIT_MESSAGE" value="Update SIS and fix bug with AuraGem Ask." />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
   <component name="VgoProject">

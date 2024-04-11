@@ -72,4 +72,4 @@ require (
 	modernc.org/mathutil v1.4.2-0.20220822142738-b13e5b564332 // indirect
 )
 
-replace github.com/dhowden/tag => github.com/clseibold/tag v0.0.0-20230917192755-2c2210e229df
+replace github.com/dhowden/tag => github.com/clseibold/tag v0.0.0-20240406050303-c203ec2f69d1

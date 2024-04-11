@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"html"
+	"net"
 	"net/http"
 	"net/url"
 	"path"
@@ -346,6 +347,16 @@ func getVideoDownloadRouteFunc() sis.RequestHandler {
 		videoId := strings.TrimSuffix(idStr, "."+extension)
 
 		client := ytd.Client{}
+		client.HTTPClient = &http.Client{Transport: &http.Transport{
+			IdleConnTimeout:       60 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+			ForceAttemptHTTP2:     true,
+			DialContext: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).DialContext,
+		}}
 		video, err := client.GetVideo(videoId)
 		retries := 0
 		for err != nil {
