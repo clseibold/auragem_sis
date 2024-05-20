@@ -27,6 +27,7 @@ func handleGithub(g sis.ServerHandle) {
 	client := github.NewClient(tc)
 
 	g.AddRoute("/github", func(request sis.Request) {
+		request.SetClassification(sis.ScrollResponseUDC_Reference)
 		request.Gemini(`# AuraGem Github Proxy
 
 Welcome to the AuraGem Github proxy!
@@ -63,6 +64,7 @@ Welcome to the AuraGem Github proxy!
 	})
 
 	g.AddRoute("/github/repo/:id", func(request sis.Request) {
+		request.SetClassification(sis.ScrollResponseUDC_Docs)
 		id := request.GetParam("id")
 		template := `# Repo: %s
 
@@ -112,6 +114,7 @@ Homepage: %s
 	})
 
 	g.AddRoute("/github/repo/:id/b", func(request sis.Request) {
+		request.SetClassification(sis.ScrollResponseUDC_Docs)
 		id := request.GetParam("id")
 
 		id_int, err1 := strconv.Atoi(id)
@@ -145,6 +148,7 @@ Homepage: %s
 	})
 
 	g.AddRoute("/github/repo/:id/issues/", func(request sis.Request) {
+		request.SetClassification(sis.ScrollResponseUDC_Docs)
 		id := request.GetParam("id")
 
 		id_int, err1 := strconv.Atoi(id)
@@ -182,6 +186,7 @@ Homepage: %s
 	})
 
 	g.AddRoute("/github/repo/:id/issues/:issue", func(request sis.Request) {
+		request.SetClassification(sis.ScrollResponseUDC_Docs)
 		id := request.GetParam("id")
 		issueParam := request.GetParam("issue")
 

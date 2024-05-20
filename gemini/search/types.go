@@ -39,6 +39,7 @@ type Page struct {
 	Charset      string
 	Language     string
 	Linecount    int
+	Udc          string
 
 	Title string // Used for text/gemini and text/markdown files with page titles
 	// content []u8 // TODO

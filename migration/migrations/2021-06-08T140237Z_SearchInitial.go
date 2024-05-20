@@ -63,6 +63,7 @@ func (m SearchInitial) Up(tx *sql.Tx) error {
 		charset character varying(250) COLLATE UNICODE,
 		language character varying(250) COLLATE UNICODE,
 		linecount integer,
+		udc character varying(25) NOT NULL COLLATE UNICODE_CI,
 
 		title character varying(250) NOT NULL COLLATE UNICODE_CI,
 		prompt character varying(250) NOT NULL COLLATE UNICODE_CI,

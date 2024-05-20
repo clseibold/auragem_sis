@@ -208,6 +208,16 @@ github.com/warpfork/go-fsx v0.4.0/go.mod h1:oTACCMj+Zle+vgVa5SAhGAh7WksYpLgGUCKE
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240324210426-e7aa5799c6a1 h1:9m9kPa2AQGY6x+u54ytHKQBdv3XMzxiBDSL6x3jcprw=
 gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240324210426-e7aa5799c6a1/go.mod h1:1K8FkDn3Ke4DQ+RTO5884rtfXjIquI5Foy5lfRTO9x4=
+gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240518212713-19da36f6a3b0 h1:rUTaZGpzvr5KHkluGFGCb+L8x+KlWVHLk1Bt9HxYEMg=
+gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240518212713-19da36f6a3b0/go.mod h1:f0q6bWhDSyXUpREpLfqBGg3u62Jckf4PwstTP5JTwhk=
+gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240518230856-7e615058f8da h1:l7a/MwHRaBsPL7QtMbcizP1azuCTYoVnPxmow453e9o=
+gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240518230856-7e615058f8da/go.mod h1:f0q6bWhDSyXUpREpLfqBGg3u62Jckf4PwstTP5JTwhk=
+gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240518232455-7460f6397396 h1:Z/wysUmHUoULJtFEDXJpJZjCRP4Q2pU2VmrRak9WNiM=
+gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240518232455-7460f6397396/go.mod h1:f0q6bWhDSyXUpREpLfqBGg3u62Jckf4PwstTP5JTwhk=
+gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240519011725-99e1ab573d68 h1:Wzhli9AztEqX90/vpe2MkO3fWpUUOIx+eLKdzgGbyQM=
+gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240519011725-99e1ab573d68/go.mod h1:f0q6bWhDSyXUpREpLfqBGg3u62Jckf4PwstTP5JTwhk=
+gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240519013546-ba625b844724 h1:MtbHE0H5WHEgv3lBWiD03sOVrjgqq0j5D+PwA0u18hA=
+gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240519013546-ba625b844724/go.mod h1:f0q6bWhDSyXUpREpLfqBGg3u62Jckf4PwstTP5JTwhk=
 gitlab.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b h1:7gd+rd8P3bqcn/96gOZa3F5dpJr/vEiDQYlNb/y2uNs=
 gitlab.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b/go.mod h1:T3BPAOm2cqquPa0MKWeNkmOM5RQsRhkrwMWonFMN7fE=
 go.opencensus.io v0.24.0 h1:y73uSU6J157QMP2kn2r30vwW1A2W2WFwSCGnAVxeaD0=

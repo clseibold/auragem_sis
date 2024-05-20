@@ -104,6 +104,144 @@ func getSearchRouteFunc(service *youtube.Service) sis.RequestHandler {
 	}
 }
 
+func handleVideoClassification(video *youtube.Video, request sis.Request) {
+	handleTopicId := false
+	switch video.Snippet.CategoryId {
+	case "1": // Film & Animation
+		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+	case "2": // Autos & Vehicles
+		request.SetClassification(sis.ScrollResponseUDC_Engineering)
+	case "10": // Music
+		request.SetClassification(sis.ScrollResponseUDC_Music)
+	case "15": // Pets and Animals
+		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+	case "17": // Sports
+		request.SetClassification(sis.ScrollResponseUDC_Sport)
+	case "18": // Short Movies
+		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+	case "19": // Travel & Events
+		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+	case "20": // Gaming
+		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+	case "21": // Videoblogging
+		request.SetClassification(sis.ScrollResponseUDC_PersonalLog)
+	case "22": // People & Blogs
+		request.SetClassification(sis.ScrollResponseUDC_PersonalLog)
+	case "23": // Comedy
+		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+	case "24": // Entertainment
+		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+	case "25": // News and Politics
+		request.SetClassification(sis.ScrollResponseUDC_SocialScience)
+	case "26": // Howto and Style
+		request.SetClassification(sis.ScrollResponseUDC_Reference)
+	case "27": // Education
+		request.SetClassification(sis.ScrollResponseUDC_SocialScience)
+	case "28": // Science and Technology
+		handleTopicId = true
+		//request.SetClassification(sis.ScrollResponseUDC_Technology) // TODO
+	case "29": // Nonprofits & Activism
+		request.SetClassification(sis.ScrollResponseUDC_SocialScience)
+	case "30": // Movies
+		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+	case "31": // Anime/Animation
+		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+	case "32": // Action/Adventure
+		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+	case "33": // Classics
+		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+	case "34": // Comedy
+		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+	case "35": // Documentary
+		handleTopicId = true
+	case "36": // Drama
+		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+	case "37": // Family
+		request.SetClassification(sis.ScrollResponseUDC_PersonalLog)
+	case "38": // Foreign
+		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+	case "39": // Horror
+		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+	case "40": // Sci-Fi/Fantasy
+		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+	case "41": // Thriller
+		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+	case "42": // Shorts
+		handleTopicId = true
+	case "43": // Shows
+		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+	case "44": // Trailers
+		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+	}
+
+	if handleTopicId {
+	outer:
+		for _, topic := range video.TopicDetails.TopicIds {
+			switch topic {
+			case "/m/01k8wb":
+				request.SetClassification(sis.ScrollResponseUDC_GeneralKnowledge)
+				break outer
+			case "/m/04rlf", "/m/02mscn", "/m/0ggq0m", "/m/01lyv", "/m/02lkt", "/m/0glt670", "/m/05rwpb", "/m/03_d0", "/m/028sqc", "/m/0g293", "/m/064t9", "/m/06cqb", "/m/06j6l", "/m/06by7", "/m/0gywn":
+				request.SetClassification(sis.ScrollResponseUDC_Music)
+				break outer
+			case "/m/0bzvm2", "/m/025zzc", "/m/02ntfj", "/m/0b1vjn", "/m/02hygl", "/m/04q1x3q", "/m/01sjng", "/m/0403l3g", "/m/021bp2", "/m/022dc6", "/m/03hf_rm": // Gaming
+				request.SetClassification(sis.ScrollResponseUDC_GamingVideos)
+				break outer
+			case "/m/06ntj", "/m/0jm_", "/m/018jz", "/m/018w8", "/m/01cgz", "/m/09xp_", "/m/02vx4", "/m/037hz", "/m/03tmr", "/m/01h7lh", "/m/0410tth", "/m/07bs0", "/m/07_53": // Sports
+				request.SetClassification(sis.ScrollResponseUDC_Sport)
+				break outer
+			case "/m/02jjt", "/m/09kqc", "/m/02vxn", "/m/05qjc", "/m/066wd", "/m/0f2f9": // Entertainment
+				request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+				break outer
+			case "/m/032tl": // Fashion -> Art
+				request.SetClassification(sis.ScrollResponseUDC_Art)
+				break outer
+			case "/m/027x7n": // Fitness -> Sport
+				request.SetClassification(sis.ScrollResponseUDC_Sport)
+				break outer
+			case "/m/02wbm": // Food -> Art
+				request.SetClassification(sis.ScrollResponseUDC_Art)
+				break outer
+			case "/m/03glg": // Hobby -> Recreation
+				request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+				break outer
+			case "/m/068hy": // Pets -> Recreation
+				request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+				break outer
+			case "/m/041xxh": // Beauty
+				request.SetClassification(sis.ScrollResponseUDC_Art)
+				break outer
+			case "/m/07c1v": // Computer Technology
+				request.SetClassification(sis.ScrollResponseUDC_Class0)
+				break outer
+			case "/m/07bxq": // Tourism -> Recreation
+				request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+				break outer
+			case "/m/07yv9": // Vehicles -> Engineering/General Technology
+				request.SetClassification(sis.ScrollResponseUDC_Engineering)
+				break outer
+			case "/m/06bvp": // Religion
+				request.SetClassification(sis.ScrollResponseUDC_Religion)
+				break outer
+			case "/m/05qt0": // Politics
+				request.SetClassification(sis.ScrollResponseUDC_SocialScience)
+				break outer
+			case "/m/01h6rj": // Military
+				request.SetClassification(sis.ScrollResponseUDC_SocialScience)
+				break outer
+			case "/m/0kt51": // Health
+				request.SetClassification(sis.ScrollResponseUDC_Medicine)
+				break outer
+			case "/m/09s1f": // Business
+				request.SetClassification(sis.ScrollResponseUDC_AppliedScience)
+				break outer
+			case "/m/098wr", "/m/019_rr":
+				request.SetClassification(sis.ScrollResponseUDC_SocialScience)
+			}
+		}
+	}
+}
+
 func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 	return func(request sis.Request) {
 		id := request.GetParam("id")
@@ -119,6 +257,7 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 			return
 		}
 		video := response.Items[0]
+		handleVideoClassification(video, request)
 
 		lang := request.Server.DefaultLanguage()
 		if video.Snippet.DefaultLanguage != "" {

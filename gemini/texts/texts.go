@@ -18,6 +18,7 @@ import (
 
 func HandleTexts(g sis.ServerHandle) {
 	g.AddRoute("/scriptures/", func(request sis.Request) {
+		request.SetClassification(sis.ScrollResponseUDC_Scripture)
 		request.Gemini(`# Religious Texts
 
 => /scriptures/jewish/ ✡ Jewish Texts

@@ -46,6 +46,7 @@ func HandleJewishTexts(g sis.ServerHandle) {
 }
 
 func handleIndex(index []SefariaIndexCategoryOrText, request sis.Request) {
+	request.SetClassification(sis.ScrollResponseUDC_Scripture)
 	var builder strings.Builder
 	for _, category := range index {
 		fmt.Fprintf(&builder, "=> /scriptures/jewish/?%s %s\n", url.QueryEscape(category.Category), category.Category)
@@ -86,6 +87,7 @@ func handleIndex(index []SefariaIndexCategoryOrText, request sis.Request) {
 }
 
 func handleCategory(index []SefariaIndexCategoryOrText, query string, request sis.Request) {
+	request.SetClassification(sis.ScrollResponseUDC_Scripture)
 	categories := strings.Split(query, "/")
 	var categoryStringBuilder strings.Builder
 	for i, c := range categories {
@@ -121,6 +123,7 @@ func handleCategory(index []SefariaIndexCategoryOrText, query string, request si
 
 func handleText(ref string, request sis.Request) {
 	text := GetText(ref, "", "" /*"Tanakh: The Holy Scriptures, published by JPS"*/)
+	request.SetClassification(sis.ScrollResponseUDC_Scripture)
 
 	var startingChapterInRef int = 1
 	if text.TextDepth-1 >= 0 && text.TextDepth-1 <= len(text.Sections) {

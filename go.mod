@@ -5,7 +5,7 @@ go 1.22.0
 require (
 	git.sr.ht/~adnano/go-gemini v0.2.4
 	github.com/clseibold/go-gemini v0.0.0-20240314051634-436d3e54df5c
-	github.com/dhowden/tag v0.0.0-20240122214204-713ab0e94639
+	github.com/dhowden/tag v0.0.0-20240417053706-3d75831295e8
 	github.com/efarrer/iothrottler v0.0.3
 	github.com/gammazero/deque v0.2.1
 	github.com/go-stack/stack v1.8.1
@@ -17,7 +17,7 @@ require (
 	github.com/rivo/uniseg v0.4.7
 	github.com/rs/zerolog v1.32.0
 	github.com/spf13/cobra v1.8.0
-	gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240324210426-e7aa5799c6a1
+	gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240519013546-ba625b844724
 	golang.org/x/net v0.22.0
 	golang.org/x/oauth2 v0.18.0
 	golang.org/x/text v0.14.0

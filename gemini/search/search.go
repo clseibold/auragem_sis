@@ -40,20 +40,20 @@ ORDER BY GROUPED_SCORE DESC, s.publishdate DESC`*/
 
 // FTS.FTS$ID as fts_id
 var fts_searchQuery string = `
-select FIRST %%first%% SKIP %%skip%% COUNT(*) OVER () totalCount, (FTS.FTS$SCORE) as GROUPED_SCORE, P.ID, P.URL, P.SCHEME, P.DOMAINID, P.CONTENTTYPE, P.CHARSET, P.LANGUAGE, P.LINECOUNT, P.TITLE, P.PROMPT, P.SIZE, P.HASH, P.FEED, CASE WHEN EXTRACT(YEAR FROM P.PUBLISHDATE) < 1800 THEN TIMESTAMP '01.01.9999 00:00:00.000' ELSE P.PUBLISHDATE END AS PUBLISHDATE, P.INDEXTIME, P.ALBUM, P.ARTIST, P.ALBUMARTIST, P.COMPOSER, P.TRACK, P.DISC, P.COPYRIGHT, P.CRAWLINDEX, P.DATE_ADDED, P.LAST_SUCCESSFUL_VISIT, P.HIDDEN
+select FIRST %%first%% SKIP %%skip%% COUNT(*) OVER () totalCount, (FTS.FTS$SCORE) as GROUPED_SCORE, P.ID, P.URL, P.SCHEME, P.DOMAINID, P.CONTENTTYPE, P.CHARSET, P.LANGUAGE, P.LINECOUNT, P.UDC, P.TITLE, P.PROMPT, P.SIZE, P.HASH, P.FEED, CASE WHEN EXTRACT(YEAR FROM P.PUBLISHDATE) < 1800 THEN TIMESTAMP '01.01.9999 00:00:00.000' ELSE P.PUBLISHDATE END AS PUBLISHDATE, P.INDEXTIME, P.ALBUM, P.ARTIST, P.ALBUMARTIST, P.COMPOSER, P.TRACK, P.DISC, P.COPYRIGHT, P.CRAWLINDEX, P.DATE_ADDED, P.LAST_SUCCESSFUL_VISIT, P.HIDDEN
     FROM FTS$SEARCH('FTS_PAGE_ID_EN', '(%%query%%) AND HIDDEN:false') FTS
     JOIN PAGES P ON P.ID = FTS.FTS$ID
 	ORDER BY GROUPED_SCORE DESC, PUBLISHDATE DESC, CHAR_LENGTH(P.URL) ASC
 `
 var fts_searchQuery_protocol string = `
-select FIRST %%first%% SKIP %%skip%% COUNT(*) OVER () totalCount, (FTS.FTS$SCORE) as GROUPED_SCORE, P.ID, P.URL, P.SCHEME, P.DOMAINID, P.CONTENTTYPE, P.CHARSET, P.LANGUAGE, P.LINECOUNT, P.TITLE, P.PROMPT, P.SIZE, P.HASH, P.FEED, CASE WHEN EXTRACT(YEAR FROM P.PUBLISHDATE) < 1800 THEN TIMESTAMP '01.01.9999 00:00:00.000' ELSE P.PUBLISHDATE END AS PUBLISHDATE, P.INDEXTIME, P.ALBUM, P.ARTIST, P.ALBUMARTIST, P.COMPOSER, P.TRACK, P.DISC, P.COPYRIGHT, P.CRAWLINDEX, P.DATE_ADDED, P.LAST_SUCCESSFUL_VISIT, P.HIDDEN
+select FIRST %%first%% SKIP %%skip%% COUNT(*) OVER () totalCount, (FTS.FTS$SCORE) as GROUPED_SCORE, P.ID, P.URL, P.SCHEME, P.DOMAINID, P.CONTENTTYPE, P.CHARSET, P.LANGUAGE, P.LINECOUNT, P.UDC, P.TITLE, P.PROMPT, P.SIZE, P.HASH, P.FEED, CASE WHEN EXTRACT(YEAR FROM P.PUBLISHDATE) < 1800 THEN TIMESTAMP '01.01.9999 00:00:00.000' ELSE P.PUBLISHDATE END AS PUBLISHDATE, P.INDEXTIME, P.ALBUM, P.ARTIST, P.ALBUMARTIST, P.COMPOSER, P.TRACK, P.DISC, P.COPYRIGHT, P.CRAWLINDEX, P.DATE_ADDED, P.LAST_SUCCESSFUL_VISIT, P.HIDDEN
     FROM FTS$SEARCH('FTS_PAGE_ID_EN', '(%%query%%) AND HIDDEN:false AND SCHEME:%%protocol%%') FTS
     JOIN PAGES P ON P.ID = FTS.FTS$ID
 	ORDER BY GROUPED_SCORE DESC, PUBLISHDATE DESC, CHAR_LENGTH(P.URL) ASC
 `
 
 var fts_audioSearchQuery string = `
-select FIRST %%first%% SKIP %%skip%% COUNT(*) OVER () totalCount, SUM(s.SCORE) as GROUPED_SCORE, s.HIGHLIGHT, s.ID, s.URL, s.SCHEME, s.DOMAINID, s.CONTENTTYPE, s.CHARSET, s.LANGUAGE, s.LINECOUNT, s.TITLE, s.PROMPT, s.SIZE, s.HASH, s.FEED, s.PUBLISHDATE, s.INDEXTIME, s.ALBUM, s.ARTIST, s.ALBUMARTIST, s.COMPOSER, s.TRACK, s.DISC, s.COPYRIGHT, s.CRAWLINDEX, s.DATE_ADDED, s.LAST_SUCCESSFUL_VISIT, s.HIDDEN
+select FIRST %%first%% SKIP %%skip%% COUNT(*) OVER () totalCount, SUM(s.SCORE) as GROUPED_SCORE, s.HIGHLIGHT, s.ID, s.URL, s.SCHEME, s.DOMAINID, s.CONTENTTYPE, s.CHARSET, s.LANGUAGE, s.LINECOUNT, s.UDC, s.TITLE, s.PROMPT, s.SIZE, s.HASH, s.FEED, s.PUBLISHDATE, s.INDEXTIME, s.ALBUM, s.ARTIST, s.ALBUMARTIST, s.COMPOSER, s.TRACK, s.DISC, s.COPYRIGHT, s.CRAWLINDEX, s.DATE_ADDED, s.LAST_SUCCESSFUL_VISIT, s.HIDDEN
 FROM (select FTS.FTS$ID as fts_id, FTS.FTS$SCORE as SCORE,
         FTS$HIGHLIGHTER.FTS$BEST_FRAGMENT(A.TEXT, '%%query%%', 'ENGLISH', 'TEXT', 70, '[', ']') AS HIGHLIGHT,
         P.*
@@ -147,7 +147,9 @@ func HandleSearchEngine(s sis.ServerHandle) {
 		}
 
 		request.Gemini("# AuraGem Search\n\n")
-		request.PromptLine("/search/s/", "🔍 Search")
+		request.PromptLine("/search/s/", "🔍 Search Smallnet")
+		request.PromptLine("/search/gemini/", "🔍 Search Geminispace")
+		request.PromptLine("/search/scroll/", "🔍 Search Scrollspace")
 		request.Gemini(`=> /search/random/ 🎲 Goto Random Capsule
 => /search/backlinks/ Check Backlinks
 
@@ -200,7 +202,7 @@ Note that AuraGem Search does not ensure or rank based on the popularity or accu
 	})
 
 	s.AddRoute("/search/configure_default", func(request sis.Request) {
-		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# Configure Default Search Engine in Lagrange\n"})
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Docs, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# Configure Default Search Engine in Lagrange\n"})
 		if request.ScrollMetadataRequested {
 			request.SendAbstract("")
 			return
@@ -215,7 +217,7 @@ Note that AuraGem Search does not ensure or rank based on the popularity or accu
 	})
 
 	s.AddRoute("/search/features", func(request sis.Request) {
-		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search Features\n"})
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Docs, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search Features\n"})
 		if request.ScrollMetadataRequested {
 			request.SendAbstract("")
 			return
@@ -306,7 +308,7 @@ When I type "Station", I want an exact match for Station itself. However, when I
 		}
 
 		if totalSizeCache == -1 || lastCacheTime.Add(refreshCacheEvery).Before(currentTime) {
-			row := conn.QueryRowContext(context.Background(), "SELECT COUNT(*), MAX(LAST_SUCCESSFUL_VISIT), SUM(SIZE) FROM pages")
+			row := conn.QueryRowContext(context.Background(), "SELECT COUNT(*), MAX(LAST_SUCCESSFUL_VISIT), SUM(SIZE) FROM pages WHERE SCHEME = 'gemini' OR SCHEME = 'GEMINI'")
 			row.Scan(&pagesCountCache, &lastCrawlCache, &totalSizeCache)
 			// Convert totalSize to GB
 			lastCacheTime = currentTime
@@ -326,7 +328,7 @@ When I type "Station", I want an exact match for Station itself. However, when I
 		row3.Scan(&feedCount)
 
 		if totalSizeTextCache == -1 || lastCacheTime.Add(refreshCacheEvery).Before(currentTime) {
-			row4 := conn.QueryRowContext(context.Background(), "SELECT SUM(SIZE) FROM pages WHERE contenttype LIKE 'text/%%'")
+			row4 := conn.QueryRowContext(context.Background(), "SELECT SUM(SIZE) FROM pages WHERE contenttype LIKE 'text/%%' AND (SCHEME = 'gemini' OR SCHEME = 'GEMINI')")
 			row4.Scan(&totalSizeTextCache)
 			lastCacheTime = currentTime
 		}
@@ -352,7 +354,7 @@ Capsule Count: %d
 Gemsub Feed Count: %d
 
 Total Size of Geminispace: %.3f GB
-Total Size of Text Files: %.3f GB (%.2f%% of Geminispace)
+Total Size of Text Files within Geminispace: %.3f GB (%.2f%% of Geminispace)
 
 Number of Domains with SlowDown responses: %d
 Number of Domains that responded with an empty META field: %d
@@ -439,6 +441,7 @@ Number of Domains that responded with an empty META field: %d
 		}
 	})
 
+	// Smallnet search
 	s.AddRoute("/search/s", func(request sis.Request) {
 		query, err := request.Query()
 		if err != nil {
@@ -455,7 +458,7 @@ Number of Domains that responded with an empty META field: %d
 			}
 
 			// Page 1
-			handleSearch(request, conn, query, 1, false)
+			handleSearch(request, conn, query, 1, false, false, false)
 			return
 		}
 	})
@@ -482,7 +485,105 @@ Number of Domains that responded with an empty META field: %d
 				return
 			}
 
-			handleSearch(request, conn, query, page, false)
+			handleSearch(request, conn, query, page, false, false, false)
+			return
+		}
+	})
+
+	// Geminispace search
+	s.AddRoute("/search/gemini", func(request sis.Request) {
+		query, err := request.Query()
+		if err != nil {
+			request.TemporaryFailure(err.Error())
+			return
+		} else if query == "" {
+			request.RequestInput("Search Query:")
+			return
+		} else {
+			request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - '" + query + "'\n"})
+			if request.ScrollMetadataRequested {
+				request.SendAbstract("")
+				return
+			}
+
+			// Page 1
+			handleSearch(request, conn, query, 1, false, true, false)
+			return
+		}
+	})
+
+	s.AddRoute("/search/gemini/:page", func(request sis.Request) {
+		pageStr := request.GetParam("page")
+		page, err := strconv.Atoi(pageStr)
+		if err != nil {
+			request.BadRequest("Couldn't parse int.")
+			return
+		}
+
+		query, err := request.Query()
+		if err != nil {
+			request.TemporaryFailure(err.Error())
+			return
+		} else if query == "" {
+			request.RequestInput("Search Query:")
+			return
+		} else {
+			request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - '" + query + "' Page " + pageStr + "\n"})
+			if request.ScrollMetadataRequested {
+				request.SendAbstract("")
+				return
+			}
+
+			handleSearch(request, conn, query, page, false, true, false)
+			return
+		}
+	})
+
+	// Scroll protocol search
+	s.AddRoute("/search/scroll", func(request sis.Request) {
+		query, err := request.Query()
+		if err != nil {
+			request.TemporaryFailure(err.Error())
+			return
+		} else if query == "" {
+			request.RequestInput("Search Query:")
+			return
+		} else {
+			request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - '" + query + "'\n"})
+			if request.ScrollMetadataRequested {
+				request.SendAbstract("")
+				return
+			}
+
+			// Page 1
+			handleSearch(request, conn, query, 1, false, false, true)
+			return
+		}
+	})
+
+	s.AddRoute("/search/scroll/:page", func(request sis.Request) {
+		pageStr := request.GetParam("page")
+		page, err := strconv.Atoi(pageStr)
+		if err != nil {
+			request.BadRequest("Couldn't parse int.")
+			return
+		}
+
+		query, err := request.Query()
+		if err != nil {
+			request.TemporaryFailure(err.Error())
+			return
+		} else if query == "" {
+			request.RequestInput("Search Query:")
+			return
+		} else {
+			request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - '" + query + "' Page " + pageStr + "\n"})
+			if request.ScrollMetadataRequested {
+				request.SendAbstract("")
+				return
+			}
+
+			handleSearch(request, conn, query, page, false, false, true)
 			return
 		}
 	})
@@ -498,7 +599,7 @@ Number of Domains that responded with an empty META field: %d
 			return
 		} else {
 			// Page 1
-			handleSearch(request, conn, query, 1, true)
+			handleSearch(request, conn, query, 1, true, false, false)
 			return
 		}
 	})
@@ -519,7 +620,7 @@ Number of Domains that responded with an empty META field: %d
 			request.RequestInput("Search Query:")
 			return
 		} else {
-			handleSearch(request, conn, query, page, true)
+			handleSearch(request, conn, query, page, true, false, false)
 			return
 		}
 	})
@@ -631,93 +732,95 @@ Number of Domains that responded with an empty META field: %d
 `, builder.String()))
 	})
 
-	s.AddRoute("/search/yearposts", func(request sis.Request) {
-		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Posts From The Past Year\n"})
-		if request.ScrollMetadataRequested {
-			request.SendAbstract("")
-			return
-		}
+	/*
+			s.AddRoute("/search/yearposts", func(request sis.Request) {
+				request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Posts From The Past Year\n"})
+				if request.ScrollMetadataRequested {
+					request.SendAbstract("")
+					return
+				}
 
-		page := 1
-		results := 40
-		skip := (page - 1) * results
+				page := 1
+				results := 40
+				skip := (page - 1) * results
 
-		pages, totalResultsCount := getPagesWithPublishDateFromLastYear(conn, results, skip)
+				pages, totalResultsCount := getPagesWithPublishDateFromLastYear(conn, results, skip)
 
-		resultsStart := skip + 1
-		resultsEnd := Min(totalResultsCount, skip+results) // + 1 - 1
-		hasNextPage := resultsEnd < totalResultsCount && totalResultsCount != 0
-		hasPrevPage := resultsStart > results
+				resultsStart := skip + 1
+				resultsEnd := Min(totalResultsCount, skip+results) // + 1 - 1
+				hasNextPage := resultsEnd < totalResultsCount && totalResultsCount != 0
+				hasPrevPage := resultsStart > results
 
-		var builder strings.Builder
-		buildPageResults(&builder, pages, false, false)
+				var builder strings.Builder
+				buildPageResults(&builder, pages, false, false)
 
-		if hasPrevPage {
-			fmt.Fprintf(&builder, "\n=> /search/yearposts/%d Previous Page\n", page-1)
-		}
-		if hasNextPage && !hasPrevPage {
-			fmt.Fprintf(&builder, "\n=> /search/yearposts/%d/ Next Page\n", page+1)
-		} else if hasNextPage && hasPrevPage {
-			fmt.Fprintf(&builder, "=> /search/yearposts/%d/ Next Page\n", page+1)
-		}
+				if hasPrevPage {
+					fmt.Fprintf(&builder, "\n=> /search/yearposts/%d Previous Page\n", page-1)
+				}
+				if hasNextPage && !hasPrevPage {
+					fmt.Fprintf(&builder, "\n=> /search/yearposts/%d/ Next Page\n", page+1)
+				} else if hasNextPage && hasPrevPage {
+					fmt.Fprintf(&builder, "=> /search/yearposts/%d/ Next Page\n", page+1)
+				}
 
-		request.Gemini(fmt.Sprintf(`# Posts From The Past Year
+				request.Gemini(fmt.Sprintf(`# Posts From The Past Year
 
-=> /search/ Home
-=> /search/s/ Search
+		=> /search/ Home
+		=> /search/s/ Search
 
-Note: Currently tries to list only posts that are in English.
+		Note: Currently tries to list only posts that are in English.
 
-%s
-`, builder.String()))
-	})
+		%s
+		`, builder.String()))
+			})
 
-	s.AddRoute("/search/yearposts/:page", func(request sis.Request) {
-		pageStr := request.GetParam("page")
-		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Posts From The Past Year, Page " + pageStr + "\n"})
-		if request.ScrollMetadataRequested {
-			request.SendAbstract("")
-			return
-		}
+			s.AddRoute("/search/yearposts/:page", func(request sis.Request) {
+				pageStr := request.GetParam("page")
+				request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Posts From The Past Year, Page " + pageStr + "\n"})
+				if request.ScrollMetadataRequested {
+					request.SendAbstract("")
+					return
+				}
 
-		page, err := strconv.Atoi(pageStr)
-		if err != nil {
-			request.BadRequest("Couldn't parse int.")
-			return
-		}
+				page, err := strconv.Atoi(pageStr)
+				if err != nil {
+					request.BadRequest("Couldn't parse int.")
+					return
+				}
 
-		results := 40
-		skip := (page - 1) * results
+				results := 40
+				skip := (page - 1) * results
 
-		pages, totalResultsCount := getPagesWithPublishDateFromLastYear(conn, results, skip)
+				pages, totalResultsCount := getPagesWithPublishDateFromLastYear(conn, results, skip)
 
-		resultsStart := skip + 1
-		resultsEnd := Min(totalResultsCount, skip+results) // + 1 - 1
-		hasNextPage := resultsEnd < totalResultsCount && totalResultsCount != 0
-		hasPrevPage := resultsStart > results
+				resultsStart := skip + 1
+				resultsEnd := Min(totalResultsCount, skip+results) // + 1 - 1
+				hasNextPage := resultsEnd < totalResultsCount && totalResultsCount != 0
+				hasPrevPage := resultsStart > results
 
-		var builder strings.Builder
-		buildPageResults(&builder, pages, false, false)
+				var builder strings.Builder
+				buildPageResults(&builder, pages, false, false)
 
-		if hasPrevPage {
-			fmt.Fprintf(&builder, "\n=> /search/yearposts/%d Previous Page\n", page-1)
-		}
-		if hasNextPage && !hasPrevPage {
-			fmt.Fprintf(&builder, "\n=> /search/yearposts/%d/ Next Page\n", page+1)
-		} else if hasNextPage && hasPrevPage {
-			fmt.Fprintf(&builder, "=> /search/yearposts/%d/ Next Page\n", page+1)
-		}
+				if hasPrevPage {
+					fmt.Fprintf(&builder, "\n=> /search/yearposts/%d Previous Page\n", page-1)
+				}
+				if hasNextPage && !hasPrevPage {
+					fmt.Fprintf(&builder, "\n=> /search/yearposts/%d/ Next Page\n", page+1)
+				} else if hasNextPage && hasPrevPage {
+					fmt.Fprintf(&builder, "=> /search/yearposts/%d/ Next Page\n", page+1)
+				}
 
-		request.Gemini(fmt.Sprintf(`# Posts From The Past Year
+				request.Gemini(fmt.Sprintf(`# Posts From The Past Year
 
-=> /search/ Home
-=> /search/s/ Search
+		=> /search/ Home
+		=> /search/s/ Search
 
-Note: Currently tries to list only posts that are in English.
+		Note: Currently tries to list only posts that are in English.
 
-%s
-`, builder.String()))
-	})
+		%s
+		`, builder.String()))
+			})
+	*/
 
 	s.AddRoute("/search/audio", func(request sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Indexed Audio Files\n"})
@@ -1081,7 +1184,7 @@ ORDER BY r.CROSSHOST ASC`
 `, url.String(), builder.String()))
 }
 
-func handleSearch(request sis.Request, conn *sql.DB, query string, page int, showScores bool) {
+func handleSearch(request sis.Request, conn *sql.DB, query string, page int, showScores bool, gemini_only bool, scroll_only bool) {
 	//rawQuery := c.URL().RawQuery
 	rawQuery, err := request.RawQuery()
 	if err != nil {
@@ -1102,7 +1205,16 @@ func handleSearch(request sis.Request, conn *sql.DB, query string, page int, sho
 	queryFiltered = strings.Replace(queryFiltered, "Project gemini", "\"Project gemini\"", 1)
 	//queryFiltered = strings.Replace(queryFiltered, "gemini", "\"gemini protocol\"", 1) // TODO: Doesn't work well yet
 
-	actualQuery := strings.Replace(fts_searchQuery, `%%query%%`, queryFiltered, 2) // TODO: Support for protocol-specific searching.
+	actualQuery := ""
+	if !gemini_only && !scroll_only {
+		actualQuery = strings.Replace(fts_searchQuery, `%%query%%`, queryFiltered, 2) // TODO: Support for protocol-specific searching.
+	} else if gemini_only {
+		actualQuery = strings.Replace(fts_searchQuery_protocol, `%%query%%`, queryFiltered, 2) // TODO: Support for protocol-specific searching.
+		actualQuery = strings.Replace(actualQuery, `%%protocol%%`, "gemini", 1)
+	} else if scroll_only {
+		actualQuery = strings.Replace(fts_searchQuery_protocol, `%%query%%`, queryFiltered, 2) // TODO: Support for protocol-specific searching.
+		actualQuery = strings.Replace(actualQuery, `%%protocol%%`, "scroll", 1)
+	}
 	actualQuery = strings.Replace(actualQuery, `%%first%%`, strconv.Itoa(results), 1)
 	actualQuery = strings.Replace(actualQuery, `%%skip%%`, strconv.Itoa(skip), 1)
 
@@ -1135,7 +1247,7 @@ func handleSearch(request sis.Request, conn *sql.DB, query string, page int, sho
 		defer rows.Close()
 		for rows.Next() {
 			var page Page
-			scan_err := rows.Scan(&totalResultsCount, &page.Score, &page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
+			scan_err := rows.Scan(&totalResultsCount, &page.Score, &page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Udc, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
 			if scan_err == nil {
 				pages = append(pages, page)
 			} else {
@@ -1181,7 +1293,7 @@ func handleSearch(request sis.Request, conn *sql.DB, query string, page int, sho
 
 func handleSearchIndex(request sis.Request, conn *sql.DB) {
 	request.Gemini("Test\n")
-	query := "SELECT FIRST %%first%% SKIP %%skip%% COUNT(*) OVER () totalCount, P.ID, P.URL, P.SCHEME, P.DOMAINID, P.CONTENTTYPE, P.CHARSET, P.LANGUAGE, P.LINECOUNT, P.TITLE, P.PROMPT, P.SIZE, P.HASH, P.FEED, P.PUBLISHDATE, P.INDEXTIME, P.ALBUM, P.ARTIST, P.ALBUMARTIST, P.COMPOSER, P.TRACK, P.DISC, P.COPYRIGHT, P.CRAWLINDEX, P.DATE_ADDED, P.LAST_SUCCESSFUL_VISIT, P.HIDDEN FROM PAGES P"
+	query := "SELECT FIRST %%first%% SKIP %%skip%% COUNT(*) OVER () totalCount, P.ID, P.URL, P.SCHEME, P.DOMAINID, P.CONTENTTYPE, P.CHARSET, P.LANGUAGE, P.LINECOUNT, P.UDC, P.TITLE, P.PROMPT, P.SIZE, P.HASH, P.FEED, P.PUBLISHDATE, P.INDEXTIME, P.ALBUM, P.ARTIST, P.ALBUMARTIST, P.COMPOSER, P.TRACK, P.DISC, P.COPYRIGHT, P.CRAWLINDEX, P.DATE_ADDED, P.LAST_SUCCESSFUL_VISIT, P.HIDDEN FROM PAGES P"
 	results_per_query := 10
 	current_query_index := 1
 	max_results := 100000000 // TODO
@@ -1204,7 +1316,7 @@ func handleSearchIndex(request sis.Request, conn *sql.DB) {
 		defer rows.Close()
 		for rows.Next() {
 			var page Page
-			scan_err := rows.Scan(&totalResultsCount, &page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
+			scan_err := rows.Scan(&totalResultsCount, &page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Udc, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
 			if scan_err == nil {
 				pages = append(pages, page)
 			} else {
@@ -1264,7 +1376,7 @@ func handleAudioSearch(request sis.Request, conn *sql.DB, query string, page int
 		defer rows.Close()
 		for rows.Next() {
 			var page Page
-			scan_err := rows.Scan(&totalResultsCount, &page.Score, &page.Highlight, &page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
+			scan_err := rows.Scan(&totalResultsCount, &page.Score, &page.Highlight, &page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Udc, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
 			if scan_err == nil {
 				pages = append(pages, page)
 			} else {

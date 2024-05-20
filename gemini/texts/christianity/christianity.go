@@ -95,6 +95,7 @@ func HandleChristianTexts(g sis.ServerHandle) {
 
 	g.AddRoute("/scriptures/christian/", func(request sis.Request) {
 		request.SetNoLanguage()
+		request.SetClassification(sis.ScrollResponseUDC_Scripture)
 		var builder strings.Builder
 		fmt.Fprintf(&builder, "## Bible Versions\n")
 		fmt.Fprintf(&builder, "### English\n")
@@ -161,12 +162,13 @@ func HandleChristianTexts(g sis.ServerHandle) {
 
 %s
 
-Tags: #bible #new #old #testament #septuagint #pentateuch 
+Tags: #bible #new #old #testament #septuagint #pentateuch
 `, builder.String()))
 	})
 
 	g.AddRoute("/scriptures/christian/bible/esv/", func(request sis.Request) {
 		request.SetLanguage("en-US")
+		request.SetClassification(sis.ScrollResponseUDC_Scripture)
 		var builder strings.Builder
 		for _, book := range asvBooks {
 			fmt.Fprintf(&builder, "=> /scriptures/christian/bible/esv/%s/ %s\n", url.PathEscape(book.Name+" 1"), book.Name)
@@ -188,6 +190,7 @@ Users may not copy or download more than 500 verses of the ESV Bible or more tha
 
 	g.AddRoute("/scriptures/christian/bible/esv/:text", func(request sis.Request) {
 		request.SetLanguage("en-US")
+		request.SetClassification(sis.ScrollResponseUDC_Scripture)
 		text := request.GetParam("text")
 		resp := GetPassages(text)
 		var builder strings.Builder
@@ -205,6 +208,7 @@ Users may not copy or download more than 500 verses of the ESV Bible or more tha
 		versionId := request.GetParam("id")
 		version := GetBibleVersion(versionId, apiKey)
 		request.SetLanguage(version.Language.Id)
+		request.SetClassification(sis.ScrollResponseUDC_Scripture)
 		books := GetBooks(versionId, apiKey)
 		var builder strings.Builder
 		for _, book := range books {
@@ -228,6 +232,7 @@ Copyright: %s
 		bookId := request.GetParam("book")
 		version := GetBibleVersion(versionId, apiKey)
 		request.SetLanguage(version.Language.Id)
+		request.SetClassification(sis.ScrollResponseUDC_Scripture)
 		book := GetBook(versionId, bookId, apiKey, true)
 		var builder strings.Builder
 		for _, chapter := range book.Chapters {
@@ -250,6 +255,7 @@ Copyright: %s
 		chapterId := request.GetParam("chapter")
 		version := GetBibleVersion(versionId, apiKey)
 		request.SetLanguage(version.Language.Id)
+		request.SetClassification(sis.ScrollResponseUDC_Scripture)
 		chapter := GetChapter(versionId, chapterId, apiKey)
 		var builder strings.Builder
 		fmt.Fprintf(&builder, "%s", chapter.Content)

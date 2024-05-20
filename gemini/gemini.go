@@ -4,6 +4,7 @@ import (
 	// "io"
 
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 	"unicode"
@@ -42,11 +43,17 @@ func RunServer(cmd *cobra.Command, args []string) {
 	}
 	context.GetPortListener("0.0.0.0", "1995").AddCertificate("auragem.letz.dev", "auragem.pem")
 
+	go startWebServer()
+
 	setupAuraGem(context)
 	setupScholasticDiversity(context)
 	setupScrollProtocol(context)
 
 	context.Start()
+}
+
+func startWebServer() {
+	http.ListenAndServe("0.0.0.0:80", http.FileServer(http.Dir("/home/clseibold/ServerData/auragem_sis/SIS/scrollprotocol_http")))
 }
 
 func setupAuraGem(context *sis.SISContext) {
