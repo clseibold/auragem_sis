@@ -17,7 +17,7 @@ require (
 	github.com/rivo/uniseg v0.4.7
 	github.com/rs/zerolog v1.32.0
 	github.com/spf13/cobra v1.8.0
-	gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240519013546-ba625b844724
+	gitlab.com/clseibold/smallnetinformationservices v0.0.0-20240520165725-d004f430e60f
 	golang.org/x/net v0.22.0
 	golang.org/x/oauth2 v0.18.0
 	golang.org/x/text v0.14.0
