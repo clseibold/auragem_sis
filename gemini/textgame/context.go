@@ -25,30 +25,33 @@ type TextGameResource struct {
 type TextGameBuildingID int
 type TextGameBuildingType int
 
-var TextGameBuildingType_Sawmill int = 0 // TODO: Rename
-var TextGameBuidingType_CoalMine int = 1
-var TextGameBuidingType_Steelworks int = 2
-var TextGameBuidingType_GatheringPost int = 3
-var TextGameBuidingType_MedicalPost int = 4
-var TextGameBuidingType_Infirmary int = 5
-var TextGameBuidingType_CareHouse int = 6
-var TextGameBuidingType_CookHouse int = 7
-var TextGameBuidingType_HuntersHut int = 8
-var TextGameBuidingType_HotHouse int = 9
-var TextGameBuidingType_Workshop int = 10 // Research
-var TextGameBuidingType_Watchtower int = 11
-var TextGameBuidingType_BathHouse int = 12
-var TextGameBuidingType_ForagersQuarters int = 13
-var TextGameBuidingType_FishingHarbour int = 14
-var TextGameBuidingType_Docks int = 15
-var TextGameBuidingType_ReloadingStation int = 16 // For Docks
-var TextGameBuidingType_CharcoalKiln int = 17
-var TextGameBuildingType_PublicHouse int = 18
-var TextGameBuildingType_TelegraphStation int = 19
-var TextGameBuildingType_LabourUnion int = 20
-var TextGameBuildingType_Chapel int = 21
-var TextGameBuildingType_Temple int = 22
-var TextGameBuildingType_TransportDepot int = 23
+const (
+	TextGameBuildingType_Sawmill TextGameBuildingType = iota // Rename
+	TextGameBuidingType_CoalMine
+	TextGameBuidingType_Steelworks
+	TextGameBuidingType_GatheringPost
+	TextGameBuidingType_MedicalPost
+	TextGameBuidingType_Infirmary
+	TextGameBuidingType_CareHouse
+	TextGameBuidingType_CookHouse
+	TextGameBuidingType_HuntersHut
+	TextGameBuidingType_HotHouse
+	TextGameBuidingType_Workshop // Research
+	TextGameBuidingType_Watchtower
+	TextGameBuidingType_BathHouse
+	TextGameBuidingType_ForagersQuarters
+	TextGameBuidingType_FishingHarbour
+	TextGameBuidingType_Docks
+	TextGameBuidingType_ReloadingStation // For Docks
+	TextGameBuidingType_CharcoalKiln
+	TextGameBuildingType_PublicHouse
+	TextGameBuildingType_TelegraphStation
+	TextGameBuildingType_LabourUnion
+	TextGameBuildingType_Chapel
+	TextGameBuildingType_Temple
+	TextGameBuildingType_TransportDepot
+)
+
 
 // Storage (Resource Depot)
 

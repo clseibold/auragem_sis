@@ -10,8 +10,11 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
+	wiki "github.com/trietmn/go-wiki"
+	"gitlab.com/clseibold/auragem_sis/crawler"
 	"gitlab.com/clseibold/auragem_sis/db"
 	sis "gitlab.com/clseibold/smallnetinformationservices"
 	"golang.org/x/text/language"
@@ -38,13 +41,16 @@ FROM (select FTS.FTS$ID as fts_id, FTS.FTS$SCORE as SCORE, P.*
 GROUP BY ID, URL, SCHEME, DOMAINID, CONTENTTYPE, CHARSET, LANGUAGE, LINECOUNT, TITLE, PROMPT, SIZE, HASH, FEED, PUBLISHDATE, INDEXTIME, ALBUM, ARTIST, ALBUMARTIST, COMPOSER, TRACK, DISC, COPYRIGHT, CRAWLINDEX, DATE_ADDED, LAST_SUCCESSFUL_VISIT, HIDDEN
 ORDER BY GROUPED_SCORE DESC, s.publishdate DESC`*/
 
-// FTS.FTS$ID as fts_id
+// Search from all protocols
 var fts_searchQuery string = `
 select FIRST %%first%% SKIP %%skip%% COUNT(*) OVER () totalCount, (FTS.FTS$SCORE) as GROUPED_SCORE, P.ID, P.URL, P.SCHEME, P.DOMAINID, P.CONTENTTYPE, P.CHARSET, P.LANGUAGE, P.LINECOUNT, P.UDC, P.TITLE, P.PROMPT, P.SIZE, P.HASH, P.FEED, CASE WHEN EXTRACT(YEAR FROM P.PUBLISHDATE) < 1800 THEN TIMESTAMP '01.01.9999 00:00:00.000' ELSE P.PUBLISHDATE END AS PUBLISHDATE, P.INDEXTIME, P.ALBUM, P.ARTIST, P.ALBUMARTIST, P.COMPOSER, P.TRACK, P.DISC, P.COPYRIGHT, P.CRAWLINDEX, P.DATE_ADDED, P.LAST_SUCCESSFUL_VISIT, P.HIDDEN
     FROM FTS$SEARCH('FTS_PAGE_ID_EN', '(%%query%%) AND HIDDEN:false') FTS
     JOIN PAGES P ON P.ID = FTS.FTS$ID
+    WHERE P.HAS_DUPLICATE_ON_GEMINI=false
 	ORDER BY GROUPED_SCORE DESC, PUBLISHDATE DESC, CHAR_LENGTH(P.URL) ASC
 `
+
+// Search from a specific protocol
 var fts_searchQuery_protocol string = `
 select FIRST %%first%% SKIP %%skip%% COUNT(*) OVER () totalCount, (FTS.FTS$SCORE) as GROUPED_SCORE, P.ID, P.URL, P.SCHEME, P.DOMAINID, P.CONTENTTYPE, P.CHARSET, P.LANGUAGE, P.LINECOUNT, P.UDC, P.TITLE, P.PROMPT, P.SIZE, P.HASH, P.FEED, CASE WHEN EXTRACT(YEAR FROM P.PUBLISHDATE) < 1800 THEN TIMESTAMP '01.01.9999 00:00:00.000' ELSE P.PUBLISHDATE END AS PUBLISHDATE, P.INDEXTIME, P.ALBUM, P.ARTIST, P.ALBUMARTIST, P.COMPOSER, P.TRACK, P.DISC, P.COPYRIGHT, P.CRAWLINDEX, P.DATE_ADDED, P.LAST_SUCCESSFUL_VISIT, P.HIDDEN
     FROM FTS$SEARCH('FTS_PAGE_ID_EN', '(%%query%%) AND HIDDEN:false AND SCHEME:%%protocol%%') FTS
@@ -81,7 +87,64 @@ func HandleSearchEngineDown(s sis.ServerHandle) {
 	})
 }
 
+func UdcClassStringToShortTitle(udc string) string {
+	switch udc {
+	case "0":
+		return "Science and Knowledge. Computer Science. Documentation."
+	case "1":
+		return "Philosophy. Psychology"
+	case "2":
+		return "Religion. Theology. Scripture"
+	case "3":
+		return "Social Sciences"
+	case "4":
+		return "Misc/Unclassed"
+	case "5":
+		return "Mathematics. Natural Sciences"
+	case "6":
+		return "Applied Sciences. Medicine. General Technology"
+	case "7":
+		return "The Arts. Recreation. Entertainment. Sport"
+	case "8":
+		return "Language. Linguistics. Literature. Personal logs"
+	case "9":
+		return "Geography. Biography. History"
+	default:
+		return "Unknown"
+	}
+}
+
+func UdcClassStringToTitle(udc string) string {
+	switch udc {
+	case "0":
+		return "Science and Knowledge. Organization. Computer Science and Computer Technology. Information. Documentation. Librarianship. Institutions. Publications"
+	case "1":
+		return "Philosophy. Psychology"
+	case "2":
+		return "Religion. Theology. Scripture"
+	case "3":
+		return "Social Sciences"
+	case "4":
+		return "Misc/Unclassed"
+	case "5":
+		return "Mathematics. Natural Sciences"
+	case "6":
+		return "Applied Sciences. Medicine. General Technology"
+	case "7":
+		return "The Arts. Recreation. Entertainment. Sport"
+	case "8":
+		return "Language. Linguistics. Literature. Personal logs"
+	case "9":
+		return "Geography. Biography. History"
+	default:
+		return "Unknown"
+	}
+}
+
 func HandleSearchEngine(s sis.ServerHandle) {
+	crawling := make(map[string]bool, 10)
+	crawling_ips := make(map[string]bool, 10)
+
 	conn := db.NewConn(db.SearchDB)
 	/*conn.SetMaxOpenConns(500)
 	conn.SetConnMaxIdleTime(0)
@@ -150,19 +213,21 @@ func HandleSearchEngine(s sis.ServerHandle) {
 		request.PromptLine("/search/s/", "🔍 Search Smallnet")
 		request.PromptLine("/search/gemini/", "🔍 Search Geminispace")
 		request.PromptLine("/search/scroll/", "🔍 Search Scrollspace")
-		request.Gemini(`=> /search/random/ 🎲 Goto Random Capsule
+		request.PromptLine("/search/spartan/", "🔍 Search Spartanspace")
+		request.Gemini(`
+=> /search/scrollspace Scrollspace Index
+=> /search/random/ 🎲 Goto Random Capsule
 => /search/backlinks/ Check Backlinks
+
+=> /search/yearposts/ 📌 Recent Publications
+=> /search/recent/ 50 Most Recently Indexed
+=> /search/capsules/ 🪐 Recently Discovered Capsules
+=> /search/mimetype/ Mimetypes
 
 => /search/features/ About and Features
 => /search/stats/ 📈 Statistics
-=> /search/feedback.gmi 🖊️ Give Feedback On Search Results
 => /search/add_capsule/ Missing your capsule? Add it to AuraGem Search
 
-=> /search/capsules/ 🪐 List of Capsules
-=> /search/mimetype/ Mimetypes
-=> /search/recent/ 50 Most Recently Indexed
-
-=> /search/yearposts/ 📌 Posts From The Past Year
 => /search/feeds/ 🗃 Indexed Feeds
 => /search/audio/ 🎵 Indexed Audio Files
 => /search/images/ 🖼️ Indexed Image Files
@@ -199,6 +264,89 @@ Note that AuraGem Search does not ensure or rank based on the popularity or accu
 		// Want to help support the project? Consider donating on the Patreon. The first goal is to get a server from a server hosting provider that could better support all of the projects I have planned.
 		//
 		// => https://www.patreon.com/krixano Patreon
+	})
+
+	s.AddRoute("/search/crawl", func(request sis.Request) {
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Docs, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# Crawl a link\n"})
+		if request.ScrollMetadataRequested {
+			request.SendAbstract("")
+			return
+		}
+
+		query, err := request.Query()
+		if err != nil {
+			request.TemporaryFailure(err.Error())
+			return
+		} else if query == "" {
+			request.RequestInput("Enter a page/capsule to crawl:")
+			return
+		} else {
+			queryUrl, parse_err := url.Parse(query)
+			if parse_err != nil {
+				//request.Redirect("/search/crawl")
+				request.TemporaryFailure("Unable to parse URL.")
+				return
+			}
+			queryUrl.Fragment = "" // Strip the fragment
+			if (queryUrl.Scheme != "gemini" && queryUrl.Scheme != "nex" && queryUrl.Scheme != "spartan" && queryUrl.Scheme != "scroll") || !queryUrl.IsAbs() {
+				request.TemporaryFailure("Please enter only a Gemini, Nex, Spartan, or Scroll URL.")
+				return
+			}
+			if queryUrl.Path == "" {
+				queryUrl.Path = "/"
+			}
+
+			if _, ok := crawling_ips[request.IPHash()]; ok {
+				request.TemporaryFailure("You have already submitted a URL to crawl.")
+				return
+			}
+
+			if len(crawling) > 10 {
+				request.TemporaryFailure("10 crawlers are in progress. Please wait until one or more of them are done before trying to submit another URL to crawl.")
+				return
+			}
+
+			// Add the capsule's root to the seeds table.
+			seedUrl := *queryUrl
+			seedUrl.Path = "/"
+			addSeedToDb(conn, Seed{0, queryUrl.String(), time.Time{}})
+
+			if _, ok := crawling[queryUrl.Host]; ok {
+				request.TemporaryFailure("Already crawling this domain name. Please wait until it is finished.")
+				return
+			} else {
+				crawling[queryUrl.Host] = true
+				crawling_ips[request.IPHash()] = true
+				go func(host string, url string, iphash string) {
+					globalData := crawler.NewGlobalData(conn, false, true, 0)
+					globalData.AddUrl(url, crawler.UrlToCrawlData{})
+					wg := &sync.WaitGroup{}
+					wg.Add(1)
+					defer delete(crawling, host)
+					defer delete(crawling_ips, iphash)
+					crawler.Crawl(globalData, len(crawling)-1, wg)
+				}(queryUrl.Host, queryUrl.String(), request.IPHash())
+				request.Redirect("/search/")
+			}
+		}
+	})
+
+	// Goes through all pages that haven't been crawled in a long time and sets them to hidden if they are no longer available
+	inCleanup := false
+	s.AddRoute("/search/cleanup", func(request sis.Request) {
+		if inCleanup {
+			request.TemporaryFailure("Cleanup already running.")
+			return
+		}
+
+		go func(inCleanup *bool) {
+			*inCleanup = true
+			globalData := crawler.NewGlobalData(conn, false, false, 0)
+			crawler.PurgeOldLinks(globalData)
+			*inCleanup = false
+		}(&inCleanup)
+
+		request.Redirect("/search/")
 	})
 
 	s.AddRoute("/search/configure_default", func(request sis.Request) {
@@ -253,7 +401,6 @@ Note that AuraGem Search does not ensure or rank based on the popularity or accu
 * Backlinks and searching of link text
 * Page Metadata Lookup
 * Full Markdown, Tinylog, and Twtxt parsing to get links, titles, and heading information.
-* Audio Transcript Search
 
 ## History
 
@@ -289,8 +436,80 @@ When I type "Station", I want an exact match for Station itself. However, when I
 `)
 	})
 
-	s.AddRoute("/search/index", func(request sis.Request) {
+	/*s.AddRoute("/search/index", func(request sis.Request) {
 		handleSearchIndex(request, conn)
+	})*/
+
+	s.AddRoute("/search/scrollspace/", func(request sis.Request) {
+		request.Gemini(`# Scrollspace Index
+
+=> /search/scrollspace/0/ 0. Science and Knowledge. Organization. Computer Science and Computer Technology. Information. Documentation. Librarianship. Institutions. Publications
+=> /search/scrollspace/1/ 1. Philosophy. Psychology
+=> /search/scrollspace/2/ 2. Religion. Theology. Scripture
+=> /search/scrollspace/3/ 3. Social Sciences
+=> /search/scrollspace/4/ 4. Misc/Unclassed
+=> /search/scrollspace/5/ 5. Mathematics. Natural Sciences
+=> /search/scrollspace/6/ 6. Applied Sciences. Medicine. General Technology
+=> /search/scrollspace/7/ 7. The Arts. Recreation. Entertainment. Sport
+=> /search/scrollspace/8/ 8. Language. Linguistics. Literature. Personal logs
+=> /search/scrollspace/9/ 9. Geography. Biography. History
+
+=> gemini://scrollprotocol.us.to/ About the Scroll Protocol
+=> /search/ Search Home
+`)
+	})
+
+	s.AddRoute("/search/scrollspace/:class/", func(request sis.Request) {
+		classStr := request.GetParam("class")
+		if classStr != "0" && classStr != "1" && classStr != "2" && classStr != "3" && classStr != "4" && classStr != "5" && classStr != "6" && classStr != "7" && classStr != "8" && classStr != "9" {
+			request.BadRequest("UDC class doesn't exist.")
+			return
+		}
+
+		pages, hasNextPage, _ := getPagesOfUDC(conn, 1, classStr)
+
+		request.Gemini(fmt.Sprintf("# Scrollspace Index: %s. %s\n", classStr, UdcClassStringToShortTitle(classStr)))
+		request.Gemini("\n=> /search/scrollspace/ Scrollspace Index Home\n\n")
+
+		var builder strings.Builder
+		buildPageResults(&builder, pages, false, false)
+		request.Gemini(builder.String() + "\n")
+
+		if hasNextPage {
+			request.Gemini(fmt.Sprintf("\n=> /search/scrollspace/%s/2/ Next Page\n", classStr))
+		}
+		request.Gemini("\n")
+	})
+
+	s.AddRoute("/search/scrollspace/:class/:page", func(request sis.Request) {
+		classStr := request.GetParam("class")
+		if classStr != "0" && classStr != "1" && classStr != "2" && classStr != "3" && classStr != "4" && classStr != "5" && classStr != "6" && classStr != "7" && classStr != "8" && classStr != "9" {
+			request.BadRequest("UDC class doesn't exist.")
+			return
+		}
+		pageStr := request.GetParam("page")
+		page, err := strconv.Atoi(pageStr)
+		if err != nil {
+			request.BadRequest("Couldn't parse int.")
+			return
+		}
+
+		pages, hasNextPage, hasPrevPage := getPagesOfUDC(conn, page, classStr)
+
+		request.Gemini(fmt.Sprintf("# Scrollspace Index: %s. %s\n", classStr, UdcClassStringToShortTitle(classStr)))
+		request.Gemini("\n=> /search/scrollspace/ Scrollspace Index Home\n\n")
+
+		var builder strings.Builder
+		buildPageResults(&builder, pages, false, false)
+		request.Gemini(builder.String() + "\n")
+
+		if hasPrevPage {
+			request.Gemini(fmt.Sprintf("\n=> /search/scrollspace/%s/%d/ Previous Page\n", classStr, page-1))
+		}
+		if hasNextPage {
+			request.Gemini(fmt.Sprintf("\n=> /search/scrollspace/%s/%d/ Next Page\n", classStr, page+1))
+		}
+		request.Gemini("\n")
 	})
 
 	var refreshCacheEvery = time.Hour * 2
@@ -308,7 +527,7 @@ When I type "Station", I want an exact match for Station itself. However, when I
 		}
 
 		if totalSizeCache == -1 || lastCacheTime.Add(refreshCacheEvery).Before(currentTime) {
-			row := conn.QueryRowContext(context.Background(), "SELECT COUNT(*), MAX(LAST_SUCCESSFUL_VISIT), SUM(SIZE) FROM pages WHERE SCHEME = 'gemini' OR SCHEME = 'GEMINI'")
+			row := conn.QueryRowContext(context.Background(), "SELECT COUNT(*), MAX(LAST_SUCCESSFUL_VISIT), SUM(SIZE) FROM pages WHERE SCHEME = 'gemini' OR SCHEME = 'GEMINI' AND HIDDEN=false")
 			row.Scan(&pagesCountCache, &lastCrawlCache, &totalSizeCache)
 			// Convert totalSize to GB
 			lastCacheTime = currentTime
@@ -323,12 +542,12 @@ When I type "Station", I want an exact match for Station itself. However, when I
 		domainsCount := 0
 		row2.Scan(&domainsCount)
 
-		row3 := conn.QueryRowContext(context.Background(), "SELECT COUNT(*) FROM pages WHERE FEED = true")
+		row3 := conn.QueryRowContext(context.Background(), "SELECT COUNT(*) FROM pages WHERE FEED = true AND HIDDEN=false")
 		feedCount := 0
 		row3.Scan(&feedCount)
 
 		if totalSizeTextCache == -1 || lastCacheTime.Add(refreshCacheEvery).Before(currentTime) {
-			row4 := conn.QueryRowContext(context.Background(), "SELECT SUM(SIZE) FROM pages WHERE contenttype LIKE 'text/%%' AND (SCHEME = 'gemini' OR SCHEME = 'GEMINI')")
+			row4 := conn.QueryRowContext(context.Background(), "SELECT SUM(SIZE) FROM pages WHERE contenttype LIKE 'text/%%' AND (SCHEME = 'gemini' OR SCHEME = 'GEMINI') AND HIDDEN=false")
 			row4.Scan(&totalSizeTextCache)
 			lastCacheTime = currentTime
 		}
@@ -387,7 +606,7 @@ Number of Domains that responded with an empty META field: %d
 				return
 			}
 			queryUrl.Fragment = "" // Strip the fragment
-			if (queryUrl.Scheme != "gemini" && queryUrl.Scheme != "nex") || !queryUrl.IsAbs() {
+			if (queryUrl.Scheme != "gemini" && queryUrl.Scheme != "nex" && queryUrl.Scheme != "spartan" && queryUrl.Scheme != "scroll") || !queryUrl.IsAbs() {
 				request.Redirect("/search/add_capsule")
 				return
 			}
@@ -397,6 +616,7 @@ Number of Domains that responded with an empty META field: %d
 
 			_, err := addSeedToDb(conn, Seed{0, queryUrl.String(), time.Time{}})
 			if err != nil {
+				request.TemporaryFailure("%s", err.Error())
 				return //err
 			} else {
 				request.Redirect("/search")
@@ -458,7 +678,7 @@ Number of Domains that responded with an empty META field: %d
 			}
 
 			// Page 1
-			handleSearch(request, conn, query, 1, false, false, false)
+			handleSearch(request, conn, query, 1, false, false, false, false)
 			return
 		}
 	})
@@ -485,7 +705,7 @@ Number of Domains that responded with an empty META field: %d
 				return
 			}
 
-			handleSearch(request, conn, query, page, false, false, false)
+			handleSearch(request, conn, query, page, false, false, false, false)
 			return
 		}
 	})
@@ -507,7 +727,7 @@ Number of Domains that responded with an empty META field: %d
 			}
 
 			// Page 1
-			handleSearch(request, conn, query, 1, false, true, false)
+			handleSearch(request, conn, query, 1, false, true, false, false)
 			return
 		}
 	})
@@ -534,7 +754,7 @@ Number of Domains that responded with an empty META field: %d
 				return
 			}
 
-			handleSearch(request, conn, query, page, false, true, false)
+			handleSearch(request, conn, query, page, false, true, false, false)
 			return
 		}
 	})
@@ -556,7 +776,7 @@ Number of Domains that responded with an empty META field: %d
 			}
 
 			// Page 1
-			handleSearch(request, conn, query, 1, false, false, true)
+			handleSearch(request, conn, query, 1, false, false, true, false)
 			return
 		}
 	})
@@ -583,7 +803,56 @@ Number of Domains that responded with an empty META field: %d
 				return
 			}
 
-			handleSearch(request, conn, query, page, false, false, true)
+			handleSearch(request, conn, query, page, false, false, true, false)
+			return
+		}
+	})
+
+	// Spartanspace search
+	s.AddRoute("/search/spartan", func(request sis.Request) {
+		query, err := request.Query()
+		if err != nil {
+			request.TemporaryFailure(err.Error())
+			return
+		} else if query == "" {
+			request.RequestInput("Search Query:")
+			return
+		} else {
+			request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - '" + query + "'\n"})
+			if request.ScrollMetadataRequested {
+				request.SendAbstract("")
+				return
+			}
+
+			// Page 1
+			handleSearch(request, conn, query, 1, false, false, false, true)
+			return
+		}
+	})
+
+	s.AddRoute("/search/spartan/:page", func(request sis.Request) {
+		pageStr := request.GetParam("page")
+		page, err := strconv.Atoi(pageStr)
+		if err != nil {
+			request.BadRequest("Couldn't parse int.")
+			return
+		}
+
+		query, err := request.Query()
+		if err != nil {
+			request.TemporaryFailure(err.Error())
+			return
+		} else if query == "" {
+			request.RequestInput("Search Query:")
+			return
+		} else {
+			request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - '" + query + "' Page " + pageStr + "\n"})
+			if request.ScrollMetadataRequested {
+				request.SendAbstract("")
+				return
+			}
+
+			handleSearch(request, conn, query, page, false, false, false, true)
 			return
 		}
 	})
@@ -599,7 +868,7 @@ Number of Domains that responded with an empty META field: %d
 			return
 		} else {
 			// Page 1
-			handleSearch(request, conn, query, 1, true, false, false)
+			handleSearch(request, conn, query, 1, true, false, false, false)
 			return
 		}
 	})
@@ -620,7 +889,7 @@ Number of Domains that responded with an empty META field: %d
 			request.RequestInput("Search Query:")
 			return
 		} else {
-			handleSearch(request, conn, query, page, true, false, false)
+			handleSearch(request, conn, query, page, true, false, false, false)
 			return
 		}
 	})
@@ -657,10 +926,18 @@ Number of Domains that responded with an empty META field: %d
 
 		var builder strings.Builder
 		for _, capsule := range capsules {
+			scheme := "gemini"
+			if capsule.Port == 5699 {
+				scheme = "scroll"
+			} else if capsule.Port == 300 {
+				scheme = "spartan"
+			} else if capsule.Port == 1900 {
+				scheme = "nex"
+			}
 			if capsule.Title == "" {
-				fmt.Fprintf(&builder, "=> gemini://%s %s\n", capsule.Domain, capsule.Domain)
+				fmt.Fprintf(&builder, "=> %s://%s %s\n", scheme, capsule.Domain, capsule.Domain)
 			} else {
-				fmt.Fprintf(&builder, "=> gemini://%s %s\n", capsule.Domain, capsule.Title)
+				fmt.Fprintf(&builder, "=> %s://%s %s\n", scheme, capsule.Domain, capsule.Title)
 			}
 		}
 
@@ -850,7 +1127,6 @@ Number of Domains that responded with an empty META field: %d
 		request.Gemini(fmt.Sprintf(`# Indexed Audio Files
 
 => /search/ Home
-=> /search/audio/s/ Search Audio Transcripts (WIP)
 
 %s
 
@@ -888,7 +1164,6 @@ Number of Domains that responded with an empty META field: %d
 		request.Gemini(fmt.Sprintf(`# Indexed Audio Files
 
 => /search/ Home
-=> /search/audio/s/ Search Audio Transcripts (WIP)
 
 %s
 `, builder.String()))
@@ -1184,7 +1459,7 @@ ORDER BY r.CROSSHOST ASC`
 `, url.String(), builder.String()))
 }
 
-func handleSearch(request sis.Request, conn *sql.DB, query string, page int, showScores bool, gemini_only bool, scroll_only bool) {
+func handleSearch(request sis.Request, conn *sql.DB, query string, page int, showScores bool, gemini_only bool, scroll_only bool, spartan_only bool) {
 	//rawQuery := c.URL().RawQuery
 	rawQuery, err := request.RawQuery()
 	if err != nil {
@@ -1206,7 +1481,7 @@ func handleSearch(request sis.Request, conn *sql.DB, query string, page int, sho
 	//queryFiltered = strings.Replace(queryFiltered, "gemini", "\"gemini protocol\"", 1) // TODO: Doesn't work well yet
 
 	actualQuery := ""
-	if !gemini_only && !scroll_only {
+	if !gemini_only && !scroll_only && !spartan_only {
 		actualQuery = strings.Replace(fts_searchQuery, `%%query%%`, queryFiltered, 2) // TODO: Support for protocol-specific searching.
 	} else if gemini_only {
 		actualQuery = strings.Replace(fts_searchQuery_protocol, `%%query%%`, queryFiltered, 2) // TODO: Support for protocol-specific searching.
@@ -1214,6 +1489,9 @@ func handleSearch(request sis.Request, conn *sql.DB, query string, page int, sho
 	} else if scroll_only {
 		actualQuery = strings.Replace(fts_searchQuery_protocol, `%%query%%`, queryFiltered, 2) // TODO: Support for protocol-specific searching.
 		actualQuery = strings.Replace(actualQuery, `%%protocol%%`, "scroll", 1)
+	} else if spartan_only {
+		actualQuery = strings.Replace(fts_searchQuery_protocol, `%%query%%`, queryFiltered, 2) // TODO: Support for protocol-specific searching.
+		actualQuery = strings.Replace(actualQuery, `%%protocol%%`, "spartan", 1)
 	}
 	actualQuery = strings.Replace(actualQuery, `%%first%%`, strconv.Itoa(results), 1)
 	actualQuery = strings.Replace(actualQuery, `%%skip%%`, strconv.Itoa(skip), 1)
@@ -1275,6 +1553,18 @@ func handleSearch(request sis.Request, conn *sql.DB, query string, page int, sho
 	request.PromptLine("/search/s/", "New Search")
 
 	var builder strings.Builder
+
+	// Try to get wikipedia suggestion
+	if page == 1 {
+		results, _, err := wiki.Search(query, 3, true)
+		if err == nil && len(results) > 0 {
+			for _, result := range results {
+				builder.WriteString(fmt.Sprintf("=> gemini://gemi.dev/cgi-bin/wp.cgi/view?%s Gemipedia: %s\n", url.QueryEscape(result), result))
+			}
+		}
+		builder.WriteString("\n")
+	}
+
 	buildPageResults(&builder, pages, false, showScores)
 
 	request.Gemini(fmt.Sprintf("\nQuery: '%s'\nTime Taken: %v\n\n%s\n", query, timeTaken, builder.String()))

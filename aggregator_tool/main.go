@@ -56,7 +56,7 @@ func getPage(root string, page int, conn *sql.DB) bool {
 		fmt.Fprintf(&builder, "=> /search/yearposts/%d.gmi Next Page\n", page+1)
 	}
 
-	doc := fmt.Sprintf(`# Publications From The Past Year
+	doc := fmt.Sprintf(`# Recent Publications
 
 => /search/ Home
 => /search/s/ Search
@@ -81,7 +81,7 @@ Note: Currently lists only English posts.
 // TODO: Allow for different languages
 // NOTE: Blank language fields are considered English
 func getPagesWithPublishDateFromLastYear(conn *sql.DB, results int, skip int) ([]search.Page, int) {
-	query := fmt.Sprintf("SELECT FIRST %d SKIP %d COUNT(*) OVER () totalCount, id, url, scheme, domainid, contenttype, charset, language, linecount, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE publishdate > dateadd(-1 year to ?) AND publishdate < dateadd(2 day to ?) AND (language = '' OR language LIKE 'en%%' OR language LIKE 'EN%%' OR language LIKE 'eng%%' OR language LIKE 'ENG%%') AND scheme <> 'scroll' AND hidden = false AND domainid <> 9 ORDER BY publishdate DESC", results, skip)
+	query := fmt.Sprintf("SELECT FIRST %d SKIP %d COUNT(*) OVER () totalCount, id, url, scheme, domainid, contenttype, charset, language, linecount, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE publishdate > dateadd(-1 year to ?) AND publishdate < dateadd(2 day to ?) AND (language = '' OR language LIKE 'en%%' OR language LIKE 'EN%%' OR language LIKE 'eng%%' OR language LIKE 'ENG%%') AND has_duplicate_on_gemini=false AND hidden = false AND domainid <> 9 ORDER BY publishdate DESC", results, skip)
 	rows, rows_err := conn.QueryContext(context.Background(), query, time.Now().UTC(), time.Now().UTC())
 
 	var pages []search.Page = make([]search.Page, 0, results)

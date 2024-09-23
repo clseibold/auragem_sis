@@ -11,3 +11,5 @@ main.backup
 SIS/
 *.prof
 aggregator_tool/aggregator_tool
+crawler/crawler_main/crawler_main
+crawler/crawler_main/crawler

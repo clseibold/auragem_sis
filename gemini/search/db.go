@@ -6,12 +6,57 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 	_ "time/tzdata"
 	"unicode/utf8"
 	// "strconv"
 )
+
+// TODO:
+// Ordering: domainid, publishdate, url?, contenttype
+func getPagesOfUDC(conn *sql.DB, page int, udcClass string) ([]Page, bool, bool) {
+	results := 50
+	skip := (page - 1) * results
+	q := `SELECT FIRST %%first%% SKIP %%skip%% COUNT(*) OVER () totalCount, id, url, scheme, domainid, contenttype, charset, language, linecount, udc, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE scheme='scroll' AND hidden=false AND udc=? AND prompt='' ORDER BY domainid ASC, CHAR_LENGTH(url) ASC, contenttype ASC, date_added ASC`
+
+	actualQuery := strings.Replace(q, `%%first%%`, strconv.Itoa(results), 1)
+	actualQuery = strings.Replace(actualQuery, `%%skip%%`, strconv.Itoa(skip), 1)
+
+	rows, rows_err := conn.QueryContext(context.Background(), actualQuery, udcClass)
+
+	var pages []Page = make([]Page, 0, results)
+	var totalResultsCount = 0 // Total count of all results, regardless of pagination
+	if rows_err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var page Page
+			scan_err := rows.Scan(&totalResultsCount, &page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Udc, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
+			if scan_err == nil {
+				pages = append(pages, page)
+			} else {
+				prevPage := Page{}
+				if len(pages) > 0 {
+					prevPage = pages[len(pages)-1]
+				}
+				panic(fmt.Errorf("scan error after page %v; %s", prevPage, scan_err.Error()))
+			}
+		}
+		if err := rows.Err(); err != nil {
+			panic(err)
+		}
+	} else {
+		panic(rows_err)
+	}
+
+	resultsStart := skip + 1
+	resultsEnd := Min(totalResultsCount, skip+results) // + 1 - 1
+	hasNextPage := resultsEnd < totalResultsCount && totalResultsCount != 0
+	hasPrevPage := resultsStart > results
+
+	return pages, hasNextPage, hasPrevPage
+}
 
 func getRecent(conn *sql.DB) []Page {
 	q := `SELECT FIRST 50 id, url, scheme, domainid, contenttype, charset, language, linecount, udc, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE hidden=false ORDER BY date_added DESC`
@@ -430,7 +475,7 @@ var InvalidURLString = errors.New("URL is not a valid UTF-8 string.")
 var URLTooLong = errors.New("URL exceeds 1024 bytes.")
 var InvalidURL = errors.New("URL is not valid.")
 var URLRelative = errors.New("URL is relative. Only absolute URLs can be added.")
-var URLNotGemini = errors.New("Must be a Gemini URL.")
+var URLNotGemini = errors.New("Must be a Gemini, Nex, Spartan, or Scroll URL.")
 
 func addSeedToDb(conn *sql.DB, seed Seed) (Seed, error) {
 	// Make sure URL is a valid UTF-8 string
@@ -442,7 +487,7 @@ func addSeedToDb(conn *sql.DB, seed Seed) (Seed, error) {
 		return Seed{}, URLTooLong
 	}
 	// Make sure URL has gemini:// scheme
-	if !strings.HasPrefix(seed.Url, "gemini://") && !strings.HasPrefix(seed.Url, "nex://") && !strings.Contains(seed.Url, "://") && !strings.HasPrefix(seed.Url, ".") && !strings.HasPrefix(seed.Url, "/") {
+	if !strings.HasPrefix(seed.Url, "gemini://") && !strings.HasPrefix(seed.Url, "scroll://") && !strings.HasPrefix(seed.Url, "spartan://") && !strings.HasPrefix(seed.Url, "nex://") && !strings.Contains(seed.Url, "://") && !strings.HasPrefix(seed.Url, ".") && !strings.HasPrefix(seed.Url, "/") {
 		seed.Url = "gemini://" + seed.Url
 	}
 
@@ -454,7 +499,7 @@ func addSeedToDb(conn *sql.DB, seed Seed) (Seed, error) {
 	if !u.IsAbs() { // Check if Absolute URL
 		return Seed{}, URLRelative
 	}
-	if u.Scheme != "gemini" && u.Scheme != "nex" { // Make sure scheme is gemini or nex
+	if u.Scheme != "gemini" && u.Scheme != "nex" && u.Scheme != "spartan" && u.Scheme != "scroll" { // Make sure scheme is gemini, nex, spartan, or scroll
 		return Seed{}, URLNotGemini
 	}
 	seed.Url = _getHostname(u)

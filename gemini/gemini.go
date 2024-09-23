@@ -29,6 +29,8 @@ var Command = &cobra.Command{
 	Run:   RunServer,
 }
 
+var OnionId string = ""
+
 func RunServer(cmd *cobra.Command, args []string) {
 	context, err := sis.InitSIS("./SIS/")
 	if err != nil {
@@ -44,6 +46,8 @@ func RunServer(cmd *cobra.Command, args []string) {
 	context.GetPortListener("0.0.0.0", "1995").AddCertificate("auragem.letz.dev", "auragem.pem")
 
 	go startWebServer()
+	go startTorOnlyWebServer()
+	setupTorOnly(context)
 
 	setupAuraGem(context)
 	setupScholasticDiversity(context)
@@ -52,13 +56,74 @@ func RunServer(cmd *cobra.Command, args []string) {
 	context.Start()
 }
 
+func setupTor() {
+	/*t, err := tor.Start(nil, &tor.StartConf{DataDir: "./TorData/", EnableNetwork: true})
+	if err != nil {
+		fmt.Printf("Failed to start tor: %v", err)
+	}*/
+
+	//go startTorWebServer(t)
+}
+
+// Tor - 9400
+/*
+func startTorWebServer(t *tor.Tor) {
+	// Wait at most a few minutes to publish the service
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	defer cancel()
+
+	// Create an onion v3 service to listen on any port but show as 80
+	onion, err := t.Listen(ctx, &tor.ListenConf{RemotePorts: []int{80}, Version3: true})
+	if err != nil {
+		log.Panicf("Failed to create onion service: %v", err)
+	}
+	defer onion.Close()
+	OnionId = onion.ID
+
+	fmt.Printf("Onion Service: %v.onion\n", onion.ID)
+
+	//http.Handle("/*", )
+	http.Handle("/", http.FileServer(http.Dir("/home/clseibold/ServerData/auragem_sis/SIS/auragem_tor_http")))
+	http.Handle("/scrollprotocol/", http.FileServer(http.Dir("/home/clseibold/ServerData/auragem_sis/SIS/scrollprotocol_http")))
+	http.Serve(onion, nil)
+}
+*/
+
 func startWebServer() {
-	http.ListenAndServe("0.0.0.0:80", http.FileServer(http.Dir("/home/clseibold/ServerData/auragem_sis/SIS/scrollprotocol_http")))
+	err := http.ListenAndServe("0.0.0.0:80", http.FileServer(http.Dir("/home/clseibold/ServerData/auragem_sis/SIS/scrollprotocol_http")))
+	if err != nil {
+		fmt.Printf("Failed to start web server on 0.0.0.0:80. %s\n", err.Error())
+	}
+}
+
+// Tor-only server
+func startTorOnlyWebServer() {
+	err := http.ListenAndServe("0.0.0.0:8080", http.FileServer(http.Dir("/home/clseibold/ServerData/auragem_sis/SIS/varilib_http")))
+	if err != nil {
+		fmt.Printf("Failed to start web server on 0.0.0.0:80. %s\n", err.Error())
+	}
+}
+
+func setupTorOnly(context *sis.SISContext) {
+	geminiServer := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "varilib_gemini", Hostname: "varilibcoo4yblrqhx43y5kvryy6htzoaa2vcmguxer4yti2r4ffyfyd.onion", DefaultLanguage: "en"})
+	context.GetPortListener("0.0.0.0", "1965").AddCertificate("varilibcoo4yblrqhx43y5kvryy6htzoaa2vcmguxer4yti2r4ffyfyd.onion", "varilib.pem")
+	geminiServer.AddDirectory("/*", "./")
+
+	scrollServer := context.AddServer(sis.Server{Type: sis.ServerType_Scroll, Name: "varilib_scroll", Hostname: "varilibcoo4yblrqhx43y5kvryy6htzoaa2vcmguxer4yti2r4ffyfyd.onion", DefaultLanguage: "en"})
+	context.GetPortListener("0.0.0.0", "5699").AddCertificate("varilibcoo4yblrqhx43y5kvryy6htzoaa2vcmguxer4yti2r4ffyfyd.onion", "varilib.pem")
+	scrollServer.AddProxyRoute("/*", "$varilib_gemini/*", '1')
+
+	spartanServer := context.AddServer(sis.Server{Type: sis.ServerType_Spartan, Name: "varilib_spartan", Hostname: "varilibcoo4yblrqhx43y5kvryy6htzoaa2vcmguxer4yti2r4ffyfyd.onion", DefaultLanguage: "en"})
+	spartanServer.AddProxyRoute("/*", "$varilib_gemini/*", '1')
 }
 
 func setupAuraGem(context *sis.SISContext) {
 	geminiServer := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "auragem_gemini", Hostname: "auragem.letz.dev", DefaultLanguage: "en"})
 	context.GetPortListener("0.0.0.0", "1965").AddCertificate("auragem.letz.dev", "auragem.pem")
+
+	// Add Onion Address handling for server
+	context.AddServerRoute("0.0.0.0", "1965", sis.ProtocolType_Gemini, "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", geminiServer)
+	context.GetPortListener("0.0.0.0", "1965").AddCertificate("auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", "auragem.pem")
 
 	geminiServer.AddDirectory("/*", "./")
 	geminiServer.AddFile("/.well-known/security.txt", "./security.txt")
@@ -93,19 +158,24 @@ func setupAuraGem(context *sis.SISContext) {
 
 	scrollServer := context.AddServer(sis.Server{Type: sis.ServerType_Scroll, Name: "auragem_scroll", Hostname: "auragem.letz.dev", DefaultLanguage: "en"})
 	context.GetPortListener("0.0.0.0", "5699").AddCertificate("auragem.letz.dev", "auragem.pem")
+	context.AddServerRoute("0.0.0.0", "5699", sis.ProtocolType_Scroll, "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", scrollServer)
+	context.GetPortListener("0.0.0.0", "5699").AddCertificate("auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", "auragem.pem")
 	scrollServer.AddProxyRoute("/*", "$auragem_gemini/*", '1')
 
 	nexServer := context.AddServer(sis.Server{Type: sis.ServerType_Nex, Name: "auragem_nex", Hostname: "auragem.letz.dev", DefaultLanguage: "en"})
+	//context.AddServerRoute("0.0.0.0", "1900", sis.ProtocolType_Nex, "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", nexServer)
 	nexServer.AddDirectory("/*", "./")
 	nexServer.AddProxyRoute("/gemini/*", "$auragem_gemini/*", '1')
 	nexServer.AddProxyRoute("/scholasticdiversity/*", "$scholasticdiversity_gemini/*", '1')
 	nexServer.AddProxyRoute("/scrollprotocol/*", "$scrollprotocol_gemini/*", '1')
 
 	spartanServer := context.AddServer(sis.Server{Type: sis.ServerType_Spartan, Name: "spartan", Hostname: "auragem.letz.dev", DefaultLanguage: "en"})
+	context.AddServerRoute("0.0.0.0", "300", sis.ProtocolType_Spartan, "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", spartanServer)
 	spartanServer.AddFile("/", "./index.gmi")
 	spartanServer.AddProxyRoute("/*", "$auragem_gemini/*", '1')
 
 	gopherServer := context.AddServer(sis.Server{Type: sis.ServerType_Gopher, Name: "gopher", Hostname: "auragem.letz.dev", DefaultLanguage: "en"})
+	//context.AddServerRoute("0.0.0.0", "70", sis.ProtocolType_Gopher, "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", gopherServer)
 	gopherServer.AddDirectory("/*", "./")
 	gopherServer.AddProxyRoute("/g/*", "$auragem_gemini/*", '1')
 	gopherServer.AddProxyRoute("/scholasticdiversity/*", "$scholasticdiversity_gemini/*", '1')
