@@ -52,6 +52,7 @@ func RunServer(cmd *cobra.Command, args []string) {
 	setupAuraGem(context)
 	setupScholasticDiversity(context)
 	setupScrollProtocol(context)
+	setupNewsfin(context)
 
 	context.Start()
 }
@@ -202,6 +203,16 @@ func setupScrollProtocol(context *sis.SISContext) {
 	scrollProtocol_gemini := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "scrollprotocol_gemini", Hostname: "scrollprotocol.us.to", DefaultLanguage: "en"})
 	context.GetPortListener("0.0.0.0", "1965").AddCertificate("scrollprotocol.us.to", "scrollprotocol.pem")
 	scrollProtocol_gemini.AddProxyRoute("/*", "$scrollprotocol_scroll/*", '1')
+}
+
+func setupNewsfin(context *sis.SISContext) {
+	/*scrollProtocol_scroll := context.AddServer(sis.Server{Type: sis.ServerType_Scroll, Name: "scrollprotocol_scroll", Hostname: "scrollprotocol.us.to", DefaultLanguage: "en"})
+	context.GetPortListener("0.0.0.0", "5699").AddCertificate("scrollprotocol.us.to", "scrollprotocol.pem")
+	scrollProtocol_scroll.AddDirectory("/*", "./")*/
+
+	newsfin_gemini := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "newsfin_gemini", Hostname: "newsfin.us.to", DefaultLanguage: "en"})
+	context.GetPortListener("0.0.0.0", "1965").AddCertificate("newsfin.us.to", "newsfin.pem")
+	newsfin_gemini.AddDirectory("/*", "./")
 }
 
 func handleGuestbook(request sis.Request) {
