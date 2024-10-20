@@ -26,7 +26,7 @@ require (
 	gitlab.com/clseibold/gonex v0.0.0-20240510073418-5058258917b4
 	gitlab.com/clseibold/profectus v0.1.3-0.20240520163109-7bfdfb9ac915
 	gitlab.com/clseibold/scroll-term v0.0.0-20240520162440-6ae2e4ba051b
-	gitlab.com/clseibold/smallnetinformationservices v0.0.0-20241020045254-5b13664f86ed
+	gitlab.com/clseibold/smallnetinformationservices v0.0.0-20241020045642-405b0b9f92e6
 	golang.org/x/net v0.22.0
 	golang.org/x/oauth2 v0.18.0
 	golang.org/x/text v0.14.0
