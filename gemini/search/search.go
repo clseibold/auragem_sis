@@ -141,8 +141,8 @@ func UdcClassStringToTitle(udc string) string {
 }
 
 func HandleSearchEngine(s sis.ServerHandle) {
-	crawling := make(map[string]bool, 10)
-	crawling_ips := make(map[string]bool, 10)
+	//crawling := make(map[string]bool, 10)
+	//crawling_ips := make(map[string]bool, 10)
 
 	conn := db.NewConn(db.SearchDB)
 	/*conn.SetMaxOpenConns(500)
