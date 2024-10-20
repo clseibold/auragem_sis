@@ -10,11 +10,10 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	wiki "github.com/trietmn/go-wiki"
-	"gitlab.com/clseibold/auragem_sis/crawler"
+	// "gitlab.com/clseibold/auragem_sis/crawler"
 	"gitlab.com/clseibold/auragem_sis/db"
 	sis "gitlab.com/clseibold/smallnetinformationservices"
 	"golang.org/x/text/language"
@@ -266,88 +265,92 @@ Note that AuraGem Search does not ensure or rank based on the popularity or accu
 		// => https://www.patreon.com/krixano Patreon
 	})
 
-	s.AddRoute("/search/crawl", func(request sis.Request) {
-		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Docs, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# Crawl a link\n"})
-		if request.ScrollMetadataRequested {
-			request.SendAbstract("")
-			return
-		}
-
-		query, err := request.Query()
-		if err != nil {
-			request.TemporaryFailure(err.Error())
-			return
-		} else if query == "" {
-			request.RequestInput("Enter a page/capsule to crawl:")
-			return
-		} else {
-			queryUrl, parse_err := url.Parse(query)
-			if parse_err != nil {
-				//request.Redirect("/search/crawl")
-				request.TemporaryFailure("Unable to parse URL.")
-				return
-			}
-			queryUrl.Fragment = "" // Strip the fragment
-			if (queryUrl.Scheme != "gemini" && queryUrl.Scheme != "nex" && queryUrl.Scheme != "spartan" && queryUrl.Scheme != "scroll") || !queryUrl.IsAbs() {
-				request.TemporaryFailure("Please enter only a Gemini, Nex, Spartan, or Scroll URL.")
-				return
-			}
-			if queryUrl.Path == "" {
-				queryUrl.Path = "/"
-			}
-
-			if _, ok := crawling_ips[request.IPHash()]; ok {
-				request.TemporaryFailure("You have already submitted a URL to crawl.")
+	/*
+		s.AddRoute("/search/crawl", func(request sis.Request) {
+			request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Docs, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# Crawl a link\n"})
+			if request.ScrollMetadataRequested {
+				request.SendAbstract("")
 				return
 			}
 
-			if len(crawling) > 10 {
-				request.TemporaryFailure("10 crawlers are in progress. Please wait until one or more of them are done before trying to submit another URL to crawl.")
+			query, err := request.Query()
+			if err != nil {
+				request.TemporaryFailure(err.Error())
 				return
-			}
-
-			// Add the capsule's root to the seeds table.
-			seedUrl := *queryUrl
-			seedUrl.Path = "/"
-			addSeedToDb(conn, Seed{0, queryUrl.String(), time.Time{}})
-
-			if _, ok := crawling[queryUrl.Host]; ok {
-				request.TemporaryFailure("Already crawling this domain name. Please wait until it is finished.")
+			} else if query == "" {
+				request.RequestInput("Enter a page/capsule to crawl:")
 				return
 			} else {
-				crawling[queryUrl.Host] = true
-				crawling_ips[request.IPHash()] = true
-				go func(host string, url string, iphash string) {
-					globalData := crawler.NewGlobalData(conn, false, true, 0)
-					globalData.AddUrl(url, crawler.UrlToCrawlData{})
-					wg := &sync.WaitGroup{}
-					wg.Add(1)
-					defer delete(crawling, host)
-					defer delete(crawling_ips, iphash)
-					crawler.Crawl(globalData, len(crawling)-1, wg)
-				}(queryUrl.Host, queryUrl.String(), request.IPHash())
-				request.Redirect("/search/")
+				queryUrl, parse_err := url.Parse(query)
+				if parse_err != nil {
+					//request.Redirect("/search/crawl")
+					request.TemporaryFailure("Unable to parse URL.")
+					return
+				}
+				queryUrl.Fragment = "" // Strip the fragment
+				if (queryUrl.Scheme != "gemini" && queryUrl.Scheme != "nex" && queryUrl.Scheme != "spartan" && queryUrl.Scheme != "scroll") || !queryUrl.IsAbs() {
+					request.TemporaryFailure("Please enter only a Gemini, Nex, Spartan, or Scroll URL.")
+					return
+				}
+				if queryUrl.Path == "" {
+					queryUrl.Path = "/"
+				}
+
+				if _, ok := crawling_ips[request.IPHash()]; ok {
+					request.TemporaryFailure("You have already submitted a URL to crawl.")
+					return
+				}
+
+				if len(crawling) > 10 {
+					request.TemporaryFailure("10 crawlers are in progress. Please wait until one or more of them are done before trying to submit another URL to crawl.")
+					return
+				}
+
+				// Add the capsule's root to the seeds table.
+				seedUrl := *queryUrl
+				seedUrl.Path = "/"
+				addSeedToDb(conn, Seed{0, queryUrl.String(), time.Time{}})
+
+				if _, ok := crawling[queryUrl.Host]; ok {
+					request.TemporaryFailure("Already crawling this domain name. Please wait until it is finished.")
+					return
+				} else {
+					crawling[queryUrl.Host] = true
+					crawling_ips[request.IPHash()] = true
+					go func(host string, url string, iphash string) {
+						globalData := crawler.NewGlobalData(conn, false, true, 0)
+						globalData.AddUrl(url, crawler.UrlToCrawlData{})
+						wg := &sync.WaitGroup{}
+						wg.Add(1)
+						defer delete(crawling, host)
+						defer delete(crawling_ips, iphash)
+						crawler.Crawl(globalData, len(crawling)-1, wg)
+					}(queryUrl.Host, queryUrl.String(), request.IPHash())
+					request.Redirect("/search/")
+				}
 			}
-		}
-	})
+		})
+	*/
 
-	// Goes through all pages that haven't been crawled in a long time and sets them to hidden if they are no longer available
-	inCleanup := false
-	s.AddRoute("/search/cleanup", func(request sis.Request) {
-		if inCleanup {
-			request.TemporaryFailure("Cleanup already running.")
-			return
-		}
+	/*
+		// Goes through all pages that haven't been crawled in a long time and sets them to hidden if they are no longer available
+		inCleanup := false
+		s.AddRoute("/search/cleanup", func(request sis.Request) {
+			if inCleanup {
+				request.TemporaryFailure("Cleanup already running.")
+				return
+			}
 
-		go func(inCleanup *bool) {
-			*inCleanup = true
-			globalData := crawler.NewGlobalData(conn, false, false, 0)
-			crawler.PurgeOldLinks(globalData)
-			*inCleanup = false
-		}(&inCleanup)
+			go func(inCleanup *bool) {
+				*inCleanup = true
+				globalData := crawler.NewGlobalData(conn, false, false, 0)
+				crawler.PurgeOldLinks(globalData)
+				*inCleanup = false
+			}(&inCleanup)
 
-		request.Redirect("/search/")
-	})
+			request.Redirect("/search/")
+		})
+	*/
 
 	s.AddRoute("/search/configure_default", func(request sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Docs, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# Configure Default Search Engine in Lagrange\n"})
