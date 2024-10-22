@@ -114,8 +114,8 @@ func setupTorOnly(context *sis.SISContext) {
 	//context.GetPortListener("0.0.0.0", "5699").AddCertificate("varilibcoo4yblrqhx43y5kvryy6htzoaa2vcmguxer4yti2r4ffyfyd.onion", "varilib.pem")
 	// scrollServer.AddProxyRoute("/*", "$varilib_gemini/*", '1')
 
-	spartanServer := context.AddServer(sis.Server{Type: sis.ServerType_Spartan, Name: "varilib_spartan", DefaultLanguage: "en"}, sis.HostConfig{BindAddress: "0.0.0.0", Hostname: "varilibcoo4yblrqhx43y5kvryy6htzoaa2vcmguxer4yti2r4ffyfyd.onion", Upload: false, CertPath: "varilib.pem"}, sis.HostConfig{BindAddress: "0.0.0.0", Hostname: "varilibcoo4yblrqhx43y5kvryy6htzoaa2vcmguxer4yti2r4ffyfyd.onion", Upload: true, CertPath: "varilib.pem"})
-	spartanServer.AddProxyRoute("/*", "$varilib_gemini/*", '1')
+	// spartanServer := context.AddServer(sis.Server{Type: sis.ServerType_Spartan, Name: "varilib_spartan", DefaultLanguage: "en"}, sis.HostConfig{BindAddress: "0.0.0.0", Hostname: "varilibcoo4yblrqhx43y5kvryy6htzoaa2vcmguxer4yti2r4ffyfyd.onion", Upload: false, CertPath: "varilib.pem"}, sis.HostConfig{BindAddress: "0.0.0.0", Hostname: "varilibcoo4yblrqhx43y5kvryy6htzoaa2vcmguxer4yti2r4ffyfyd.onion", Upload: true, CertPath: "varilib.pem"})
+	// spartanServer.AddProxyRoute("/*", "$varilib_gemini/*", '1')
 }
 
 func setupAuraGem(context *sis.SISContext) {
