@@ -106,13 +106,13 @@ func startTorOnlyWebServer() {
 }
 
 func setupTorOnly(context *sis.SISContext) {
-	geminiServer := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "varilib_gemini", DefaultLanguage: "en"}, sis.HostConfig{BindAddress: "0.0.0.0", Hostname: "varilibcoo4yblrqhx43y5kvryy6htzoaa2vcmguxer4yti2r4ffyfyd.onion", Upload: false, CertPath: "varilib.pem"}, sis.HostConfig{BindAddress: "0.0.0.0", Hostname: "varilibcoo4yblrqhx43y5kvryy6htzoaa2vcmguxer4yti2r4ffyfyd.onion", Upload: true, CertPath: "varilib.pem"})
+	// geminiServer := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "varilib_gemini", DefaultLanguage: "en"}, sis.HostConfig{BindAddress: "0.0.0.0", Hostname: "varilibcoo4yblrqhx43y5kvryy6htzoaa2vcmguxer4yti2r4ffyfyd.onion", Upload: false, CertPath: "varilib.pem"}, sis.HostConfig{BindAddress: "0.0.0.0", Hostname: "varilibcoo4yblrqhx43y5kvryy6htzoaa2vcmguxer4yti2r4ffyfyd.onion", Upload: true, CertPath: "varilib.pem"})
 	//context.GetPortListener("0.0.0.0", "1965").AddCertificate("varilibcoo4yblrqhx43y5kvryy6htzoaa2vcmguxer4yti2r4ffyfyd.onion", "varilib.pem")
-	geminiServer.AddDirectory("/*", "./")
+	// geminiServer.AddDirectory("/*", "./")
 
-	scrollServer := context.AddServer(sis.Server{Type: sis.ServerType_Scroll, Name: "varilib_scroll", DefaultLanguage: "en"}, sis.HostConfig{BindAddress: "0.0.0.0", Hostname: "varilibcoo4yblrqhx43y5kvryy6htzoaa2vcmguxer4yti2r4ffyfyd.onion", Upload: false, CertPath: "varilib.pem"}, sis.HostConfig{BindAddress: "0.0.0.0", Hostname: "varilibcoo4yblrqhx43y5kvryy6htzoaa2vcmguxer4yti2r4ffyfyd.onion", Upload: true, CertPath: "varilib.pem"})
+	// scrollServer := context.AddServer(sis.Server{Type: sis.ServerType_Scroll, Name: "varilib_scroll", DefaultLanguage: "en"}, sis.HostConfig{BindAddress: "0.0.0.0", Hostname: "varilibcoo4yblrqhx43y5kvryy6htzoaa2vcmguxer4yti2r4ffyfyd.onion", Upload: false, CertPath: "varilib.pem"}, sis.HostConfig{BindAddress: "0.0.0.0", Hostname: "varilibcoo4yblrqhx43y5kvryy6htzoaa2vcmguxer4yti2r4ffyfyd.onion", Upload: true, CertPath: "varilib.pem"})
 	//context.GetPortListener("0.0.0.0", "5699").AddCertificate("varilibcoo4yblrqhx43y5kvryy6htzoaa2vcmguxer4yti2r4ffyfyd.onion", "varilib.pem")
-	scrollServer.AddProxyRoute("/*", "$varilib_gemini/*", '1')
+	// scrollServer.AddProxyRoute("/*", "$varilib_gemini/*", '1')
 
 	spartanServer := context.AddServer(sis.Server{Type: sis.ServerType_Spartan, Name: "varilib_spartan", DefaultLanguage: "en"}, sis.HostConfig{BindAddress: "0.0.0.0", Hostname: "varilibcoo4yblrqhx43y5kvryy6htzoaa2vcmguxer4yti2r4ffyfyd.onion", Upload: false, CertPath: "varilib.pem"}, sis.HostConfig{BindAddress: "0.0.0.0", Hostname: "varilibcoo4yblrqhx43y5kvryy6htzoaa2vcmguxer4yti2r4ffyfyd.onion", Upload: true, CertPath: "varilib.pem"})
 	spartanServer.AddProxyRoute("/*", "$varilib_gemini/*", '1')
