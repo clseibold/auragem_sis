@@ -125,6 +125,10 @@ func setupAuraGem(context *sis.SISContext) {
 		{BindAddress: "0.0.0.0", Hostname: "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", Upload: false, CertPath: "auragem.pem"},
 		{BindAddress: "0.0.0.0", Hostname: "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", Upload: true, CertPath: "auragem.pem"},
 	}
+	hostsConfig2 := []sis.HostConfig{
+		{BindAddress: "0.0.0.0", Hostname: "auragem.letz.dev", Upload: false, CertPath: "auragem.pem"},
+		{BindAddress: "0.0.0.0", Hostname: "auragem.letz.dev", Upload: true, CertPath: "auragem.pem"},
+	}
 	geminiServer := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "auragem_gemini", DefaultLanguage: "en"}, hostsConfig...)
 	// context.GetPortListener("0.0.0.0", "1965").AddCertificate("auragem.letz.dev", "auragem.pem")
 
@@ -169,7 +173,7 @@ func setupAuraGem(context *sis.SISContext) {
 	// context.GetPortListener("0.0.0.0", "5699").AddCertificate("auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", "auragem.pem")
 	scrollServer.AddProxyRoute("/*", "$auragem_gemini/*", '1')
 
-	nexServer := context.AddServer(sis.Server{Type: sis.ServerType_Nex, Name: "auragem_nex", DefaultLanguage: "en"}, hostsConfig...)
+	nexServer := context.AddServer(sis.Server{Type: sis.ServerType_Nex, Name: "auragem_nex", DefaultLanguage: "en"}, hostsConfig2...)
 	//context.AddServerRoute("0.0.0.0", "1900", sis.ProtocolType_Nex, "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", nexServer)
 	nexServer.AddDirectory("/*", "./")
 	nexServer.AddProxyRoute("/gemini/*", "$auragem_gemini/*", '1')
@@ -181,7 +185,7 @@ func setupAuraGem(context *sis.SISContext) {
 	spartanServer.AddFile("/", "./index.gmi")
 	spartanServer.AddProxyRoute("/*", "$auragem_gemini/*", '1')
 
-	gopherServer := context.AddServer(sis.Server{Type: sis.ServerType_Gopher, Name: "gopher", DefaultLanguage: "en"}, hostsConfig...)
+	gopherServer := context.AddServer(sis.Server{Type: sis.ServerType_Gopher, Name: "gopher", DefaultLanguage: "en"}, hostsConfig2...)
 	//context.AddServerRoute("0.0.0.0", "70", sis.ProtocolType_Gopher, "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", gopherServer)
 	gopherServer.AddDirectory("/*", "./")
 	gopherServer.AddProxyRoute("/g/*", "$auragem_gemini/*", '1')
