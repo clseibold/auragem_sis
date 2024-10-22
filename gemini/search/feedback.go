@@ -68,7 +68,7 @@ func searchFeedbackPage(request sis.Request) {
 		if err != nil {
 			return //err
 		}
-		request.Redirect("%s%s:%s/search/feedback.gmi", request.Server.Scheme(), request.Server.Hostname(), request.Server.Port())
+		request.Redirect("%s%s:%s/search/feedback.gmi", request.Server.Scheme(), request.Host.Hostname, request.Host.Port)
 		return
 	} else {
 		fileData, err := request.Server.FS().ReadFile("searchfeedback.gmi")

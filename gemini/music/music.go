@@ -77,15 +77,15 @@ func HandleMusic(s sis.ServerHandle) {
 
 		cert := request.UserCert
 		if cert == nil {
-			if request.Type == sis.ServerType_Gemini {
+			if request.Type == sis.ProtocolType_Gemini {
 				request.Gemini(index_gmi)
-			} else if request.Type == sis.ServerType_Scroll {
+			} else if request.Type == sis.ProtocolType_Scroll {
 				request.Scroll(index_scroll)
-			} else if request.Type == sis.ServerType_Spartan {
+			} else if request.Type == sis.ProtocolType_Spartan {
 				request.TemporaryFailure("Service not available over Spartan. Please visit over Gemini or Scroll.")
-			} else if request.Type == sis.ServerType_Nex {
+			} else if request.Type == sis.ProtocolType_Nex {
 				request.TemporaryFailure("Service not available over Nex. Please visit over Gemini or Scroll.")
-			} else if request.Type == sis.ServerType_Gopher {
+			} else if request.Type == sis.ProtocolType_Gopher {
 				request.TemporaryFailure("Service not available over Gopher. Please visit over Gemini or Scroll.")
 			}
 			return
@@ -184,7 +184,7 @@ In order to save space, AuraGem Music deduplicates songs by taking the hash of t
 		}
 		uploadLink := ""
 		uploadMethod := ""
-		if request.Type == sis.ServerType_Gemini || request.Type == sis.ServerType_Scroll {
+		if request.Type == sis.ProtocolType_Gemini || request.Type == sis.ProtocolType_Scroll {
 			titanHost := "titan://auragem.letz.dev/"
 			if request.Hostname() == "192.168.0.60" {
 				titanHost = "titan://192.168.0.60/"
@@ -225,10 +225,10 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 			} else {
 				// First, check mimetype if using Titan
 				mimetype := request.DataMime
-				if (request.Type == sis.ServerType_Gemini || request.Type == sis.ServerType_Scroll) && !strings.HasPrefix(mimetype, "audio/mpeg") && !strings.HasPrefix(mimetype, "audio/mp3") {
+				if (request.Type == sis.ProtocolType_Gemini || request.Type == sis.ProtocolType_Scroll) && !strings.HasPrefix(mimetype, "audio/mpeg") && !strings.HasPrefix(mimetype, "audio/mp3") {
 					request.TemporaryFailure("Only mp3 audio files are allowed.")
 					return
-				} else if !(request.Type == sis.ServerType_Gemini || request.Type == sis.ServerType_Scroll) {
+				} else if !(request.Type == sis.ProtocolType_Gemini || request.Type == sis.ProtocolType_Scroll) {
 					request.TemporaryFailure("Upload only supported via Titan.")
 					return
 				}
