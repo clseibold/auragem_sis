@@ -37,13 +37,13 @@ func RunServer(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 	//context.AdminServer().BindAddress = "0.0.0.0"
-	//context.AdminServer().Hostname = "auragem.letz.dev"
+	//context.AdminServer().Hostname = "auragem.ddns.net"
 	//context.AdminServer().AddCertificate("auragem.pem")
 	err = context.SaveConfiguration()
 	if err != nil {
 		panic(err)
 	}
-	//context.GetPortListener("0.0.0.0", "1995").AddCertificate("auragem.letz.dev", "auragem.pem")
+	//context.GetPortListener("0.0.0.0", "1995").AddCertificate("auragem.ddns.net", "auragem.pem")
 
 	go startWebServer()
 	go startTorOnlyWebServer()
@@ -120,17 +120,17 @@ func setupTorOnly(context *sis.SISContext) {
 
 func setupAuraGem(context *sis.SISContext) {
 	hostsConfig := []sis.HostConfig{
-		{BindAddress: "0.0.0.0", Hostname: "auragem.letz.dev", Upload: false, CertPath: "auragem.pem"},
-		{BindAddress: "0.0.0.0", Hostname: "auragem.letz.dev", Upload: true, CertPath: "auragem.pem"},
+		{BindAddress: "0.0.0.0", Hostname: "auragem.ddns.net", Upload: false, CertPath: "auragem.pem"},
+		{BindAddress: "0.0.0.0", Hostname: "auragem.ddns.net", Upload: true, CertPath: "auragem.pem"},
 		{BindAddress: "0.0.0.0", Hostname: "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", Upload: false, CertPath: "auragem.pem"},
 		{BindAddress: "0.0.0.0", Hostname: "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", Upload: true, CertPath: "auragem.pem"},
 	}
 	hostsConfig2 := []sis.HostConfig{
-		{BindAddress: "0.0.0.0", Hostname: "auragem.letz.dev", Upload: false, CertPath: "auragem.pem"},
-		{BindAddress: "0.0.0.0", Hostname: "auragem.letz.dev", Upload: true, CertPath: "auragem.pem"},
+		{BindAddress: "0.0.0.0", Hostname: "auragem.ddns.net", Upload: false, CertPath: "auragem.pem"},
+		{BindAddress: "0.0.0.0", Hostname: "auragem.ddns.net", Upload: true, CertPath: "auragem.pem"},
 	}
 	geminiServer := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "auragem_gemini", DefaultLanguage: "en"}, hostsConfig...)
-	// context.GetPortListener("0.0.0.0", "1965").AddCertificate("auragem.letz.dev", "auragem.pem")
+	// context.GetPortListener("0.0.0.0", "1965").AddCertificate("auragem.ddns.net", "auragem.pem")
 
 	// Add Onion Address handling for server
 	// context.AddServerRoute("0.0.0.0", "1965", sis.ProtocolType_Gemini, "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", geminiServer)
@@ -168,7 +168,7 @@ func setupAuraGem(context *sis.SISContext) {
 	})
 
 	scrollServer := context.AddServer(sis.Server{Type: sis.ServerType_Scroll, Name: "auragem_scroll", DefaultLanguage: "en"}, hostsConfig...)
-	// context.GetPortListener("0.0.0.0", "5699").AddCertificate("auragem.letz.dev", "auragem.pem")
+	// context.GetPortListener("0.0.0.0", "5699").AddCertificate("auragem.ddns.net", "auragem.pem")
 	// context.AddServerRoute("0.0.0.0", "5699", sis.ProtocolType_Scroll, "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", scrollServer)
 	// context.GetPortListener("0.0.0.0", "5699").AddCertificate("auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", "auragem.pem")
 	scrollServer.AddProxyRoute("/*", "$auragem_gemini/*", '1')

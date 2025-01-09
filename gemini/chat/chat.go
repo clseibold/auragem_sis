@@ -76,7 +76,7 @@ func HandleChat(s sis.ServerHandle) {
 		}
 		var builder strings.Builder
 		fmt.Fprintf(&builder, "# Live Chat\nThis chat is heavily inspired by Mozz's chat, but the UI has been tailored for most gemini browsers. Message history is cleared every 24 hours. This chat makes use of keepalive packets so that clients (that support them) will not timeout.\n=> gemini://chat.mozz.us/ Mozz's Chat\n\n")
-		fmt.Fprintf(&builder, "=> /chat/%s/send Send Message\n=> titan://auragem.letz.dev/chat/%s/send Send Message via Titan\n\n", url.PathEscape(username), url.PathEscape(username))
+		fmt.Fprintf(&builder, "=> /chat/%s/send Send Message\n=> titan://auragem.ddns.net/chat/%s/send Send Message via Titan\n\n", url.PathEscape(username), url.PathEscape(username))
 		context.clientNumber.Add(1)
 
 		// Print out all messages in current history
@@ -188,8 +188,8 @@ func HandleChat(s sis.ServerHandle) {
 		if !request.ScrollMetadataRequested {
 			sendChan <- (ChatText{username, message, time.Now(), ""})
 		}
-		//return c.NoContent(gig.StatusRedirectTemporary, "gemini://auragem.letz.dev/chat/"+url.PathEscape(username))
-		request.Redirect(request.Server.Scheme() + "auragem.letz.dev/chat/" + url.PathEscape(username))
+		//return c.NoContent(gig.StatusRedirectTemporary, "gemini://auragem.ddns.net/chat/"+url.PathEscape(username))
+		request.Redirect(request.Server.Scheme() + "auragem.ddns.net/chat/" + url.PathEscape(username))
 	}
 
 	s.AddRoute("/chat/:username/send", sendFunc)

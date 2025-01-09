@@ -139,7 +139,7 @@ func HandleAsk(s sis.ServerHandle) {
 		var builder strings.Builder
 		fmt.Fprintf(&builder, "# AuraGem Ask Daily Digest\n\n")
 		fmt.Fprintf(&builder, "=> /~ask/ AuraGem Ask Root\n")
-		query := strings.ReplaceAll(url.QueryEscape("gemini://auragem.letz.dev/~ask/dailydigest"), "%", "%%")
+		query := strings.ReplaceAll(url.QueryEscape("gemini://auragem.ddns.net/~ask/dailydigest"), "%", "%%")
 		fmt.Fprintf(&builder, "=> gemini://warmedal.se/~antenna/submit?%s Update Digest on Antenna\n\n", query)
 		prevYear, prevMonth := 0, time.Month(1)
 		for _, date := range dates {

@@ -339,9 +339,9 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 
 %s
 => https://youtube.com/watch?v=%s On YouTube
-=> gopher://auragem.letz.dev/1/g/youtube/video/%s/ On Gopher
-=> spartan://auragem.letz.dev/g/youtube/video/%s/ On Spartan
-=> nex://auragem.letz.dev/gemini/youtube/video/%s/ On Nex
+=> gopher://auragem.ddns.net/1/g/youtube/video/%s/ On Gopher
+=> spartan://auragem.ddns.net/g/youtube/video/%s/ On Spartan
+=> nex://auragem.ddns.net/gemini/youtube/video/%s/ On Nex
 
 %s
 

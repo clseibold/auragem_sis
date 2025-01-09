@@ -363,7 +363,7 @@ Note that AuraGem Search does not ensure or rank based on the popularity or accu
 
 1. Go to File -> Preferences -> General
 2. Paste the following link into the Search URL field:
-> gemini://auragem.letz.dev/search/s
+> gemini://auragem.ddns.net/search/s
 `)
 	})
 

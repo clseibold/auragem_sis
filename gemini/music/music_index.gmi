@@ -24,4 +24,4 @@ In order to register, create and enable a client certificate and then head over 
 
 AuraGem Music is currently not a distribution platform. Instead, it hosts a user's personal collection of music for their own consumption. Therefore, the music a user uploads is only visible to that person and will not be distributed to others. Uploading music that the user has bought is legitimate. However, the user is solely responsible for any pirated content that they have uploaded.
 
-=> scroll://auragem.letz.dev/music/ Via Scroll
+=> scroll://auragem.ddns.net/music/ Via Scroll
