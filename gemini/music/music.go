@@ -75,7 +75,7 @@ func HandleMusic(s sis.ServerHandle) {
 			return
 		}
 
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			if request.Type == sis.ProtocolType_Gemini {
 				request.Gemini(index_gmi)
 			} else if request.Type == sis.ProtocolType_Scroll {
@@ -92,7 +92,6 @@ func HandleMusic(s sis.ServerHandle) {
 			user, isRegistered := GetUser(conn, request.UserCertHash())
 			if !isRegistered {
 				request.Gemini(registerNotification)
-				request.Gemini(fmt.Sprintf("User Cert Hash: '%s'\n", request.UserCertHash()))
 				return
 			} else {
 				request.SetScrollMetadataResponse(sis.ScrollMetadata{PublishDate: publishDate, UpdateDate: updateDate, Language: "en", Abstract: "# AuraGem Music - " + user.Username + "\n"})
@@ -145,7 +144,7 @@ In order to save space, AuraGem Music deduplicates songs by taking the hash of t
 	})
 
 	s.AddRoute("/music/random", func(request sis.Request) {
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate.")
 			return
 		} else {
@@ -177,7 +176,7 @@ In order to save space, AuraGem Music deduplicates songs by taking the hash of t
 	})
 
 	s.AddRoute("/music/upload", func(request sis.Request) {
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate.")
 			return
 		}
@@ -211,7 +210,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 	})
 
 	s.AddUploadRoute("/music/upload", func(request sis.Request) {
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate.")
 			return
 		} else if request.Upload {
@@ -330,7 +329,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 	})
 
 	s.AddRoute("/music/*", func(request sis.Request) {
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
 		} else {
@@ -390,7 +389,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 	})
 
 	s.AddRoute("/music/albums", func(request sis.Request) {
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
 		} else {
@@ -425,7 +424,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 	})
 
 	s.AddRoute("/music/artists", func(request sis.Request) {
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
 		} else {
@@ -460,7 +459,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 	})
 
 	s.AddRoute("/music/artist/*", func(request sis.Request) {
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
 		} else {
@@ -486,7 +485,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 	})
 
 	s.AddRoute("/music/stream/artist/*", func(request sis.Request) {
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
 		} else {
@@ -516,7 +515,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 	})
 
 	s.AddRoute("/music/stream/random", func(request sis.Request) {
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
 		} else {
@@ -538,7 +537,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 	})
 
 	s.AddRoute("/music/register", func(request sis.Request) {
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
 		} else {
@@ -559,7 +558,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 
 	// Admin pages
 	s.AddRoute("/music/admin", func(request sis.Request) {
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
 		} else {
@@ -581,7 +580,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 			return
 		}
 
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
 		} else {
@@ -598,7 +597,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 
 	// Library Management Handles
 	s.AddRoute("/music/manage", func(request sis.Request) {
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
 		} else {
@@ -614,7 +613,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 	})
 
 	s.AddRoute("/music/manage/delete", func(request sis.Request) {
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
 		} else {
@@ -637,7 +636,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 			return
 		}
 
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
 		} else {

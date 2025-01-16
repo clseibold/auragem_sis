@@ -44,7 +44,7 @@ func HandleAsk(s sis.ServerHandle) {
 			return
 		}
 
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			if query == "register" || query != "" {
 				request.RequestClientCert("Please enable a certificate.")
 				return
@@ -77,7 +77,7 @@ func HandleAsk(s sis.ServerHandle) {
 	})
 
 	s.AddRoute("/~ask/register", func(request sis.Request) {
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			request.Redirect("/~ask/?register")
 		} else {
 			// Check if user already exists, if so, give error.
@@ -181,7 +181,7 @@ func HandleAsk(s sis.ServerHandle) {
 	})
 
 	s.AddRoute("/~ask/myquestions", func(request sis.Request) {
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate.")
 			return
 		} else {
@@ -196,7 +196,7 @@ func HandleAsk(s sis.ServerHandle) {
 	})
 
 	s.AddRoute("/~ask/:topicid", func(request sis.Request) {
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			getTopicHomepage(request, conn, (AskUser{}), false)
 		} else {
 			user, isRegistered := GetUser(conn, request.UserCertHash())
@@ -205,7 +205,7 @@ func HandleAsk(s sis.ServerHandle) {
 	})
 
 	s.AddUploadRoute("/~ask/:topicid/create", func(request sis.Request) {
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			getCreateQuestion(request, conn, (AskUser{}), false)
 		} else if request.Upload {
 			user, isRegistered := GetUser(conn, request.UserCertHash())
@@ -213,7 +213,7 @@ func HandleAsk(s sis.ServerHandle) {
 		}
 	})
 	s.AddRoute("/~ask/:topicid/create", func(request sis.Request) {
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			getCreateQuestion(request, conn, (AskUser{}), false)
 		} else {
 			user, isRegistered := GetUser(conn, request.UserCertHash())
@@ -227,7 +227,7 @@ func HandleAsk(s sis.ServerHandle) {
 			return
 		}
 
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			getCreateQuestionTitle(request, conn, (AskUser{}), false, 0, query)
 		} else if query == "" {
 			request.RequestInput("Title of Question:")
@@ -244,7 +244,7 @@ func HandleAsk(s sis.ServerHandle) {
 			return
 		}
 
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			getCreateQuestionText(request, conn, (AskUser{}), false, 0, query)
 		} else if query == "" {
 			request.RequestInput("Text of Question:")
@@ -256,7 +256,7 @@ func HandleAsk(s sis.ServerHandle) {
 	})
 
 	s.AddRoute("/~ask/:topicid/:questionid", func(request sis.Request) {
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			getQuestionPage(request, conn, (AskUser{}), false)
 		} else {
 			user, isRegistered := GetUser(conn, request.UserCertHash())
@@ -275,7 +275,7 @@ func HandleAsk(s sis.ServerHandle) {
 			return
 		}
 
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			getCreateQuestionTitle(request, conn, (AskUser{}), false, questionId, query)
 		} else if query == "" {
 			request.RequestInput("Title of Question:")
@@ -297,7 +297,7 @@ func HandleAsk(s sis.ServerHandle) {
 			return
 		}
 
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			getCreateQuestionText(request, conn, (AskUser{}), false, questionId, query)
 		} else if query == "" {
 			request.RequestInput("Text of Question:")
@@ -310,7 +310,7 @@ func HandleAsk(s sis.ServerHandle) {
 
 	s.AddRoute("/~ask/:topicid/:questionid/raw", func(request sis.Request) { // TODO
 		// Used for titan edits
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			//return getQuestionPage(c, conn, (AskUser{}), false)
 			request.TemporaryFailure("Certificate required.")
 			return
@@ -327,7 +327,7 @@ func HandleAsk(s sis.ServerHandle) {
 	})
 
 	s.AddUploadRoute("/~ask/:topicid/:questionid/a/create", func(request sis.Request) {
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			getCreateAnswer(request, conn, (AskUser{}), false)
 		} else if request.Upload {
 			user, isRegistered := GetUser(conn, request.UserCertHash())
@@ -335,7 +335,7 @@ func HandleAsk(s sis.ServerHandle) {
 		}
 	})
 	s.AddRoute("/~ask/:topicid/:questionid/a/create", func(request sis.Request) {
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			getCreateAnswer(request, conn, (AskUser{}), false)
 		} else {
 			user, isRegistered := GetUser(conn, request.UserCertHash())
@@ -349,7 +349,7 @@ func HandleAsk(s sis.ServerHandle) {
 			return
 		}
 
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			getCreateAnswerText(request, conn, (AskUser{}), false, 0, query)
 		} else if query == "" {
 			request.RequestInput("Text of Answer:")
@@ -366,7 +366,7 @@ func HandleAsk(s sis.ServerHandle) {
 			return
 		}
 
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			getCreateAnswerGemlog(request, conn, (AskUser{}), false, query)
 		} else if query == "" {
 			request.RequestInput("Gemlog URL:")
@@ -378,7 +378,7 @@ func HandleAsk(s sis.ServerHandle) {
 	})
 
 	s.AddRoute("/~ask/:topicid/:questionid/a/:answerid", func(request sis.Request) {
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			getAnswerPage(request, conn, (AskUser{}), false)
 		} else {
 			user, isRegistered := GetUser(conn, request.UserCertHash())
@@ -397,7 +397,7 @@ func HandleAsk(s sis.ServerHandle) {
 			return
 		}
 
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			getCreateAnswerText(request, conn, (AskUser{}), false, answerId, query)
 		} else if query == "" {
 			request.RequestInput("Text of Answer:")
@@ -415,7 +415,7 @@ func HandleAsk(s sis.ServerHandle) {
 		}
 		query = strings.ToLower(query)
 
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate.")
 			return
 		} else {
@@ -439,7 +439,7 @@ func HandleAsk(s sis.ServerHandle) {
 		}
 		query = strings.ToLower(query)
 
-		if request.HasUserCert() {
+		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate.")
 			return
 		} else {
