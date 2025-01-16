@@ -1,6 +1,8 @@
 module gitlab.com/clseibold/auragem_sis
 
-go 1.22.0
+go 1.23.0
+
+toolchain go1.23.1
 
 require (
 	git.sr.ht/~adnano/go-gemini v0.2.4
@@ -18,7 +20,7 @@ require (
 	github.com/rs/zerolog v1.32.0
 	github.com/spf13/cobra v1.8.0
 	github.com/trietmn/go-wiki v1.0.3
-	gitlab.com/clseibold/smallnetinformationservices v0.0.0-20241023053738-e44e2aeb9807
+	gitlab.com/clseibold/smallnetinformationservices v0.0.0-20250116144627-df6d4df16a65
 	golang.org/x/net v0.30.0
 	golang.org/x/oauth2 v0.18.0
 	golang.org/x/text v0.19.0
