@@ -75,8 +75,7 @@ func HandleMusic(s sis.ServerHandle) {
 			return
 		}
 
-		cert := request.UserCert
-		if cert == nil {
+		if request.HasUserCert() {
 			if request.Type == sis.ProtocolType_Gemini {
 				request.Gemini(index_gmi)
 			} else if request.Type == sis.ProtocolType_Scroll {
@@ -90,7 +89,7 @@ func HandleMusic(s sis.ServerHandle) {
 			}
 			return
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash_Gemini())
+			user, isRegistered := GetUser(conn, request.UserCertHash())
 			if !isRegistered {
 				request.Gemini(registerNotification)
 				return
@@ -145,12 +144,11 @@ In order to save space, AuraGem Music deduplicates songs by taking the hash of t
 	})
 
 	s.AddRoute("/music/random", func(request sis.Request) {
-		cert := request.UserCert
-		if cert == nil {
+		if request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate.")
 			return
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash_Gemini())
+			user, isRegistered := GetUser(conn, request.UserCertHash())
 			if !isRegistered {
 				request.Gemini(registerNotification)
 				return
@@ -178,7 +176,7 @@ In order to save space, AuraGem Music deduplicates songs by taking the hash of t
 	})
 
 	s.AddRoute("/music/upload", func(request sis.Request) {
-		if request.UserCert == nil {
+		if request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate.")
 			return
 		}
@@ -212,12 +210,11 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 	})
 
 	s.AddUploadRoute("/music/upload", func(request sis.Request) {
-		cert := request.UserCert
-		if cert == nil {
+		if request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate.")
 			return
 		} else if request.Upload {
-			user, isRegistered := GetUser(conn, request.UserCertHash_Gemini())
+			user, isRegistered := GetUser(conn, request.UserCertHash())
 			if !isRegistered {
 				//return c.Gemini(registerNotification)
 				request.TemporaryFailure("You must be registered first before you can upload.")
@@ -332,12 +329,11 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 	})
 
 	s.AddRoute("/music/*", func(request sis.Request) {
-		cert := request.UserCert
-		if cert == nil {
+		if request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash_Gemini())
+			user, isRegistered := GetUser(conn, request.UserCertHash())
 			if !isRegistered {
 				request.Gemini(registerNotification)
 				return
@@ -393,12 +389,11 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 	})
 
 	s.AddRoute("/music/albums", func(request sis.Request) {
-		cert := request.UserCert
-		if cert == nil {
+		if request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash_Gemini())
+			user, isRegistered := GetUser(conn, request.UserCertHash())
 			if !isRegistered {
 				request.Gemini(registerNotification)
 				return
@@ -429,12 +424,11 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 	})
 
 	s.AddRoute("/music/artists", func(request sis.Request) {
-		cert := request.UserCert
-		if cert == nil {
+		if request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash_Gemini())
+			user, isRegistered := GetUser(conn, request.UserCertHash())
 			if !isRegistered {
 				request.Gemini(registerNotification)
 				return
@@ -465,12 +459,11 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 	})
 
 	s.AddRoute("/music/artist/*", func(request sis.Request) {
-		cert := request.UserCert
-		if cert == nil {
+		if request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash_Gemini())
+			user, isRegistered := GetUser(conn, request.UserCertHash())
 			if !isRegistered {
 				request.Gemini(registerNotification)
 				return
@@ -492,12 +485,11 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 	})
 
 	s.AddRoute("/music/stream/artist/*", func(request sis.Request) {
-		cert := request.UserCert
-		if cert == nil {
+		if request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash_Gemini())
+			user, isRegistered := GetUser(conn, request.UserCertHash())
 			if !isRegistered {
 				request.Gemini(registerNotification)
 				return
@@ -523,12 +515,11 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 	})
 
 	s.AddRoute("/music/stream/random", func(request sis.Request) {
-		cert := request.UserCert
-		if cert == nil {
+		if request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash_Gemini())
+			user, isRegistered := GetUser(conn, request.UserCertHash())
 			if !isRegistered {
 				request.Gemini(registerNotification)
 				return
@@ -546,9 +537,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 	})
 
 	s.AddRoute("/music/register", func(request sis.Request) {
-		cert := request.UserCert
-
-		if cert == nil {
+		if request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
 		} else {
@@ -561,7 +550,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 				return
 			} else {
 				// Do registration
-				registerUser(request, conn, query, request.UserCertHash_Gemini())
+				registerUser(request, conn, query, request.UserCertHash())
 				return
 			}
 		}
@@ -569,12 +558,11 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 
 	// Admin pages
 	s.AddRoute("/music/admin", func(request sis.Request) {
-		cert := request.UserCert
-		if cert == nil {
+		if request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash_Gemini())
+			user, isRegistered := GetUser(conn, request.UserCertHash())
 			if !isRegistered || !user.Is_staff {
 				request.ClientCertNotAuthorized("Not authorized for this page")
 				return
@@ -592,12 +580,11 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 			return
 		}
 
-		cert := request.UserCert
-		if cert == nil {
+		if request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash_Gemini())
+			user, isRegistered := GetUser(conn, request.UserCertHash())
 			if !isRegistered || !user.Is_staff {
 				request.ClientCertNotAuthorized("Not authorized for this page")
 				return
@@ -610,12 +597,11 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 
 	// Library Management Handles
 	s.AddRoute("/music/manage", func(request sis.Request) {
-		cert := request.UserCert
-		if cert == nil {
+		if request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash_Gemini())
+			user, isRegistered := GetUser(conn, request.UserCertHash())
 			if !isRegistered {
 				request.Gemini(registerNotification)
 				return
@@ -627,12 +613,11 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 	})
 
 	s.AddRoute("/music/manage/delete", func(request sis.Request) {
-		cert := request.UserCert
-		if cert == nil {
+		if request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash_Gemini())
+			user, isRegistered := GetUser(conn, request.UserCertHash())
 			if !isRegistered {
 				request.Gemini(registerNotification)
 				return
@@ -651,12 +636,11 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 			return
 		}
 
-		cert := request.UserCert
-		if cert == nil {
+		if request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash_Gemini())
+			user, isRegistered := GetUser(conn, request.UserCertHash())
 			if !isRegistered {
 				request.Gemini(registerNotification)
 				return
