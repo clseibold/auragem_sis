@@ -199,6 +199,8 @@ gitlab.com/clseibold/smallnetinformationservices v0.0.0-20250116155522-2c7fc110f
 gitlab.com/clseibold/smallnetinformationservices v0.0.0-20250116155522-2c7fc110f2a9/go.mod h1:W7SbIEHn1qB0i8yQFTWe6ny0x/p9l9dm+7piAiX9ZSs=
 gitlab.com/clseibold/smallnetinformationservices v0.0.0-20250116164528-fc0f182bcede h1:Qfj6RZoEK5TTqycKekBp2JPTz53kS04uMZ+9ktPEjFI=
 gitlab.com/clseibold/smallnetinformationservices v0.0.0-20250116164528-fc0f182bcede/go.mod h1:W7SbIEHn1qB0i8yQFTWe6ny0x/p9l9dm+7piAiX9ZSs=
+gitlab.com/clseibold/smallnetinformationservices v0.0.0-20250116164740-9a218ef67786 h1:BnmSQ4tozXKzctfoo34n5ZrCFrFdgKfn5h9+cZRh2Yg=
+gitlab.com/clseibold/smallnetinformationservices v0.0.0-20250116164740-9a218ef67786/go.mod h1:W7SbIEHn1qB0i8yQFTWe6ny0x/p9l9dm+7piAiX9ZSs=
 gitlab.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b h1:7gd+rd8P3bqcn/96gOZa3F5dpJr/vEiDQYlNb/y2uNs=
 gitlab.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b/go.mod h1:T3BPAOm2cqquPa0MKWeNkmOM5RQsRhkrwMWonFMN7fE=
 go.opencensus.io v0.24.0 h1:y73uSU6J157QMP2kn2r30vwW1A2W2WFwSCGnAVxeaD0=
