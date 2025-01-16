@@ -21,16 +21,18 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/trietmn/go-wiki v1.0.3
 	gitlab.com/clseibold/smallnetinformationservices v0.0.0-20250116155522-2c7fc110f2a9
-	golang.org/x/net v0.31.0
-	golang.org/x/oauth2 v0.18.0
+	golang.org/x/net v0.34.0
+	golang.org/x/oauth2 v0.25.0
 	golang.org/x/text v0.21.0
 	golang.org/x/time v0.9.0
-	google.golang.org/api v0.170.0
+	google.golang.org/api v0.217.0
 )
 
 require (
+	cloud.google.com/go/auth v0.14.0 // indirect
+	cloud.google.com/go/auth/oauth2adapt v0.2.7 // indirect
 	cloud.google.com/go/compute v1.23.4 // indirect
-	cloud.google.com/go/compute/metadata v0.2.3 // indirect
+	cloud.google.com/go/compute/metadata v0.6.0 // indirect
 	github.com/anaskhan96/soup v1.2.5 // indirect
 	github.com/bitly/go-simplejson v0.5.1 // indirect
 	github.com/cretz/bine v0.2.0 // indirect
@@ -40,17 +42,17 @@ require (
 	github.com/eidolon/wordwrap v0.0.0-20161011182207-e0f54129b8bb // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
-	github.com/go-logr/logr v1.4.1 // indirect
+	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-sourcemap/sourcemap v2.1.4+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/pprof v0.0.0-20241203143554-1e3fdc7de467 // indirect
-	github.com/google/s2a-go v0.1.7 // indirect
+	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
-	github.com/googleapis/gax-go/v2 v2.12.2 // indirect
+	github.com/googleapis/enterprise-certificate-proxy v0.3.4 // indirect
+	github.com/googleapis/gax-go/v2 v2.14.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -64,17 +66,17 @@ require (
 	github.com/warpfork/go-fsx v0.4.0 // indirect
 	gitlab.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b // indirect
 	go.opencensus.io v0.24.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.49.0 // indirect
-	go.opentelemetry.io/otel v1.24.0 // indirect
-	go.opentelemetry.io/otel/metric v1.24.0 // indirect
-	go.opentelemetry.io/otel/trace v1.24.0 // indirect
-	golang.org/x/crypto v0.29.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.54.0 // indirect
+	go.opentelemetry.io/otel v1.31.0 // indirect
+	go.opentelemetry.io/otel/metric v1.31.0 // indirect
+	go.opentelemetry.io/otel/trace v1.31.0 // indirect
+	golang.org/x/crypto v0.32.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/sys v0.27.0 // indirect
+	golang.org/x/sys v0.29.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240311132316-a219d84964c2 // indirect
-	google.golang.org/grpc v1.62.1 // indirect
-	google.golang.org/protobuf v1.33.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250106144421-5f5ef82da422 // indirect
+	google.golang.org/grpc v1.69.4 // indirect
+	google.golang.org/protobuf v1.36.2 // indirect
 	modernc.org/mathutil v1.4.2-0.20220822142738-b13e5b564332 // indirect
 )
 

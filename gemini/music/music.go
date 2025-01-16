@@ -92,6 +92,7 @@ func HandleMusic(s sis.ServerHandle) {
 			user, isRegistered := GetUser(conn, request.UserCertHash())
 			if !isRegistered {
 				request.Gemini(registerNotification)
+				request.Gemini(fmt.Sprintf("User Cert Hash: '%s'\n", request.UserCertHash()))
 				return
 			} else {
 				request.SetScrollMetadataResponse(sis.ScrollMetadata{PublishDate: publishDate, UpdateDate: updateDate, Language: "en", Abstract: "# AuraGem Music - " + user.Username + "\n"})
