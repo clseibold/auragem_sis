@@ -263,7 +263,10 @@ func radioService(conn *sql.DB, radioBuffer *RadioBuf, station *RadioStation) {
 	//songsPlayed := make([]int64, 0, 10) // Ids of songs played within the hour, so we don't get repeats for the whole hour
 	songsPlayed_genre := "Any" // Used to detect genre changes. If changed, clear songsPlayed
 
-	var songsPlayed *deque.Deque[int64] = deque.New[int64](50, 19)
+	var songsPlayed *deque.Deque[int64] = new(deque.Deque[int64])
+	songsPlayed.SetBaseCap(19)
+	songsPlayed.Grow(50)
+	//var songsPlayed *deque.Deque[int64] = deque.New[int64](50, 19)
 
 	initialTime := time.Now()
 	min := 0
