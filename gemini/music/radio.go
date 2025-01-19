@@ -95,6 +95,8 @@ func (rb *RadioBuf) NewSong(conn *sql.DB, songsPlayed []int64, station *RadioSta
 		}
 	}
 
+	rb.currentMusicFile = file
+
 	// Use ffmpeg to get file data without container tags, and set the buffer in rb so that NewReader can use it for clients
 	path := filepath.Join(musicDirectory, rb.currentMusicFile.Filename)
 	noTags := exec.Command("ffmpeg", "-v", "quiet", "-i", path, "-map", "0:a", "-c:a", "copy", "-map_metadata", "-1", "-f", "mp3", "-")
@@ -106,7 +108,6 @@ func (rb *RadioBuf) NewSong(conn *sql.DB, songsPlayed []int64, station *RadioSta
 	}
 
 	rb.currentFileLocation = 0
-	rb.currentMusicFile = file
 	rb.bitrate = file.CbrKbps
 	rb.fileChangeIndex += 1
 	rb.Unlock()
