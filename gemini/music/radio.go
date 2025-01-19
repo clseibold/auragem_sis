@@ -36,11 +36,12 @@ type RadioBufInterface interface {
 }
 
 type RadioBuf struct {
-	currentMusicFile    MusicFile
-	fileChangeIndex     int64
-	currentFileLocation int64
-	bitrate             int64
-	clientCount         int64
+	currentMusicFile       MusicFile
+	currentMusicFileBuffer []byte
+	fileChangeIndex        int64
+	currentFileLocation    int64
+	bitrate                int64
+	clientCount            int64
 	//*os.File
 	sync.RWMutex
 	readCond     *sync.Cond
@@ -94,24 +95,17 @@ func (rb *RadioBuf) NewSong(conn *sql.DB, songsPlayed []int64, station *RadioSta
 		}
 	}
 
-	// Open the file.
-	/*f, err := os.Open(filepath.Join(musicDirectory, file.Filename))
+	// Use ffmpeg to get file data without container tags, and set the buffer in rb so that NewReader can use it for clients
+	path := filepath.Join(musicDirectory, rb.currentMusicFile.Filename)
+	noTags := exec.Command("ffmpeg", "-v", "quiet", "-i", path, "-map", "0:a", "-c:a", "copy", "-map_metadata", "-1", "-f", "mp3", "-")
+	var err error
+	rb.currentMusicFileBuffer, err = noTags.Output()
 	if err != nil {
-		fmt.Printf("Failed to open.\n")
-		return MusicFile{}, true, "", err // TODO: This locks forever
-	}*/
-	//rb.File = f
+		fmt.Printf("FFMPEG Error: %s\n", err.Error())
+		// TODO
+	}
 
-	// Skip ID3v2 Tags at start of file
-	/*skip_err := tag.SkipID3v2Tags(f)
-	if skip_err != nil {
-		fmt.Printf("Failed to skip ID3 Headers\n")
-	}*/
-
-	// Set starting location to after tags, set the bitrate, update the fileChangeIndex, unlock the lock, and broadcast that the new song was selected
-	//currentLocation, _ := f.Seek(0, io.SeekCurrent)
 	rb.currentFileLocation = 0
-
 	rb.currentMusicFile = file
 	rb.bitrate = file.CbrKbps
 	rb.fileChangeIndex += 1
@@ -131,15 +125,7 @@ func (rb *RadioBuf) NewReader(old_fileChangeIndex int64, station *RadioStation) 
 		//fmt.Printf("%s Station: Received Broadcast (%d==%d)\n", station.Name, old_fileChangeIndex, rb.fileChangeIndex)
 	}
 
-	// Use ffmpeg to get file data without container tags
-	path := filepath.Join(musicDirectory, rb.currentMusicFile.Filename)
-	noTags := exec.Command("ffmpeg", "-v", "quiet", "-i", path, "-map", "0:a", "-c:a", "copy", "-map_metadata", "-1", "-f", "mp3", "-")
-	buffer, err := noTags.Output()
-	if err != nil {
-		fmt.Printf("FFMPEG Error: %s\n", err.Error())
-		// TODO
-	}
-	f := NopSeekCloser(bytes.NewReader(buffer))
+	f := NopSeekCloser(bytes.NewReader(rb.currentMusicFileBuffer))
 	f.Seek(rb.currentFileLocation, io.SeekStart)
 	bitrate := rb.bitrate
 
