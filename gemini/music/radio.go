@@ -136,6 +136,7 @@ func (rb *RadioBuf) NewReader(old_fileChangeIndex int64, station *RadioStation) 
 	noTags := exec.Command("ffmpeg", "-i", path, "-map", "0:a", "-c:a", "copy", "-map_metadata", "-1", "-f", "mp3", "-")
 	buffer, err := noTags.Output()
 	if err != nil {
+		fmt.Printf("FFMPEG Error: %s\n", err.Error())
 		// TODO
 	}
 	f := NopSeekCloser(bytes.NewReader(buffer))
