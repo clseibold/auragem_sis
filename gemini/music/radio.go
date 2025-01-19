@@ -133,7 +133,7 @@ func (rb *RadioBuf) NewReader(old_fileChangeIndex int64, station *RadioStation) 
 
 	// Use ffmpeg to get file data without container tags
 	path := filepath.Join(musicDirectory, rb.currentMusicFile.Filename)
-	noTags := exec.Command("ffmpeg", "-i", path, "-map", "0:a", "-c:a", "copy", "-map_metadata", "-1", "-f", "mp3", "-")
+	noTags := exec.Command("ffmpeg", "-v", "quiet", "-i", path, "-map", "0:a", "-c:a", "copy", "-map_metadata", "-1", "-f", "mp3", "-")
 	buffer, err := noTags.Output()
 	if err != nil {
 		fmt.Printf("FFMPEG Error: %s\n", err.Error())
