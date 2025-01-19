@@ -53,7 +53,7 @@ func HandleAsk(s sis.ServerHandle) {
 			}
 		} else {
 			fmt.Printf("%s\n", query)
-			user, isRegistered := GetUser(conn, request.UserCertHash())
+			user, isRegistered := GetUser(conn, request.UserCertHash(), request.UserCertOldGeminiHash())
 			if !isRegistered {
 				if query == "register" {
 					request.RequestInput("Enter a username:")
@@ -81,7 +81,7 @@ func HandleAsk(s sis.ServerHandle) {
 			request.Redirect("/~ask/?register")
 		} else {
 			// Check if user already exists, if so, give error.
-			_, isRegistered := GetUser(conn, request.UserCertHash())
+			_, isRegistered := GetUser(conn, request.UserCertHash(), request.UserCertOldGeminiHash())
 			if isRegistered {
 				request.TemporaryFailure("You are already registered. Be sure to select your certificate on the homepage.")
 				return
@@ -185,7 +185,7 @@ func HandleAsk(s sis.ServerHandle) {
 			request.RequestClientCert("Please enable a certificate.")
 			return
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash())
+			user, isRegistered := GetUser(conn, request.UserCertHash(), request.UserCertOldGeminiHash())
 			if isRegistered {
 				getUserQuestionsPage(request, conn, user)
 			} else {
@@ -199,7 +199,7 @@ func HandleAsk(s sis.ServerHandle) {
 		if !request.HasUserCert() {
 			getTopicHomepage(request, conn, (AskUser{}), false)
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash())
+			user, isRegistered := GetUser(conn, request.UserCertHash(), request.UserCertOldGeminiHash())
 			getTopicHomepage(request, conn, user, isRegistered)
 		}
 	})
@@ -208,7 +208,7 @@ func HandleAsk(s sis.ServerHandle) {
 		if !request.HasUserCert() {
 			getCreateQuestion(request, conn, (AskUser{}), false)
 		} else if request.Upload {
-			user, isRegistered := GetUser(conn, request.UserCertHash())
+			user, isRegistered := GetUser(conn, request.UserCertHash(), request.UserCertOldGeminiHash())
 			doCreateQuestion(request, conn, user, isRegistered)
 		}
 	})
@@ -216,7 +216,7 @@ func HandleAsk(s sis.ServerHandle) {
 		if !request.HasUserCert() {
 			getCreateQuestion(request, conn, (AskUser{}), false)
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash())
+			user, isRegistered := GetUser(conn, request.UserCertHash(), request.UserCertOldGeminiHash())
 			getCreateQuestion(request, conn, user, isRegistered)
 		}
 	})
@@ -233,7 +233,7 @@ func HandleAsk(s sis.ServerHandle) {
 			request.RequestInput("Title of Question:")
 			return
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash())
+			user, isRegistered := GetUser(conn, request.UserCertHash(), request.UserCertOldGeminiHash())
 			getCreateQuestionTitle(request, conn, user, isRegistered, 0, query)
 		}
 	})
@@ -250,7 +250,7 @@ func HandleAsk(s sis.ServerHandle) {
 			request.RequestInput("Text of Question:")
 			return
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash())
+			user, isRegistered := GetUser(conn, request.UserCertHash(), request.UserCertOldGeminiHash())
 			getCreateQuestionText(request, conn, user, isRegistered, 0, query)
 		}
 	})
@@ -259,7 +259,7 @@ func HandleAsk(s sis.ServerHandle) {
 		if !request.HasUserCert() {
 			getQuestionPage(request, conn, (AskUser{}), false)
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash())
+			user, isRegistered := GetUser(conn, request.UserCertHash(), request.UserCertOldGeminiHash())
 			getQuestionPage(request, conn, user, isRegistered)
 		}
 	})
@@ -281,7 +281,7 @@ func HandleAsk(s sis.ServerHandle) {
 			request.RequestInput("Title of Question:")
 			return
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash())
+			user, isRegistered := GetUser(conn, request.UserCertHash(), request.UserCertOldGeminiHash())
 			getCreateQuestionTitle(request, conn, user, isRegistered, questionId, query)
 		}
 	})
@@ -303,7 +303,7 @@ func HandleAsk(s sis.ServerHandle) {
 			request.RequestInput("Text of Question:")
 			return
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash())
+			user, isRegistered := GetUser(conn, request.UserCertHash(), request.UserCertOldGeminiHash())
 			getCreateQuestionText(request, conn, user, isRegistered, questionId, query)
 		}
 	})
@@ -315,7 +315,7 @@ func HandleAsk(s sis.ServerHandle) {
 			request.TemporaryFailure("Certificate required.")
 			return
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash())
+			user, isRegistered := GetUser(conn, request.UserCertHash(), request.UserCertOldGeminiHash())
 			if !isRegistered {
 				request.Gemini(registerNotification)
 				return
@@ -330,7 +330,7 @@ func HandleAsk(s sis.ServerHandle) {
 		if !request.HasUserCert() {
 			getCreateAnswer(request, conn, (AskUser{}), false)
 		} else if request.Upload {
-			user, isRegistered := GetUser(conn, request.UserCertHash())
+			user, isRegistered := GetUser(conn, request.UserCertHash(), request.UserCertOldGeminiHash())
 			doCreateAnswer(request, conn, user, isRegistered)
 		}
 	})
@@ -338,7 +338,7 @@ func HandleAsk(s sis.ServerHandle) {
 		if !request.HasUserCert() {
 			getCreateAnswer(request, conn, (AskUser{}), false)
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash())
+			user, isRegistered := GetUser(conn, request.UserCertHash(), request.UserCertOldGeminiHash())
 			getCreateAnswer(request, conn, user, isRegistered)
 		}
 	})
@@ -355,7 +355,7 @@ func HandleAsk(s sis.ServerHandle) {
 			request.RequestInput("Text of Answer:")
 			return
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash())
+			user, isRegistered := GetUser(conn, request.UserCertHash(), request.UserCertOldGeminiHash())
 			getCreateAnswerText(request, conn, user, isRegistered, 0, query)
 		}
 	})
@@ -372,7 +372,7 @@ func HandleAsk(s sis.ServerHandle) {
 			request.RequestInput("Gemlog URL:")
 			return
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash())
+			user, isRegistered := GetUser(conn, request.UserCertHash(), request.UserCertOldGeminiHash())
 			getCreateAnswerGemlog(request, conn, user, isRegistered, query)
 		}
 	})
@@ -381,7 +381,7 @@ func HandleAsk(s sis.ServerHandle) {
 		if !request.HasUserCert() {
 			getAnswerPage(request, conn, (AskUser{}), false)
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash())
+			user, isRegistered := GetUser(conn, request.UserCertHash(), request.UserCertOldGeminiHash())
 			getAnswerPage(request, conn, user, isRegistered)
 		}
 	})
@@ -403,7 +403,7 @@ func HandleAsk(s sis.ServerHandle) {
 			request.RequestInput("Text of Answer:")
 			return
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash())
+			user, isRegistered := GetUser(conn, request.UserCertHash(), request.UserCertOldGeminiHash())
 			getCreateAnswerText(request, conn, user, isRegistered, answerId, query)
 		}
 	})
@@ -419,7 +419,7 @@ func HandleAsk(s sis.ServerHandle) {
 			request.RequestClientCert("Please enable a certificate.")
 			return
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash())
+			user, isRegistered := GetUser(conn, request.UserCertHash(), request.UserCertOldGeminiHash())
 			if !isRegistered {
 				request.Gemini(registerNotification)
 				return
@@ -443,7 +443,7 @@ func HandleAsk(s sis.ServerHandle) {
 			request.RequestClientCert("Please enable a certificate.")
 			return
 		} else {
-			user, isRegistered := GetUser(conn, request.UserCertHash())
+			user, isRegistered := GetUser(conn, request.UserCertHash(), request.UserCertOldGeminiHash())
 			if !isRegistered {
 				request.Gemini(registerNotification)
 				return

@@ -9,10 +9,10 @@ import (
 	sis "gitlab.com/clseibold/smallnetinformationservices"
 )
 
-func GetUser(conn *sql.DB, certHash string) (AskUser, bool) {
+func GetUser(conn *sql.DB, certHash string, oldCertHash string) (AskUser, bool) {
 	//query := "SELECT id, username, language, timezone, is_staff, is_active, date_joined FROM members LEFT JOIN membercerts ON membercerts.memberid = members.id WHERE membercerts.certificate=?"
-	query := "SELECT membercerts.id, membercerts.memberid, membercerts.title, membercerts.certificate, membercerts.is_active, membercerts.date_added, members.id, members.username, members.language, members.timezone, members.is_staff, members.is_active, members.date_joined FROM membercerts LEFT JOIN members ON membercerts.memberid = members.id WHERE membercerts.certificate=? AND membercerts.is_active = true"
-	row := conn.QueryRowContext(context.Background(), query, certHash)
+	query := "SELECT membercerts.id, membercerts.memberid, membercerts.title, membercerts.certificate, membercerts.is_active, membercerts.date_added, members.id, members.username, members.language, members.timezone, members.is_staff, members.is_active, members.date_joined FROM membercerts LEFT JOIN members ON membercerts.memberid = members.id WHERE membercerts.certificate=? OR membercerts.certificate=? AND membercerts.is_active = true"
+	row := conn.QueryRowContext(context.Background(), query, certHash, oldCertHash)
 
 	var user AskUser
 	var certTitle interface{}
@@ -26,6 +26,10 @@ func GetUser(conn *sql.DB, certHash string) (AskUser, bool) {
 	if certTitle != nil {
 		user.Certificate.Title = certTitle.(string)
 	}
+
+	// Update user with new certHash
+	query2 := "UPDATE MEMBERCERTS a SET a.certificate=? WHERE a.ID=?"
+	conn.Exec(query2, certHash, user.Certificate.Id)
 
 	return user, true
 }
