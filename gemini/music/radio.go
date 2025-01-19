@@ -1,21 +1,34 @@
 package music
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"io"
 	"math"
 	"net/url"
-	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/dhowden/tag"
 	"github.com/gammazero/deque"
 	sis "gitlab.com/clseibold/smallnetinformationservices"
 )
+
+func NopSeekCloser(r io.ReadSeeker) io.ReadSeekCloser {
+	/*if _, ok := r.(io.WriterTo); ok {
+		return nopCloserWriterTo{r}
+	}*/
+	return nopCloser{r}
+}
+
+type nopCloser struct {
+	io.ReadSeeker
+}
+
+func (nopCloser) Close() error { return nil }
 
 type RadioBufInterface interface {
 	io.WriteCloser
@@ -82,22 +95,22 @@ func (rb *RadioBuf) NewSong(conn *sql.DB, songsPlayed []int64, station *RadioSta
 	}
 
 	// Open the file.
-	f, err := os.Open(filepath.Join(musicDirectory, file.Filename))
+	/*f, err := os.Open(filepath.Join(musicDirectory, file.Filename))
 	if err != nil {
 		fmt.Printf("Failed to open.\n")
 		return MusicFile{}, true, "", err // TODO: This locks forever
-	}
+	}*/
 	//rb.File = f
 
 	// Skip ID3v2 Tags at start of file
-	skip_err := tag.SkipID3v2Tags(f)
+	/*skip_err := tag.SkipID3v2Tags(f)
 	if skip_err != nil {
 		fmt.Printf("Failed to skip ID3 Headers\n")
-	}
+	}*/
 
 	// Set starting location to after tags, set the bitrate, update the fileChangeIndex, unlock the lock, and broadcast that the new song was selected
-	currentLocation, _ := f.Seek(0, io.SeekCurrent)
-	rb.currentFileLocation = currentLocation
+	//currentLocation, _ := f.Seek(0, io.SeekCurrent)
+	rb.currentFileLocation = 0
 
 	rb.currentMusicFile = file
 	rb.bitrate = file.CbrKbps
@@ -105,7 +118,7 @@ func (rb *RadioBuf) NewSong(conn *sql.DB, songsPlayed []int64, station *RadioSta
 	rb.Unlock()
 	//fmt.Printf("%s Station: Unlocked\n", station.Name)
 	rb.readCond.Broadcast() // Broadcast that there's been a change in file
-	f.Close()
+	//f.Close()
 	return file, false, currentRadioGenre, nil
 }
 
@@ -117,13 +130,24 @@ func (rb *RadioBuf) NewReader(old_fileChangeIndex int64, station *RadioStation) 
 		rb.readCond.Wait()
 		//fmt.Printf("%s Station: Received Broadcast (%d==%d)\n", station.Name, old_fileChangeIndex, rb.fileChangeIndex)
 	}
-	f, err := os.Open(filepath.Join(musicDirectory, rb.currentMusicFile.Filename))
+
+	// Use ffmpeg to get file data without container tags
+	path := filepath.Join(musicDirectory, rb.currentMusicFile.Filename)
+	noTags := exec.Command("ffmpeg", "-i", path, "-map", "0:a", "-c:a", "copy", "-map_metadata", "-1", "-f", "mp3", "-")
+	buffer, err := noTags.Output()
+	if err != nil {
+		// TODO
+	}
+	f := NopSeekCloser(bytes.NewReader(buffer))
 	bitrate := rb.bitrate
+
+	/*f, err := os.Open()
 	rb.RUnlock()
 	f.Seek(rb.currentFileLocation, io.SeekStart)
 	if err != nil {
 		return nil, 0, 0, err
-	}
+	}*/
+
 	//bufferedReader := bufio.NewReader(f)
 	return f, rb.fileChangeIndex, bitrate, nil
 }
