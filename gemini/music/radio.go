@@ -140,15 +140,10 @@ func (rb *RadioBuf) NewReader(old_fileChangeIndex int64, station *RadioStation) 
 		// TODO
 	}
 	f := NopSeekCloser(bytes.NewReader(buffer))
-	f.Seek(0, io.SeekStart)
+	f.Seek(rb.currentFileLocation, io.SeekStart)
 	bitrate := rb.bitrate
 
 	rb.RUnlock()
-	/*f, err := os.Open()
-	f.Seek(rb.currentFileLocation, io.SeekStart)
-	if err != nil {
-		return nil, 0, 0, err
-	}*/
 
 	//bufferedReader := bufio.NewReader(f)
 	return f, rb.fileChangeIndex, bitrate, nil
