@@ -28,8 +28,10 @@ func GetUser(conn *sql.DB, certHash string, oldCertHash string) (AskUser, bool) 
 	}
 
 	// Update user with new certHash
-	query2 := "UPDATE MEMBERCERTS a SET a.certificate=? WHERE a.ID=?"
-	conn.Exec(query2, certHash, user.Certificate.Id)
+	if user.Certificate.Certificate == oldCertHash {
+		query2 := "UPDATE MEMBERCERTS a SET a.certificate=? WHERE a.ID=?"
+		conn.Exec(query2, certHash, user.Certificate.Id)
+	}
 
 	return user, true
 }
