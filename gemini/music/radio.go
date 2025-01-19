@@ -143,8 +143,8 @@ func (rb *RadioBuf) NewReader(old_fileChangeIndex int64, station *RadioStation) 
 	f.Seek(0, io.SeekStart)
 	bitrate := rb.bitrate
 
-	/*f, err := os.Open()
 	rb.RUnlock()
+	/*f, err := os.Open()
 	f.Seek(rb.currentFileLocation, io.SeekStart)
 	if err != nil {
 		return nil, 0, 0, err
