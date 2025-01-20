@@ -91,7 +91,7 @@ func startTorWebServer(t *tor.Tor) {
 */
 
 func startWebServer() {
-	err := http.ListenAndServe("0.0.0.0:80", http.FileServer(http.Dir("/home/clseibold/ServerData/auragem_sis/SIS/scrollprotocol_http")))
+	err := http.ListenAndServe("0.0.0.0:80", http.FileServer(http.Dir("/home/clseibold/ServerData/auragem_sis/SIS/auragem_tor_http")))
 	if err != nil {
 		fmt.Printf("Failed to start web server on 0.0.0.0:80. %s\n", err.Error())
 	}
