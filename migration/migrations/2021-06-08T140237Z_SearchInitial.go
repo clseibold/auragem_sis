@@ -64,6 +64,7 @@ func (m SearchInitial) Up(tx *sql.Tx) error {
 		language character varying(250) COLLATE UNICODE,
 		linecount integer,
 		udc character varying(25) NOT NULL COLLATE UNICODE_CI,
+		headings blob sub_type 1 NOT NULL,
 
 		title character varying(250) NOT NULL COLLATE UNICODE_CI,
 		prompt character varying(250) NOT NULL COLLATE UNICODE_CI,
@@ -83,7 +84,8 @@ func (m SearchInitial) Up(tx *sql.Tx) error {
 		crawlIndex integer,
 		date_added timestamp with time zone NOT NULL,
 		last_successful_visit timestamp with time zone NOT NULL,
-		hidden boolean
+		hidden boolean,
+		has_duplicate_on_gemini boolean
 	);
 	`) // 1020 URL
 	if err != nil {

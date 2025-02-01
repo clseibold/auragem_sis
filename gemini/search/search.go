@@ -23,23 +23,6 @@ import (
 // %%matches%% replaced with something like `t.NAME = 'term1' OR t.NAME = 'term2'`
 // Search query will rank domain root pages higher if they match the query
 
-// TODO: Optimize SQL query by switching to JOINS so that I can replace the GROUP BY. Join the domains search with the pages search and add the two scores together to create one score that can be ordered by
-/*var fts_searchQuery string = `
-select FIRST %%first%% SKIP %%skip%% COUNT(*) OVER () totalCount, SUM(s.SCORE) as GROUPED_SCORE, s.ID, s.URL, s.SCHEME, s.DOMAINID, s.CONTENTTYPE, s.CHARSET, s.LANGUAGE, s.LINECOUNT, s.TITLE, s.PROMPT, s.SIZE, s.HASH, s.FEED, s.PUBLISHDATE, s.INDEXTIME, s.ALBUM, s.ARTIST, s.ALBUMARTIST, s.COMPOSER, s.TRACK, s.DISC, s.COPYRIGHT, s.CRAWLINDEX, s.DATE_ADDED, s.LAST_SUCCESSFUL_VISIT, s.HIDDEN
-FROM (select FTS.FTS$ID as fts_id, FTS.FTS$SCORE as SCORE, P.*
-    FROM FTS$SEARCH('FTS_PAGE_ID_EN', '%%query%%') FTS
-    JOIN PAGES P ON P.ID = FTS.FTS$ID
-    UNION ALL
-    select P.ID as fts_id, (t.RANK / 11) as SCORE, P.* FROM TAGS t JOIN PAGES P ON P.ID = t.PAGEID WHERE %%matches%%
-	UNION ALL
-    select FTSD.FTS$ID as fts_id, (FTSD.FTS$SCORE * 1.5) as SCORE, P.*
-    FROM FTS$SEARCH('FTS_DOMAIN_ID', '%%query%%') FTSD
-    JOIN DOMAINS D ON D.ID = FTSD.FTS$ID
-    JOIN PAGES P ON P.URL = 'gemini://' || D.DOMAIN || '/'
-	) s
-GROUP BY ID, URL, SCHEME, DOMAINID, CONTENTTYPE, CHARSET, LANGUAGE, LINECOUNT, TITLE, PROMPT, SIZE, HASH, FEED, PUBLISHDATE, INDEXTIME, ALBUM, ARTIST, ALBUMARTIST, COMPOSER, TRACK, DISC, COPYRIGHT, CRAWLINDEX, DATE_ADDED, LAST_SUCCESSFUL_VISIT, HIDDEN
-ORDER BY GROUPED_SCORE DESC, s.publishdate DESC`*/
-
 // Search from all protocols
 var fts_searchQuery string = `
 select FIRST %%first%% SKIP %%skip%% COUNT(*) OVER () totalCount, (FTS.FTS$SCORE) as GROUPED_SCORE, P.ID, P.URL, P.SCHEME, P.DOMAINID, P.CONTENTTYPE, P.CHARSET, P.LANGUAGE, P.LINECOUNT, P.UDC, P.TITLE, P.PROMPT, P.SIZE, P.HASH, P.FEED, CASE WHEN EXTRACT(YEAR FROM P.PUBLISHDATE) < 1800 THEN TIMESTAMP '01.01.9999 00:00:00.000' ELSE P.PUBLISHDATE END AS PUBLISHDATE, P.INDEXTIME, P.ALBUM, P.ARTIST, P.ALBUMARTIST, P.COMPOSER, P.TRACK, P.DISC, P.COPYRIGHT, P.CRAWLINDEX, P.DATE_ADDED, P.LAST_SUCCESSFUL_VISIT, P.HIDDEN
