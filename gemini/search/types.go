@@ -73,17 +73,6 @@ type PageWithDomain struct {
 	domain Domain
 }
 
-type Tag struct {
-	Id         int
-	PageId     int
-	Name       string
-	Rank       float64
-	CrawlIndex int
-	Date_added time.Time
-
-	Count int
-}
-
 type Backlink struct {
 	Id           int
 	PageId_From  int

@@ -118,68 +118,6 @@ func getCapsules(conn *sql.DB) []Domain {
 	return capsules
 }
 
-// NOTE: Only tags used more than twice are included
-func getTags(conn *sql.DB) []Tag {
-	q := `SELECT tags.name, COUNT(*) as c FROM tags WHERE tags.name NOT LIKE 'boycottnovell%' GROUP BY tags.name HAVING COUNT(*) > 2 ORDER BY c DESC`
-
-	rows, rows_err := conn.QueryContext(context.Background(), q)
-
-	var tags []Tag
-	if rows_err == nil {
-		defer rows.Close()
-		for rows.Next() {
-			var tag Tag
-			scan_err := rows.Scan(&tag.Name, &tag.Count)
-			if scan_err == nil {
-				tags = append(tags, tag)
-			} else {
-				panic(scan_err)
-			}
-		}
-
-		if err := rows.Err(); err != nil {
-			panic(err)
-		}
-	}
-
-	return tags
-}
-
-// TODO: Set a way to order the results
-func getPagesOfTag(conn *sql.DB, name string) []Page {
-	q := `SELECT COUNT(*) OVER () as total, pages.id, pages.url, pages.scheme, pages.domainid, pages.contenttype, pages.charset, pages.language, pages.linecount, pages.udc, pages.title, pages.prompt, pages.size, pages.hash, pages.feed, pages.publishdate, pages.indextime, pages.album, pages.artist, pages.albumartist, pages.composer, pages.track, pages.disc, pages.copyright, pages.crawlindex, pages.date_added, pages.last_successful_visit, pages.hidden FROM tags JOIN pages ON pages.id = tags.pageid where tags.name=?`
-
-	rows, rows_err := conn.QueryContext(context.Background(), q, name)
-
-	var pages []Page = nil
-	if rows_err == nil {
-		var count int64
-		defer rows.Close()
-		for rows.Next() {
-			var page Page
-			scan_err := rows.Scan(&count, &page.Id, &page.Url, &page.Scheme, &page.DomainId, &page.Content_type, &page.Charset, &page.Language, &page.Linecount, &page.Udc, &page.Title, &page.Prompt, &page.Size, &page.Hash, &page.Feed, &page.PublishDate, &page.Index_time, &page.Album, &page.Artist, &page.AlbumArtist, &page.Composer, &page.Track, &page.Disc, &page.Copyright, &page.CrawlIndex, &page.Date_added, &page.LastSuccessfulVisit, &page.Hidden)
-			if scan_err == nil {
-				if pages == nil {
-					pages = make([]Page, 0, count)
-				}
-				pages = append(pages, page)
-			} else {
-				prevPage := Page{}
-				if len(pages) > 0 {
-					prevPage = pages[len(pages)-1]
-				}
-				panic(fmt.Errorf("scan error after page %v; %s", prevPage, scan_err.Error()))
-			}
-		}
-
-		if err := rows.Err(); err != nil {
-			panic(err)
-		}
-	}
-
-	return pages
-}
-
 func getMimetypeFiles(conn *sql.DB, mimetype string) []Page {
 	q := `SELECT FIRST 300 id, url, scheme, domainid, contenttype, charset, language, linecount, udc, title, prompt, size, hash, feed, publishdate, indextime, album, artist, albumartist, composer, track, disc, copyright, crawlindex, date_added, last_successful_visit, hidden FROM pages WHERE contenttype=? AND hidden=false`
 

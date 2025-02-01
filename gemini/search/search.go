@@ -936,44 +936,6 @@ Number of Domains that responded with an empty META field: %d
 `, builder.String()))
 	})
 
-	s.AddRoute("/search/tags", func(request sis.Request) {
-		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Tag Index\n"})
-		if request.ScrollMetadataRequested {
-			request.SendAbstract("")
-			return
-		}
-
-		tags := getTags(conn)
-
-		var builder strings.Builder
-		for _, tag := range tags {
-			fmt.Fprintf(&builder, "=> /search/tag/%s %s (%d)\n", url.PathEscape(tag.Name), tag.Name, tag.Count)
-		}
-
-		request.Gemini(fmt.Sprintf(`# Tag Index
-
-=> /search/ Home
-=> /search/s/ Search
-
-%s
-`, builder.String()))
-	})
-
-	s.AddRoute("/search/tag/:name", func(request sis.Request) {
-		pages := getPagesOfTag(conn, request.GetParam("name"))
-
-		var builder strings.Builder
-		buildPageResults(&builder, pages, false, false)
-
-		request.Gemini(fmt.Sprintf(`# Tag: %s
-
-=> /search/ Home
-=> /search/s/ Search
-
-%s
-`, request.GetParam("name"), builder.String()))
-	})
-
 	s.AddRoute("/search/feeds", func(request sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Indexed Feeds\n"})
 		if request.ScrollMetadataRequested {
