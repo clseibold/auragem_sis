@@ -45,7 +45,9 @@ func (m SearchInitial) Up(tx *sql.Tx) error {
 		has_favicon boolean,
 		favicon character varying(10) COLLATE UNICODE,
 		crawlIndex integer,
-		date_added timestamp with time zone NOT NULL
+		date_added timestamp with time zone NOT NULL,
+		slowdowncount bigint,
+		emptymetacount bigint
 	);
 	`)
 	if err != nil {
