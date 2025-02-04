@@ -14,7 +14,7 @@ type GeminiLink struct {
 }
 
 func (ctx *CrawlContext) GetGeminiPageInfo2(dataReader *bytes.Reader, tagsMap *map[string]float64, mentionsMap *map[string]bool, links *[]GeminiLink, strippedTextBuilder *strings.Builder, update bool) (string, int, string, string, int, bool) {
-	var isFeed = false
+	var isFeed = 0
 	var spartanTitle = ""
 	var lastTitleLevel = 5
 	var linecount = 0
@@ -83,7 +83,7 @@ func (ctx *CrawlContext) GetGeminiPageInfo2(dataReader *bytes.Reader, tagsMap *m
 			*links = append(*links, GeminiLink{title, link_without_fragment, true})
 
 			if isTimeDate(title) {
-				isFeed = true
+				isFeed++
 			}
 		} else if strings.HasPrefix(line, "=>") {
 			line = strings.TrimSpace(strings.TrimPrefix(line, "=>"))
@@ -95,7 +95,7 @@ func (ctx *CrawlContext) GetGeminiPageInfo2(dataReader *bytes.Reader, tagsMap *m
 			*links = append(*links, GeminiLink{title, link_without_fragment, false})
 
 			if isTimeDate(title) {
-				isFeed = true
+				isFeed++
 			}
 		} else if strings.HasPrefix(line, ">") {
 			fmt.Fprintf(strippedTextBuilder, "%s\n", strings.TrimPrefix(line, ">"))
@@ -113,5 +113,5 @@ func (ctx *CrawlContext) GetGeminiPageInfo2(dataReader *bytes.Reader, tagsMap *m
 		}
 	}
 
-	return spartanTitle, linecount, headingsBuilder.String(), preformattedTextBuilder.String(), size, isFeed
+	return spartanTitle, linecount, headingsBuilder.String(), preformattedTextBuilder.String(), size, isFeed > 1
 }

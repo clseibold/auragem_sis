@@ -13,7 +13,7 @@ type MarkdownLink struct {
 }
 
 func (ctx *CrawlContext) GetMarkdownPageInfo(dataReader *bytes.Reader, tagsMap *map[string]float64, mentionsMap *map[string]bool, links *[]MarkdownLink, strippedTextBuilder *strings.Builder, update bool) (string, int, string, string, int, bool) {
-	var isFeed bool = false
+	var isFeed = 0
 	var mdTitle string = ""
 	var lastTitleLevel int = 5
 	var linecount = 0
@@ -126,7 +126,7 @@ func (ctx *CrawlContext) GetMarkdownPageInfo(dataReader *bytes.Reader, tagsMap *
 						url_without_fragment, _, _ := strings.Cut(currentLinkUrlBuilder.String(), "#")
 						(*links) = append((*links), MarkdownLink{currentLinkTitleBuilder.String(), url_without_fragment})
 						if isTimeDate(link_title) {
-							isFeed = true
+							isFeed++
 						}
 
 						inLinkUrl = false
@@ -150,5 +150,5 @@ func (ctx *CrawlContext) GetMarkdownPageInfo(dataReader *bytes.Reader, tagsMap *
 		}
 	}
 
-	return mdTitle, linecount, headingsBuilder.String(), preformattedTextBuilder.String(), size, isFeed
+	return mdTitle, linecount, headingsBuilder.String(), preformattedTextBuilder.String(), size, isFeed > 1
 }

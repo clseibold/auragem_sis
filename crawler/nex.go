@@ -13,7 +13,7 @@ type NexLink struct {
 }
 
 func (ctx *CrawlContext) GetNexPageInfo(dataReader *bytes.Reader, tagsMap *map[string]float64, mentionsMap *map[string]bool, links *[]NexLink, strippedTextBuilder *strings.Builder, update bool) (string, int, string, string, int, bool) {
-	var isFeed bool = false
+	var isFeed = 0
 	var nexTitle string = ""
 	var lastTitleLevel int = 4
 	var linecount = 0
@@ -71,7 +71,7 @@ func (ctx *CrawlContext) GetNexPageInfo(dataReader *bytes.Reader, tagsMap *map[s
 			*links = append(*links, NexLink{title, link_without_fragment})
 
 			if isTimeDate(title) {
-				isFeed = true
+				isFeed++
 			}
 		} else if strings.HasPrefix(line, ">") {
 			fmt.Fprintf(strippedTextBuilder, "%s\n", strings.TrimPrefix(line, ">"))
@@ -81,5 +81,5 @@ func (ctx *CrawlContext) GetNexPageInfo(dataReader *bytes.Reader, tagsMap *map[s
 		}
 	}
 
-	return nexTitle, linecount, headingsBuilder.String(), preformattedTextBuilder.String(), size, isFeed
+	return nexTitle, linecount, headingsBuilder.String(), preformattedTextBuilder.String(), size, isFeed > 1
 }
