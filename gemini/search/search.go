@@ -14,6 +14,7 @@ import (
 
 	wiki "github.com/trietmn/go-wiki"
 	// "gitlab.com/clseibold/auragem_sis/crawler"
+	"gitlab.com/clseibold/auragem_sis/crawler"
 	"gitlab.com/clseibold/auragem_sis/db"
 	sis "gitlab.com/clseibold/smallnetinformationservices"
 	"golang.org/x/text/language"
@@ -128,10 +129,36 @@ func HandleSearchEngine(s sis.ServerHandle) {
 	//crawling_ips := make(map[string]bool, 10)
 
 	conn := db.NewConn(db.SearchDB)
-	/*conn.SetMaxOpenConns(500)
+	conn.SetMaxOpenConns(100)
 	conn.SetConnMaxIdleTime(0)
-	conn.SetMaxIdleConns(6)
-	conn.SetConnMaxLifetime(0)*/
+	conn.SetMaxIdleConns(8 + 10)
+	conn.SetConnMaxLifetime(0)
+
+	// Crawler - full crawl every month, feed crawl every 13 hours, and on-demand capsule crawling
+	globalData := crawler.NewGlobalData(conn, true, true, 0) // Follows all links
+	go crawler.RegularCrawler(globalData, nil)
+	go crawler.FeedCrawler(globalData, 13, nil)
+
+	// On-Demand Capsule Crawler
+	capsulesCrawling := make(map[string]bool, 10)
+	addToCrawlerChan := make(chan string, 1000)
+	go func() {
+		for {
+			url := <-addToCrawlerChan
+			capsulesCrawling[url] = true
+		}
+	}()
+	go func() {
+		for {
+			url := ""
+			for k := range capsulesCrawling {
+				url = k
+				break
+			}
+			crawler.OnDemandCapsuleCrawl(globalData, url, "")
+			delete(capsulesCrawling, url)
+		}
+	}()
 
 	// Outdated Link Handles
 	s.AddRoute("/searchengine", func(request sis.Request) {
@@ -248,92 +275,67 @@ Note that AuraGem Search does not ensure or rank based on the popularity or accu
 		// => https://www.patreon.com/krixano Patreon
 	})
 
-	/*
-		s.AddRoute("/search/crawl", func(request sis.Request) {
-			request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Docs, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# Crawl a link\n"})
-			if request.ScrollMetadataRequested {
-				request.SendAbstract("")
+	s.AddRoute("/search/crawl", func(request sis.Request) {
+		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Docs, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# Crawl a link\n"})
+		if request.ScrollMetadataRequested {
+			request.SendAbstract("")
+			return
+		}
+
+		query, err := request.Query()
+		if err != nil {
+			request.TemporaryFailure(err.Error())
+			return
+		} else if query == "" {
+			request.RequestInput("Enter a page/capsule to crawl:")
+			return
+		} else {
+			queryUrl, parse_err := url.Parse(query)
+			if parse_err != nil {
+				//request.Redirect("/search/crawl")
+				request.TemporaryFailure("Unable to parse URL.")
 				return
 			}
-
-			query, err := request.Query()
-			if err != nil {
-				request.TemporaryFailure(err.Error())
-				return
-			} else if query == "" {
-				request.RequestInput("Enter a page/capsule to crawl:")
-				return
-			} else {
-				queryUrl, parse_err := url.Parse(query)
-				if parse_err != nil {
-					//request.Redirect("/search/crawl")
-					request.TemporaryFailure("Unable to parse URL.")
-					return
-				}
-				queryUrl.Fragment = "" // Strip the fragment
-				if (queryUrl.Scheme != "gemini" && queryUrl.Scheme != "nex" && queryUrl.Scheme != "spartan" && queryUrl.Scheme != "scroll") || !queryUrl.IsAbs() {
-					request.TemporaryFailure("Please enter only a Gemini, Nex, Spartan, or Scroll URL.")
-					return
-				}
-				if queryUrl.Path == "" {
-					queryUrl.Path = "/"
-				}
-
-				if _, ok := crawling_ips[request.IPHash()]; ok {
-					request.TemporaryFailure("You have already submitted a URL to crawl.")
-					return
-				}
-
-				if len(crawling) > 10 {
-					request.TemporaryFailure("10 crawlers are in progress. Please wait until one or more of them are done before trying to submit another URL to crawl.")
-					return
-				}
-
-				// Add the capsule's root to the seeds table.
-				seedUrl := *queryUrl
-				seedUrl.Path = "/"
-				addSeedToDb(conn, Seed{0, queryUrl.String(), time.Time{}})
-
-				if _, ok := crawling[queryUrl.Host]; ok {
-					request.TemporaryFailure("Already crawling this domain name. Please wait until it is finished.")
-					return
-				} else {
-					crawling[queryUrl.Host] = true
-					crawling_ips[request.IPHash()] = true
-					go func(host string, url string, iphash string) {
-						globalData := crawler.NewGlobalData(conn, false, true, 0)
-						globalData.AddUrl(url, crawler.UrlToCrawlData{})
-						wg := &sync.WaitGroup{}
-						wg.Add(1)
-						defer delete(crawling, host)
-						defer delete(crawling_ips, iphash)
-						crawler.Crawl(globalData, len(crawling)-1, wg)
-					}(queryUrl.Host, queryUrl.String(), request.IPHash())
-					request.Redirect("/search/")
-				}
-			}
-		})
-	*/
-
-	/*
-		// Goes through all pages that haven't been crawled in a long time and sets them to hidden if they are no longer available
-		inCleanup := false
-		s.AddRoute("/search/cleanup", func(request sis.Request) {
-			if inCleanup {
-				request.TemporaryFailure("Cleanup already running.")
+			queryUrl.Fragment = "" // Strip the fragment
+			if (queryUrl.Scheme != "gemini" && queryUrl.Scheme != "nex" && queryUrl.Scheme != "spartan" && queryUrl.Scheme != "scroll") || !queryUrl.IsAbs() {
+				request.TemporaryFailure("Please enter only a Gemini, Nex, Spartan, or Scroll URL.")
 				return
 			}
+			if queryUrl.Path == "" {
+				queryUrl.Path = "/"
+			}
 
-			go func(inCleanup *bool) {
-				*inCleanup = true
-				globalData := crawler.NewGlobalData(conn, false, false, 0)
-				crawler.PurgeOldLinks(globalData)
-				*inCleanup = false
-			}(&inCleanup)
+			/*if _, ok := crawling_ips[request.IPHash()]; ok {
+				request.TemporaryFailure("You have already submitted a URL to crawl.")
+				return
+			}*/
 
+			// Add the capsule's root to the seeds table.
+			seedUrl := *queryUrl
+			seedUrl.Path = "/"
+			addSeedToDb(conn, Seed{0, seedUrl.String(), time.Time{}})
 			request.Redirect("/search/")
-		})
-	*/
+			addToCrawlerChan <- seedUrl.String()
+		}
+	})
+
+	// Goes through all pages that haven't been crawled in a long time and sets them to hidden if they are no longer available
+	/*inCleanup := false
+	s.AddRoute("/search/cleanup", func(request sis.Request) {
+		if inCleanup {
+			request.TemporaryFailure("Cleanup already running.")
+			return
+		}
+
+		go func(inCleanup *bool) {
+			*inCleanup = true
+			globalData := crawler.NewGlobalData(conn, false, false, 0)
+			crawler.PurgeOldLinks(globalData)
+			*inCleanup = false
+		}(&inCleanup)
+
+		request.Redirect("/search/")
+	})*/
 
 	s.AddRoute("/search/configure_default", func(request sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Docs, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# Configure Default Search Engine in Lagrange\n"})
@@ -574,7 +576,7 @@ Number of Domains that responded with an empty META field: %d
 	s.AddRoute("/search/add_capsule", func(request sis.Request) {
 		query, err := request.Query()
 		if err != nil {
-			request.TemporaryFailure(err.Error())
+			request.TemporaryFailure("%s", err.Error())
 			return
 		} else if query == "" {
 			request.RequestInput("Capsule:")
@@ -614,7 +616,7 @@ Number of Domains that responded with an empty META field: %d
 	s.AddRoute("/search/backlinks", func(request sis.Request) {
 		query, err := request.Query()
 		if err != nil {
-			request.TemporaryFailure(err.Error())
+			request.TemporaryFailure("%s", err.Error())
 			return
 		} else if query == "" {
 			request.RequestInput("Gemini URL:")
@@ -651,7 +653,7 @@ Number of Domains that responded with an empty META field: %d
 	s.AddRoute("/search/s", func(request sis.Request) {
 		query, err := request.Query()
 		if err != nil {
-			request.TemporaryFailure(err.Error())
+			request.TemporaryFailure("%s", err.Error())
 			return
 		} else if query == "" {
 			request.RequestInput("Search Query:")
@@ -679,7 +681,7 @@ Number of Domains that responded with an empty META field: %d
 
 		query, err := request.Query()
 		if err != nil {
-			request.TemporaryFailure(err.Error())
+			request.TemporaryFailure("%s", err.Error())
 			return
 		} else if query == "" {
 			request.RequestInput("Search Query:")
@@ -700,7 +702,7 @@ Number of Domains that responded with an empty META field: %d
 	s.AddRoute("/search/gemini", func(request sis.Request) {
 		query, err := request.Query()
 		if err != nil {
-			request.TemporaryFailure(err.Error())
+			request.TemporaryFailure("%s", err.Error())
 			return
 		} else if query == "" {
 			request.RequestInput("Search Query:")
@@ -728,7 +730,7 @@ Number of Domains that responded with an empty META field: %d
 
 		query, err := request.Query()
 		if err != nil {
-			request.TemporaryFailure(err.Error())
+			request.TemporaryFailure("%s", err.Error())
 			return
 		} else if query == "" {
 			request.RequestInput("Search Query:")
@@ -749,7 +751,7 @@ Number of Domains that responded with an empty META field: %d
 	s.AddRoute("/search/scroll", func(request sis.Request) {
 		query, err := request.Query()
 		if err != nil {
-			request.TemporaryFailure(err.Error())
+			request.TemporaryFailure("%s", err.Error())
 			return
 		} else if query == "" {
 			request.RequestInput("Search Query:")
@@ -777,7 +779,7 @@ Number of Domains that responded with an empty META field: %d
 
 		query, err := request.Query()
 		if err != nil {
-			request.TemporaryFailure(err.Error())
+			request.TemporaryFailure("%s", err.Error())
 			return
 		} else if query == "" {
 			request.RequestInput("Search Query:")
@@ -798,7 +800,7 @@ Number of Domains that responded with an empty META field: %d
 	s.AddRoute("/search/spartan", func(request sis.Request) {
 		query, err := request.Query()
 		if err != nil {
-			request.TemporaryFailure(err.Error())
+			request.TemporaryFailure("%s", err.Error())
 			return
 		} else if query == "" {
 			request.RequestInput("Search Query:")
@@ -826,7 +828,7 @@ Number of Domains that responded with an empty META field: %d
 
 		query, err := request.Query()
 		if err != nil {
-			request.TemporaryFailure(err.Error())
+			request.TemporaryFailure("%s", err.Error())
 			return
 		} else if query == "" {
 			request.RequestInput("Search Query:")
@@ -847,7 +849,7 @@ Number of Domains that responded with an empty META field: %d
 	s.AddRoute("/search/debug_s", func(request sis.Request) {
 		query, err := request.Query()
 		if err != nil {
-			request.TemporaryFailure(err.Error())
+			request.TemporaryFailure("%s", err.Error())
 			return
 		} else if query == "" {
 			request.RequestInput("Search Query:")
@@ -869,7 +871,7 @@ Number of Domains that responded with an empty META field: %d
 
 		query, err := request.Query()
 		if err != nil {
-			request.TemporaryFailure(err.Error())
+			request.TemporaryFailure("%s", err.Error())
 			return
 		} else if query == "" {
 			request.RequestInput("Search Query:")
@@ -1120,7 +1122,7 @@ Number of Domains that responded with an empty META field: %d
 	s.AddRoute("/search/audio/s", func(request sis.Request) {
 		query, err := request.Query()
 		if err != nil {
-			request.TemporaryFailure(err.Error())
+			request.TemporaryFailure("%s", err.Error())
 			return
 		} else if query == "" {
 			request.RequestInput("Audio Search Query:")
@@ -1141,7 +1143,7 @@ Number of Domains that responded with an empty META field: %d
 
 		query, err := request.Query()
 		if err != nil {
-			request.TemporaryFailure(err.Error())
+			request.TemporaryFailure("%s", err.Error())
 			return
 		} else if query == "" {
 			request.RequestInput("Audio Search Query:")
@@ -1295,7 +1297,7 @@ Number of Domains that responded with an empty META field: %d
 	s.AddRoute("/search/mimetype", func(request sis.Request) {
 		query, err := request.Query()
 		if err != nil {
-			request.TemporaryFailure(err.Error())
+			request.TemporaryFailure("%s", err.Error())
 			return
 		} else if query == "" {
 			request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Mimetypes\n"})
@@ -1353,7 +1355,7 @@ ORDER BY (r.ID + cast(? as bigint))*4294967291-((r.ID + cast(? as bigint))*42949
 		var page Page
 		scan_err := row.Scan(&page.Url)
 		if scan_err == nil {
-			request.Redirect(page.Url)
+			request.Redirect("%s", page.Url)
 			return
 		} else if scan_err == sql.ErrNoRows {
 			request.Redirect("/search/")
@@ -1411,7 +1413,7 @@ func handleSearch(request sis.Request, conn *sql.DB, query string, page int, sho
 	//rawQuery := c.URL().RawQuery
 	rawQuery, err := request.RawQuery()
 	if err != nil {
-		request.TemporaryFailure(err.Error())
+		request.TemporaryFailure("%s", err.Error())
 		return
 	}
 	results := 30
@@ -1591,7 +1593,7 @@ func handleSearchIndex(request sis.Request, conn *sql.DB) {
 func handleAudioSearch(request sis.Request, conn *sql.DB, query string, page int) {
 	rawQuery, err := request.RawQuery()
 	if err != nil {
-		request.TemporaryFailure(err.Error())
+		request.TemporaryFailure("%s", err.Error())
 		return
 	}
 	results := 30

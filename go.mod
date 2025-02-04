@@ -29,11 +29,17 @@ require (
 )
 
 require (
+	github.com/go-enry/go-oniguruma v1.2.1 // indirect
+	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f // indirect
+)
+
+require (
 	cloud.google.com/go/auth v0.14.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.7 // indirect
 	cloud.google.com/go/compute v1.23.4 // indirect
 	cloud.google.com/go/compute/metadata v0.6.0 // indirect
 	github.com/anaskhan96/soup v1.2.5 // indirect
+	github.com/barasher/go-exiftool v1.10.0
 	github.com/bitly/go-simplejson v0.5.1 // indirect
 	github.com/cretz/bine v0.2.0 // indirect
 	github.com/djherbis/times v1.6.0 // indirect
@@ -42,6 +48,7 @@ require (
 	github.com/eidolon/wordwrap v0.0.0-20161011182207-e0f54129b8bb // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
+	github.com/go-enry/go-enry/v2 v2.9.1
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-sourcemap/sourcemap v2.1.4+incompatible // indirect
@@ -58,12 +65,18 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/nakagami/chacha20 v0.1.0 // indirect
+	github.com/orcaman/concurrent-map v1.0.0
 	github.com/orcaman/concurrent-map/v2 v2.0.1 // indirect
+	github.com/pemistahl/lingua-go v1.4.0
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/temoto/robotstxt v1.1.2
 	github.com/warpfork/go-fsx v0.4.0 // indirect
+	gitlab.com/clseibold/gonex v0.0.0-20240510073418-5058258917b4
+	gitlab.com/clseibold/profectus v0.1.2
+	gitlab.com/clseibold/scroll-term v0.0.0-20240520162440-6ae2e4ba051b
 	gitlab.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.54.0 // indirect
