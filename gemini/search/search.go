@@ -284,7 +284,7 @@ Note that AuraGem Search does not ensure or rank based on the popularity or accu
 
 		query, err := request.Query()
 		if err != nil {
-			request.TemporaryFailure(err.Error())
+			request.TemporaryFailure("%s", err.Error())
 			return
 		} else if query == "" {
 			request.RequestInput("Enter a page/capsule to crawl:")
@@ -500,7 +500,7 @@ When I type "Station", I want an exact match for Station itself. However, when I
 		request.Gemini("\n")
 	})
 
-	var refreshCacheEvery = time.Hour * 2
+	var refreshCacheEvery = time.Hour * 1
 	var pagesCountCache = 0
 	var lastCrawlCache = time.Time{}
 	var totalSizeCache float64 = -1
