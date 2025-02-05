@@ -375,6 +375,8 @@ func handleSuccess(ctx CrawlContext, crawlThread int, crawlData UrlToCrawlData) 
 			geminiTitle = "Station"
 		} else if ctx.GetCurrentURL() == "gemini://hashnix.club/" {
 			geminiTitle = "Hashnix Club"
+		} else if ctx.GetCurrentURL() == "gemini://warmedal.se/~antenna-dev/" {
+			geminiTitle = "Antenna Dev"
 		}
 
 		if geminiTitle == "" || !ContainsLetterRunes(geminiTitle) {
@@ -498,6 +500,14 @@ func handleSuccess(ctx CrawlContext, crawlThread int, crawlData UrlToCrawlData) 
 			if url == nil {
 				continue
 			}
+			if url.Scheme == "nex" && strings.HasSuffix(url.Path, "index") {
+				url.Path = strings.TrimSuffix(url.Path, "index")
+			} else if url.Scheme == "scroll" && strings.HasSuffix(url.Path, "index.scroll") {
+				url.Path = strings.TrimSuffix(url.Path, "index.scroll")
+			} else if (url.Scheme == "gemini" || url.Scheme == "spartan") && (strings.HasSuffix(url.Path, "index.gmi") || strings.HasSuffix(url.Path, "index.gemini")) {
+				url.Path = strings.TrimSuffix(url.Path, "index.gmi")
+				url.Path = strings.TrimSuffix(url.Path, "index.gemini")
+			}
 			url.Fragment = "" // Strip the fragment
 			internalLink := ctx.currentURL.Hostname() == url.Hostname() && ctx.currentURL.Port() == url.Port() && ctx.currentURL.Scheme == url.Scheme
 			if crawledPage, ok := ctx.globalData.urlsCrawled.Get(url.String()); /*ctx.urlsCrawled[url.String()]*/ ok {
@@ -620,6 +630,14 @@ func handleSuccess(ctx CrawlContext, crawlThread int, crawlData UrlToCrawlData) 
 			if url == nil {
 				continue
 			}
+			if url.Scheme == "nex" && strings.HasSuffix(url.Path, "index") {
+				url.Path = strings.TrimSuffix(url.Path, "index")
+			} else if url.Scheme == "scroll" && strings.HasSuffix(url.Path, "index.scroll") {
+				url.Path = strings.TrimSuffix(url.Path, "index.scroll")
+			} else if (url.Scheme == "gemini" || url.Scheme == "spartan") && (strings.HasSuffix(url.Path, "index.gmi") || strings.HasSuffix(url.Path, "index.gemini")) {
+				url.Path = strings.TrimSuffix(url.Path, "index.gmi")
+				url.Path = strings.TrimSuffix(url.Path, "index.gemini")
+			}
 			url.Fragment = "" // Strip the fragment
 			internalLink := ctx.currentURL.Hostname() == url.Hostname() && ctx.currentURL.Port() == url.Port() && ctx.currentURL.Scheme == url.Scheme
 			if crawledPage, ok := ctx.globalData.urlsCrawled.Get(url.String()); /*ctx.urlsCrawled[url.String()]*/ ok {
@@ -735,6 +753,14 @@ func handleSuccess(ctx CrawlContext, crawlThread int, crawlData UrlToCrawlData) 
 			url, _ := ctx.currentURL.Parse(link.url) // NOTE: This call will translate all relative and absolute links in the context of the current page's URL.
 			if url == nil {
 				continue
+			}
+			if url.Scheme == "nex" && strings.HasSuffix(url.Path, "index") {
+				url.Path = strings.TrimSuffix(url.Path, "index")
+			} else if url.Scheme == "scroll" && strings.HasSuffix(url.Path, "index.scroll") {
+				url.Path = strings.TrimSuffix(url.Path, "index.scroll")
+			} else if (url.Scheme == "gemini" || url.Scheme == "spartan") && (strings.HasSuffix(url.Path, "index.gmi") || strings.HasSuffix(url.Path, "index.gemini")) {
+				url.Path = strings.TrimSuffix(url.Path, "index.gmi")
+				url.Path = strings.TrimSuffix(url.Path, "index.gemini")
 			}
 			url.Fragment = "" // Strip the fragment
 			internalLink := ctx.currentURL.Hostname() == url.Hostname() && ctx.currentURL.Port() == url.Port() && ctx.currentURL.Scheme == url.Scheme
