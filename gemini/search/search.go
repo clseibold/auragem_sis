@@ -327,7 +327,11 @@ Note that AuraGem Search does not ensure or rank based on the popularity or accu
 			seedUrl := *queryUrl
 			seedUrl.Path = "/"
 			addSeedToDb(conn, Seed{0, seedUrl.String(), time.Time{}})
+			// Add to regular crawler in case it's not already there.
+			globalData.AddUrl(seedUrl.String(), crawler.UrlToCrawlData{})
 			request.Redirect("/search/")
+
+			// Add to capsule on-demand crawler
 			addToCrawlerChan <- seedUrl.String()
 		}
 	})
