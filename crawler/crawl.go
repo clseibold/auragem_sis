@@ -66,7 +66,8 @@ var skipUrls = map[string]bool{
 	"spartan://gmi.noulin.net/stackoverflow/": true, // Mirror
 }
 
-func Crawl(globalData *GlobalData, crawlThread int, wg *sync.WaitGroup) {
+// breakSeconds is the number of seconds to wait when there's no new URLs before breaking.
+func Crawl(globalData *GlobalData, crawlThread int, wg *sync.WaitGroup, breakSeconds int) {
 	defer func() {
 		if wg != nil {
 			wg.Done()
@@ -78,8 +79,8 @@ func Crawl(globalData *GlobalData, crawlThread int, wg *sync.WaitGroup) {
 	//for i := 0; i < 900000; i++ {
 	for {
 		//fmt.Printf("\n")
-		nextUrl, crawlData := ctx.getNextUrl()                                           // Note: Removes the url from urlsToCrawl
-		if nextUrl == "" && breakCounter >= ((1000/threadSleepDurationMiliSeconds)*60) { // Break only after 60 seconds (since 10ms delay with each)
+		nextUrl, crawlData := ctx.getNextUrl()                                                     // Note: Removes the url from urlsToCrawl
+		if nextUrl == "" && breakCounter >= ((1000/threadSleepDurationMiliSeconds)*breakSeconds) { // Break only after 60 seconds (since 10ms delay with each)
 			fmt.Printf("Nothing next. Breaking.\n")
 			break
 		} else if nextUrl == "" {

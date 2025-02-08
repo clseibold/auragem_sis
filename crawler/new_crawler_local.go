@@ -58,11 +58,11 @@ func RegularCrawler(globalData *GlobalData, wg *sync.WaitGroup) {
 		}
 
 		wg2.Add(5)
-		go Crawl(globalData, 0, wg2)
-		go Crawl(globalData, 1, wg2)
-		go Crawl(globalData, 2, wg2)
-		go Crawl(globalData, 3, wg2)
-		go Crawl(globalData, 4, wg2)
+		go Crawl(globalData, 0, wg2, 60)
+		go Crawl(globalData, 1, wg2, 60)
+		go Crawl(globalData, 2, wg2, 60)
+		go Crawl(globalData, 3, wg2, 60)
+		go Crawl(globalData, 4, wg2, 60)
 		//go Crawl(globalData, 5, wg2)
 
 		wg2.Wait()
@@ -106,8 +106,8 @@ func FeedCrawler(globalData *GlobalData, hourDuration int, wg *sync.WaitGroup) {
 		}
 
 		wg2.Add(2)
-		go Crawl(feedData, 6, wg2)
-		go Crawl(feedData, 7, wg2)
+		go Crawl(feedData, 6, wg2, 60)
+		go Crawl(feedData, 7, wg2, 60)
 
 		wg2.Wait()
 		fmt.Printf("[6-7] Feed Crawler Finished.\n")
@@ -123,12 +123,12 @@ func FeedCrawler(globalData *GlobalData, hourDuration int, wg *sync.WaitGroup) {
 func OnDemandPageCrawl(globalData *GlobalData, url, title string) {
 	pageCrawlData := NewSubGlobalData(globalData, false, false, 0) // Do not follow any links
 	pageCrawlData.AddUrl(url, UrlToCrawlData{PageFrom_LinkText: title})
-	Crawl(pageCrawlData, 1000, nil)
+	Crawl(pageCrawlData, 1000, nil, 1)
 }
 
 // Crawls a root page and any internal links it leads to
 func OnDemandCapsuleCrawl(globalData *GlobalData, rootUrl, title string) {
 	capsuleCrawlData := NewSubGlobalData(globalData, false, true, 0) // Follow all internal links
 	capsuleCrawlData.AddUrl(rootUrl, UrlToCrawlData{PageFrom_LinkText: title})
-	Crawl(capsuleCrawlData, 2000, nil)
+	Crawl(capsuleCrawlData, 2000, nil, 1)
 }
