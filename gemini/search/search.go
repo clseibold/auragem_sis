@@ -235,7 +235,7 @@ func HandleSearchEngine(s sis.ServerHandle) {
 
 => /search/features/ About and Features
 => /search/stats/ 📈 Statistics
-=> /search/add_capsule/ Missing your capsule? Add it to AuraGem Search
+=> /search/crawl/ Missing your capsule? Add it to AuraGem Search
 
 => /search/feeds/ 🗃 Indexed Feeds
 => /search/audio/ 🎵 Indexed Audio Files
