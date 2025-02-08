@@ -38,7 +38,7 @@ var timeWaitDelay, _ = time.ParseDuration("4m")
 }*/
 
 func RegularCrawler(globalData *GlobalData, wg *sync.WaitGroup) {
-	time.Sleep(time.Minute)
+	time.Sleep(time.Second * 1)
 	defer func() {
 		if wg != nil {
 			wg.Done()
@@ -77,7 +77,7 @@ func RegularCrawler(globalData *GlobalData, wg *sync.WaitGroup) {
 
 // Crawls every feed and its internal links
 func FeedCrawler(globalData *GlobalData, hourDuration int, wg *sync.WaitGroup) {
-	time.Sleep(time.Minute)
+	time.Sleep(time.Second * 1)
 	defer func() {
 		if wg != nil {
 			wg.Done()
