@@ -446,7 +446,7 @@ func addLinkToDb(ctx CrawlContext, link Link) (Link, bool) {
 	count := 0
 	err := row.Scan(&count)
 	if err != sql.ErrNoRows && err != nil { // TODO
-		panic(err)
+		//panic(err)
 		//return Page{}, false
 	}
 	if link.FromPageId == 0 || link.ToPageId == 0 {
