@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	wiki "github.com/trietmn/go-wiki"
@@ -142,14 +143,26 @@ func HandleSearchEngine(s sis.ServerHandle) {
 	// On-Demand Capsule Crawler
 	capsulesCrawling := make(map[string]bool, 10)
 	addToCrawlerChan := make(chan string, 1000)
+	crawlerMutex := &sync.RWMutex{}
+	cond := sync.NewCond(crawlerMutex.RLocker())
 	go func() {
 		for {
+			crawlerMutex.Lock()
 			url := <-addToCrawlerChan
 			capsulesCrawling[url] = true
+			crawlerMutex.Unlock()
+			cond.Broadcast()
 		}
 	}()
 	go func() {
 		for {
+			oldLen := len(capsulesCrawling)
+			crawlerMutex.RLock()
+			// If no capsules to crawl, wait until there is a capsule to crawl.
+			for oldLen == 0 && len(capsulesCrawling) != 0 {
+				cond.Wait()
+			}
+			fmt.Printf("[2000] Starting capsule crawl.\n")
 			url := ""
 			for k := range capsulesCrawling {
 				url = k
@@ -157,6 +170,7 @@ func HandleSearchEngine(s sis.ServerHandle) {
 			}
 			crawler.OnDemandCapsuleCrawl(globalData, url, "")
 			delete(capsulesCrawling, url)
+			crawlerMutex.RUnlock()
 		}
 	}()
 
