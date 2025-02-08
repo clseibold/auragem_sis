@@ -156,10 +156,9 @@ func HandleSearchEngine(s sis.ServerHandle) {
 	}()
 	go func() {
 		for {
-			oldLen := len(capsulesCrawling)
 			crawlerMutex.RLock()
 			// If no capsules to crawl, wait until there is a capsule to crawl.
-			for oldLen == 0 && len(capsulesCrawling) != 0 {
+			for len(capsulesCrawling) == 0 {
 				cond.Wait()
 			}
 			fmt.Printf("[2000] Starting capsule crawl.\n")
