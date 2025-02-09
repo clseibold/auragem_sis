@@ -229,7 +229,10 @@ func handleFailure(ctx CrawlContext) {
 
 func handleRedirect(ctx CrawlContext, permanent bool, crawlData UrlToCrawlData) {
 	meta := ctx.resp.Description
-	url, _ := ctx.currentURL.Parse(meta)
+	url, err := ctx.currentURL.Parse(meta)
+	if err != nil {
+		return
+	}
 	if _, ok := ctx.globalData.urlsCrawled.Get(url.String()); /*ctx.urlsCrawled[url.String()];*/ ok {
 		return
 	}
