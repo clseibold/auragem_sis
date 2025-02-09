@@ -228,7 +228,7 @@ func handleFailure(ctx CrawlContext) {
 }
 
 func handleRedirect(ctx CrawlContext, permanent bool, crawlData UrlToCrawlData) {
-	meta := ctx.resp.Description
+	meta := strings.TrimSpace(ctx.resp.Description)
 	url, err := ctx.currentURL.Parse(meta)
 	if err != nil {
 		return
