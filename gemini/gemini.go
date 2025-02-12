@@ -91,7 +91,11 @@ func startTorWebServer(t *tor.Tor) {
 */
 
 func startWebServer() {
-	err := http.ListenAndServe("0.0.0.0:80", http.FileServer(http.Dir("/home/clseibold/ServerData/auragem_sis/SIS/auragem_tor_http")))
+	httpMuxer := http.NewServeMux()
+	httpMuxer.Handle("auragem.ddns.net/", http.FileServer(http.Dir("/home/clseibold/ServerData/auragem_sis/SIS/auragem_http")))
+	httpMuxer.Handle("scrollprotocol.us.to/", http.FileServer(http.Dir("/home/clseibold/ServerData/auragem_sis/SIS/scrollprotocol_http")))
+	httpMuxer.Handle("auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion/", http.FileServer(http.Dir("/home/clseibold/ServerData/auragem_sis/SIS/auragem_tor_http")))
+	err := http.ListenAndServe("0.0.0.0:80", httpMuxer)
 	if err != nil {
 		fmt.Printf("Failed to start web server on 0.0.0.0:80. %s\n", err.Error())
 	}
