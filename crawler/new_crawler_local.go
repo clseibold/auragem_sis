@@ -48,9 +48,9 @@ func RegularCrawler(globalData *GlobalData, wg *sync.WaitGroup) {
 	wg2 := &sync.WaitGroup{}
 	// globalData := NewGlobalData(false, true) // Follows internal links only
 
+	globalData.Reset()
 	for {
 		fmt.Printf("[0-5] Starting Search Engine Crawler.\n")
-		globalData.Reset()
 		seeds := GetSeeds(globalData)
 		globalData.AddUrl("scroll://scrollprotocol.us.to/", UrlToCrawlData{})
 		for _, seed := range seeds {
@@ -67,6 +67,7 @@ func RegularCrawler(globalData *GlobalData, wg *sync.WaitGroup) {
 
 		wg2.Wait()
 		fmt.Printf("[0-4] Search Engine Crawler Finished.\n")
+		globalData.Reset()
 		time.Sleep(time.Minute * 30)
 		_, ok := <-ticker.C
 		if !ok {
@@ -93,7 +94,6 @@ func FeedCrawler(globalData *GlobalData, hourDuration int, wg *sync.WaitGroup) {
 	feedData := NewSubGlobalData(globalData, false, true, 1)
 	for {
 		fmt.Printf("[6] Starting Feed Crawler.\n")
-		feedData.Reset()
 		seeds := GetFeedsAsSeeds(feedData)
 		fmt.Printf("Getting %d feeds to crawl.\n", len(seeds))
 		for _, seed := range seeds {
@@ -111,6 +111,7 @@ func FeedCrawler(globalData *GlobalData, hourDuration int, wg *sync.WaitGroup) {
 
 		wg2.Wait()
 		fmt.Printf("[6-7] Feed Crawler Finished.\n")
+		feedData.Reset()
 		time.Sleep(time.Minute * 5)
 		_, ok := <-ticker.C
 		if !ok {

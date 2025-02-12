@@ -93,6 +93,18 @@ func (gd *GlobalData) AddUrl(url string, crawlData UrlToCrawlData) {
 	gd.urlsToCrawl.Set(url, crawlData)
 }
 
+func (gd *GlobalData) ToCrawlCount() int {
+	return gd.urlsToCrawl.Count()
+}
+
+func (gd *GlobalData) CrawledCount() int {
+	return gd.urlsCrawled.Count()
+}
+
+func (gd *GlobalData) IsCrawling() bool {
+	return !gd.urlsToCrawl.IsEmpty()
+}
+
 // CrawlContext supports concurrency
 // TODO: Separate the thread-specific info from the universal info
 type CrawlContext struct {
