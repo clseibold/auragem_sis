@@ -145,6 +145,7 @@ func HandleSearchEngine(s sis.ServerHandle) {
 	addToCrawlerChan := make(chan string, 1000)
 	crawlerMutex := &sync.RWMutex{}
 	cond := sync.NewCond(crawlerMutex.RLocker())
+	currentCapsuleCrawl := ""
 	go func() {
 		for {
 			crawlerMutex.Lock()
@@ -155,6 +156,7 @@ func HandleSearchEngine(s sis.ServerHandle) {
 		}
 	}()
 	go func() {
+		currentCapsuleCrawl = ""
 		for {
 			crawlerMutex.RLock()
 			// If no capsules to crawl, wait until there is a capsule to crawl.
@@ -162,13 +164,13 @@ func HandleSearchEngine(s sis.ServerHandle) {
 				cond.Wait()
 			}
 			fmt.Printf("[2000] Starting capsule crawl.\n")
-			url := ""
 			for k := range capsulesCrawling {
-				url = k
+				currentCapsuleCrawl = k
 				break
 			}
-			crawler.OnDemandCapsuleCrawl(globalData, url, "")
-			delete(capsulesCrawling, url)
+			crawler.OnDemandCapsuleCrawl(globalData, currentCapsuleCrawl, "")
+			delete(capsulesCrawling, currentCapsuleCrawl)
+			currentCapsuleCrawl = ""
 			crawlerMutex.RUnlock()
 		}
 	}()
@@ -589,6 +591,9 @@ Number of Domains that responded with an empty META field: %d
 
 		if globalData.IsCrawling() {
 			request.Gemini(fmt.Sprintf("## Crawler\n\nCurrently crawled %d documents.\n", globalData.CrawledCount()))
+		}
+		if currentCapsuleCrawl != "" {
+			request.Gemini(fmt.Sprintf("## Capsule On-Demand Crawler\n\nCurrently crawling capsule '%s'.\n", currentCapsuleCrawl))
 		}
 	})
 
