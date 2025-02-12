@@ -594,6 +594,9 @@ Number of Domains that responded with an empty META field: %d
 		}
 		if currentCapsuleCrawl != "" {
 			request.Gemini(fmt.Sprintf("## Capsule On-Demand Crawler\n\nCurrently crawling capsule '%s'.\n", currentCapsuleCrawl))
+			if len(capsulesCrawling)-1 > 0 {
+				request.Gemini(fmt.Sprintf("%d capsules left in queue to crawl.\n", len(capsulesCrawling)-1))
+			}
 		}
 	})
 
