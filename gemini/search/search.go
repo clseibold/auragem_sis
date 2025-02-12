@@ -588,7 +588,7 @@ Number of Domains that responded with an empty META field: %d
 `, lastCrawlCache.Format("2006-01-02"), pagesCountCache, domainsCount, feedCount, totalSize, totalSizeText, totalSizeText/totalSize*100.0, slowdowncount, emptyMetaCount))
 
 		if globalData.IsCrawling() {
-			request.Gemini(fmt.Sprintf("## Crawler\n\nCurrently crawled %d documents.", globalData.CrawledCount()))
+			request.Gemini(fmt.Sprintf("## Crawler\n\nCurrently crawled %d documents.\n", globalData.CrawledCount()))
 		}
 	})
 
