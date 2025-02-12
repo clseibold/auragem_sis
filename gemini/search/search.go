@@ -329,7 +329,7 @@ Note that AuraGem Search does not ensure or rank based on the popularity or accu
 			addSeedToDb(conn, Seed{0, seedUrl.String(), time.Time{}})
 			// Add to regular crawler in case it's not already there.
 			globalData.AddUrl(seedUrl.String(), crawler.UrlToCrawlData{})
-			request.Redirect("/search/")
+			request.Gemini(fmt.Sprintf("# Capsule submitted\n\n'%s' has been submitted for on-demand crawling.\n=> /search/ AuraGem Search Home\n", queryUrl.String()))
 
 			// Add to capsule on-demand crawler
 			addToCrawlerChan <- seedUrl.String()
@@ -628,7 +628,7 @@ Number of Domains that responded with an empty META field: %d
 				request.TemporaryFailure("%s", err.Error())
 				return //err
 			} else {
-				request.Redirect("/search")
+				request.Gemini(fmt.Sprintf("# Capsule submitted\n\n'%s' has been submitted as a seed.\n=> /search/ AuraGem Search Home\n", queryUrl.String()))
 				return
 			}
 		}
