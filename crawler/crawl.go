@@ -105,8 +105,7 @@ func Crawl(globalData *GlobalData, crawlThread int, wg *sync.WaitGroup, breakSec
 			}
 		}
 
-		//fmt.Printf("Current[%d]: %s\n", crawlThread, nextUrl)
-		fmt.Printf("[%d] %d out of %d left to crawl\n", crawlThread, globalData.urlsToCrawl.Count(), globalData.urlsCrawled.Count()+globalData.urlsToCrawl.Count())
+		//fmt.Printf("[%d] %d out of %d left to crawl\n", crawlThread, globalData.urlsToCrawl.Count(), globalData.urlsCrawled.Count()+globalData.urlsToCrawl.Count())
 
 		resp, err := ctx.Get(nextUrl, crawlThread, crawlData)
 		if err != nil && strings.HasSuffix(err.Error(), "bind: An operation on a socket could not be performed because the system lacked sufficient buffer space or because a queue was full.") {
