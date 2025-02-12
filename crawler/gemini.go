@@ -81,10 +81,6 @@ func (ctx *CrawlContext) GetGeminiPageInfo2(dataReader *bytes.Reader, tagsMap *m
 			link_without_fragment, _, _ := strings.Cut(link, "#")
 			//link_without_query_and_fragment, _, _ = strings.Cut(link_without_query_and_fragment, "?")
 			*links = append(*links, GeminiLink{title, link_without_fragment, true})
-
-			if isTimeDate(title) {
-				isFeed++
-			}
 		} else if strings.HasPrefix(line, "=>") {
 			line = strings.TrimSpace(strings.TrimPrefix(line, "=>"))
 			fmt.Fprintf(strippedTextBuilder, "%s\n", line)
