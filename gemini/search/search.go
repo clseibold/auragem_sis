@@ -14,7 +14,6 @@ import (
 	"time"
 
 	wiki "github.com/trietmn/go-wiki"
-	// "gitlab.com/clseibold/auragem_sis/crawler"
 	"gitlab.com/clseibold/auragem_sis/crawler"
 	"gitlab.com/clseibold/auragem_sis/db"
 	sis "gitlab.com/clseibold/smallnetinformationservices"
@@ -138,7 +137,10 @@ func HandleSearchEngine(s sis.ServerHandle) {
 	// Crawler - full crawl every month, feed crawl every 13 hours, and on-demand capsule crawling
 	globalData := crawler.NewGlobalData(conn, true, true, 0) // Follows all links
 	go crawler.RegularCrawler(globalData, nil)
-	go crawler.FeedCrawler(globalData, 13, nil)
+	go crawler.FeedCrawler(globalData, 13, nil, func() {
+		// After each feed crawl, run the aggregator
+		Aggregate("/home/clseibold/ServerData/auragem_sis/SIS/auragem_gemini/search/yearposts/", conn)
+	})
 
 	// On-Demand Capsule Crawler
 	capsulesCrawling := make(map[string]bool, 10)

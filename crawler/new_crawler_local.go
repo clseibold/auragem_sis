@@ -68,6 +68,11 @@ func RegularCrawler(globalData *GlobalData, wg *sync.WaitGroup) {
 		wg2.Wait()
 		fmt.Printf("[0-4] Search Engine Crawler Finished.\n")
 		globalData.Reset()
+
+		// Execute procedures to update FTS database
+		globalData.dbConn.Exec("EXECUTE PROCEDURE FTS$MANAGEMENT.FTS$REBUILD_INDEX('FTS_DOMAIN_ID');")
+		globalData.dbConn.Exec("EXECUTE PROCEDURE FTS$MANAGEMENT.FTS$REBUILD_INDEX('FTS_PAGE_ID_EN');")
+
 		time.Sleep(time.Minute * 30)
 		_, ok := <-ticker.C
 		if !ok {
@@ -77,7 +82,7 @@ func RegularCrawler(globalData *GlobalData, wg *sync.WaitGroup) {
 }
 
 // Crawls every feed and its internal links
-func FeedCrawler(globalData *GlobalData, hourDuration int, wg *sync.WaitGroup) {
+func FeedCrawler(globalData *GlobalData, hourDuration int, wg *sync.WaitGroup, finished func()) {
 	time.Sleep(time.Second * 5)
 	defer func() {
 		if wg != nil {
@@ -112,6 +117,7 @@ func FeedCrawler(globalData *GlobalData, hourDuration int, wg *sync.WaitGroup) {
 		wg2.Wait()
 		fmt.Printf("[6-7] Feed Crawler Finished.\n")
 		feedData.Reset()
+		finished()
 		time.Sleep(time.Minute * 5)
 		_, ok := <-ticker.C
 		if !ok {
