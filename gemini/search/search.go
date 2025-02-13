@@ -597,11 +597,11 @@ Number of Domains that responded with an empty META field: %d
 		if globalData.IsCrawling() {
 			currentCrawlCount := globalData.CrawledCount()
 			diff := float64(currentCrawlCount - lastCrawlCount)
-			diffSeconds := time.Now().Sub(lastCrawlCountStatTime).Seconds()
+			diffMinutes := time.Now().Sub(lastCrawlCountStatTime).Minutes()
 
 			lastCrawlCount = currentCrawlCount
 			lastCrawlCountStatTime = time.Now()
-			request.Gemini(fmt.Sprintf("## Crawler\n\nCurrently crawled %d documents (%.1f/s).\n", currentCrawlCount, diff/diffSeconds))
+			request.Gemini(fmt.Sprintf("## Crawler\n\nCurrently crawled %d documents (%.1f/s).\n", currentCrawlCount, diff/diffMinutes))
 		}
 		if currentCapsuleCrawl != "" {
 			request.Gemini(fmt.Sprintf("## Capsule On-Demand Crawler\n\nCurrently crawling capsule '%s'.\n", currentCapsuleCrawl))
