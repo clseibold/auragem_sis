@@ -62,8 +62,8 @@ func RegularCrawler(globalData *GlobalData, wg *sync.WaitGroup) {
 		go Crawl(globalData, 1, wg2, 60)
 		go Crawl(globalData, 2, wg2, 60)
 		go Crawl(globalData, 3, wg2, 60)
-		go Crawl(globalData, 4, wg2, 60)
-		//go Crawl(globalData, 5, wg2)
+		//go Crawl(globalData, 4, wg2, 60)
+		//go Crawl(globalData, 5, wg2, 60)
 
 		wg2.Wait()
 		fmt.Printf("[0-4] Search Engine Crawler Finished.\n")
