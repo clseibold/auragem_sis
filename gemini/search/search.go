@@ -527,6 +527,9 @@ When I type "Station", I want an exact match for Station itself. However, when I
 	var totalSizeCache float64 = -1
 	var totalSizeTextCache float64 = -1
 	var lastCacheTime time.Time
+
+	var lastCrawlCountStatTime time.Time
+	var lastCrawlCount int
 	s.AddRoute("/search/stats", func(request sis.Request) {
 		currentTime := time.Now()
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: currentTime, Abstract: "# AuraGem Search Stats\n"})
@@ -592,7 +595,13 @@ Number of Domains that responded with an empty META field: %d
 `, lastCrawlCache.Format("2006-01-02"), pagesCountCache, domainsCount, feedCount, totalSize, totalSizeText, totalSizeText/totalSize*100.0, slowdowncount, emptyMetaCount))
 
 		if globalData.IsCrawling() {
-			request.Gemini(fmt.Sprintf("## Crawler\n\nCurrently crawled %d documents.\n", globalData.CrawledCount()))
+			currentCrawlCount := globalData.CrawledCount()
+			diff := float64(currentCrawlCount - lastCrawlCount)
+			diffSeconds := time.Now().Sub(lastCrawlCountStatTime).Seconds()
+
+			lastCrawlCount = currentCrawlCount
+			lastCrawlCountStatTime = time.Now()
+			request.Gemini(fmt.Sprintf("## Crawler\n\nCurrently crawled %d documents (%.1f/s).\n", currentCrawlCount, diff/diffSeconds))
 		}
 		if currentCapsuleCrawl != "" {
 			request.Gemini(fmt.Sprintf("## Capsule On-Demand Crawler\n\nCurrently crawling capsule '%s'.\n", currentCapsuleCrawl))
