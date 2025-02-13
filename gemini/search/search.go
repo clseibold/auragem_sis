@@ -601,7 +601,7 @@ Number of Domains that responded with an empty META field: %d
 
 			lastCrawlCount = currentCrawlCount
 			lastCrawlCountStatTime = time.Now()
-			request.Gemini(fmt.Sprintf("## Crawler\n\nCurrently crawled %d documents (%.1f/s).\n", currentCrawlCount, diff/diffMinutes))
+			request.Gemini(fmt.Sprintf("## Crawler\n\nCurrently crawled %d documents (%.1f/min; %.1f/day).\n", currentCrawlCount, diff/diffMinutes, diff/diffMinutes*60*24))
 		}
 		if currentCapsuleCrawl != "" {
 			request.Gemini(fmt.Sprintf("## Capsule On-Demand Crawler\n\nCurrently crawling capsule '%s'.\n", currentCapsuleCrawl))
