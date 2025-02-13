@@ -528,8 +528,8 @@ When I type "Station", I want an exact match for Station itself. However, when I
 	var totalSizeTextCache float64 = -1
 	var lastCacheTime time.Time
 
-	var lastCrawlCountStatTime time.Time
-	var lastCrawlCount int
+	var firstCrawlCountStatTime time.Time = time.Now()
+	var firstCrawlCount int = globalData.CrawledCount()
 	s.AddRoute("/search/stats", func(request sis.Request) {
 		currentTime := time.Now()
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: currentTime, Abstract: "# AuraGem Search Stats\n"})
@@ -596,11 +596,8 @@ Number of Domains that responded with an empty META field: %d
 
 		if globalData.IsCrawling() {
 			currentCrawlCount := globalData.CrawledCount()
-			diff := float64(currentCrawlCount - lastCrawlCount)
-			diffMinutes := time.Now().Sub(lastCrawlCountStatTime).Minutes()
-
-			lastCrawlCount = currentCrawlCount
-			lastCrawlCountStatTime = time.Now()
+			diff := float64(currentCrawlCount - firstCrawlCount)
+			diffMinutes := time.Now().Sub(firstCrawlCountStatTime).Minutes()
 			request.Gemini(fmt.Sprintf("## Crawler\n\nCurrently crawled %d documents (%.1f/min; %.1f/day).\n", currentCrawlCount, diff/diffMinutes, diff/diffMinutes*60*24))
 		}
 		if currentCapsuleCrawl != "" {
