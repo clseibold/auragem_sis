@@ -528,8 +528,6 @@ When I type "Station", I want an exact match for Station itself. However, when I
 	var totalSizeTextCache float64 = -1
 	var lastCacheTime time.Time
 
-	var firstCrawlCountStatTime time.Time = time.Now()
-	var firstCrawlCount int = globalData.CrawledCount()
 	s.AddRoute("/search/stats", func(request sis.Request) {
 		currentTime := time.Now()
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: currentTime, Abstract: "# AuraGem Search Stats\n"})
@@ -595,10 +593,9 @@ Number of Domains that responded with an empty META field: %d
 `, lastCrawlCache.Format("2006-01-02"), pagesCountCache, domainsCount, feedCount, totalSize, totalSizeText, totalSizeText/totalSize*100.0, slowdowncount, emptyMetaCount))
 
 		if globalData.IsCrawling() {
-			currentCrawlCount := globalData.CrawledCount()
-			diff := float64(currentCrawlCount - firstCrawlCount)
-			diffMinutes := time.Now().Sub(firstCrawlCountStatTime).Minutes()
-			request.Gemini(fmt.Sprintf("## Crawler\n\nCurrently crawled %d documents (%.1f/min; %.1f/day).\n", currentCrawlCount, diff/diffMinutes, diff/diffMinutes*60*24))
+			currentCrawlCount := float64(globalData.CrawledCount())
+			diffMinutes := time.Now().Sub(globalData.StartCrawlTime()).Minutes()
+			request.Gemini(fmt.Sprintf("## Crawler\n\nCurrently crawled %.0f documents (%.1f/min; %.1f/day).\n", currentCrawlCount, currentCrawlCount/diffMinutes, currentCrawlCount/diffMinutes*60*24))
 		}
 		if currentCapsuleCrawl != "" {
 			request.Gemini(fmt.Sprintf("## Capsule On-Demand Crawler\n\nCurrently crawling capsule '%s'.\n", currentCapsuleCrawl))

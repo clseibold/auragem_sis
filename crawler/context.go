@@ -61,15 +61,17 @@ type GlobalData struct {
 	urlsToCrawl    cmap.ConcurrentMap // bool is whether robots.txt should be checked or not
 	robotsMap      cmap.ConcurrentMap
 	dbConn         *sql.DB
+	crawlStartTime time.Time
 
 	// Whether to follow links
 	followExternalLinks bool
 	followInternalLinks bool
 	maxDepth            int // 0 to disregard depth
+	sub                 bool
 }
 
 func NewGlobalData(db *sql.DB, followExternalLinks bool, followInternalLinks bool, maxDepth int) *GlobalData {
-	return &GlobalData{cmap.New(), cmap.New(), cmap.New(), cmap.New(), db, followExternalLinks, followInternalLinks, maxDepth}
+	return &GlobalData{cmap.New(), cmap.New(), cmap.New(), cmap.New(), db, time.Now(), followExternalLinks, followInternalLinks, maxDepth, false}
 }
 
 // NewSubGlobalData creates a new global data with the same domainsCrawled, urlsCrawled, and robots maps but a different urlsToCrawl List
@@ -79,14 +81,18 @@ func NewGlobalData(db *sql.DB, followExternalLinks bool, followInternalLinks boo
 
 // NewSubGlobalData creates a new global data with the same robots map and domainsCrawled, but with different urlsToCrawl and urlsCrawled Lists
 func NewSubGlobalData(globalData *GlobalData, followExternalLinks bool, followInternalLinks bool, maxDepth int) *GlobalData {
-	return &GlobalData{globalData.domainsCrawled, cmap.New(), cmap.New(), globalData.robotsMap, globalData.dbConn, followExternalLinks, followInternalLinks, maxDepth}
+	return &GlobalData{globalData.domainsCrawled, cmap.New(), cmap.New(), globalData.robotsMap, globalData.dbConn, time.Now(), followExternalLinks, followInternalLinks, maxDepth, true}
 }
 
 func (gd *GlobalData) Reset() {
 	gd.urlsCrawled.Clear()
 	gd.urlsToCrawl.Clear()
-	gd.robotsMap.Clear()
-	gd.domainsCrawled.Clear()
+	gd.crawlStartTime = time.Now()
+
+	if gd.sub {
+		gd.robotsMap.Clear()
+		gd.domainsCrawled.Clear()
+	}
 }
 
 func (gd *GlobalData) AddUrl(url string, crawlData UrlToCrawlData) {
@@ -103,6 +109,10 @@ func (gd *GlobalData) CrawledCount() int {
 
 func (gd *GlobalData) IsCrawling() bool {
 	return !gd.urlsToCrawl.IsEmpty()
+}
+
+func (gd *GlobalData) StartCrawlTime() time.Time {
+	return gd.crawlStartTime
 }
 
 // CrawlContext supports concurrency

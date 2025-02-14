@@ -48,8 +48,8 @@ func RegularCrawler(globalData *GlobalData, wg *sync.WaitGroup) {
 	wg2 := &sync.WaitGroup{}
 	// globalData := NewGlobalData(false, true) // Follows internal links only
 
-	globalData.Reset()
 	for {
+		globalData.Reset()
 		fmt.Printf("[0-5] Starting Search Engine Crawler.\n")
 		seeds := GetSeeds(globalData)
 		globalData.AddUrl("scroll://scrollprotocol.us.to/", UrlToCrawlData{})
@@ -98,6 +98,7 @@ func FeedCrawler(globalData *GlobalData, hourDuration int, wg *sync.WaitGroup, f
 
 	feedData := NewSubGlobalData(globalData, false, true, 1)
 	for {
+		feedData.Reset()
 		fmt.Printf("[6] Starting Feed Crawler.\n")
 		seeds := GetFeedsAsSeeds(feedData)
 		fmt.Printf("Getting %d feeds to crawl.\n", len(seeds))
@@ -129,6 +130,7 @@ func FeedCrawler(globalData *GlobalData, hourDuration int, wg *sync.WaitGroup, f
 // Crawls a singular page
 func OnDemandPageCrawl(globalData *GlobalData, url, title string) {
 	pageCrawlData := NewSubGlobalData(globalData, false, false, 0) // Do not follow any links
+	pageCrawlData.Reset()
 	pageCrawlData.AddUrl(url, UrlToCrawlData{PageFrom_LinkText: title})
 	Crawl(pageCrawlData, 1000, nil, 1)
 }
@@ -136,6 +138,7 @@ func OnDemandPageCrawl(globalData *GlobalData, url, title string) {
 // Crawls a root page and any internal links it leads to
 func OnDemandCapsuleCrawl(globalData *GlobalData, rootUrl, title string) {
 	capsuleCrawlData := NewSubGlobalData(globalData, false, true, 0) // Follow all internal links
+	capsuleCrawlData.Reset()
 	capsuleCrawlData.AddUrl(rootUrl, UrlToCrawlData{PageFrom_LinkText: title})
 	Crawl(capsuleCrawlData, 2000, nil, 1)
 }
