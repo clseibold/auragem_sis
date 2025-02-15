@@ -93,13 +93,17 @@ func startTorWebServer(t *tor.Tor) {
 func startWebServer() {
 	httpMuxer := http.NewServeMux()
 	httpMuxer.Handle("/", http.FileServer(http.Dir("/home/clseibold/ServerData/auragem_sis/SIS/auragem_http")))
-	httpMuxer.Handle("/.well-known/", http.FileServer(http.Dir("/home/clseibold/ServerData/auragem_sis/SIS/auragem_http/.well-known")))
+	//httpMuxer.Handle("/.well-known/", http.FileServer(http.Dir("/home/clseibold/ServerData/auragem_sis/SIS/auragem_http/.well-known")))
 	httpMuxer.Handle("scrollprotocol.us.to/", http.FileServer(http.Dir("/home/clseibold/ServerData/auragem_sis/SIS/scrollprotocol_http")))
 	httpMuxer.Handle("auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion/", http.FileServer(http.Dir("/home/clseibold/ServerData/auragem_sis/SIS/auragem_tor_http")))
 	err := http.ListenAndServe("0.0.0.0:80", httpMuxer)
 	if err != nil {
 		fmt.Printf("Failed to start web server on 0.0.0.0:80. %s\n", err.Error())
 	}
+	/*err2 := http.ListenAndServeTLS("0.0.0.0:443", "/home/clseibold/ServerData/auragem_sis/SIS/auragem_https.pem", "/home/clseibold/ServerData/auragem_sis/SIS/auragem_https.key", httpMuxer)
+	if err2 != nil {
+		fmt.Printf("Failed to start web server on 0.0.0.0:443. %s\n", err2.Error())
+	}*/
 }
 
 // Tor-only server
