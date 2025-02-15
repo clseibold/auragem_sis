@@ -100,10 +100,10 @@ func startWebServer() {
 	if err != nil {
 		fmt.Printf("Failed to start web server on 0.0.0.0:80. %s\n", err.Error())
 	}
-	/*err2 := http.ListenAndServeTLS("0.0.0.0:443", "/home/clseibold/ServerData/auragem_sis/SIS/auragem_https.pem", "/home/clseibold/ServerData/auragem_sis/SIS/auragem_https.key", httpMuxer)
+	err2 := http.ListenAndServeTLS("0.0.0.0:443", "/etc/letsencrypt/live/auragem.ddns.net/fullchain.pem", "/etc/letsencrypt/live/auragem.ddns.net/privkey.pem", httpMuxer)
 	if err2 != nil {
 		fmt.Printf("Failed to start web server on 0.0.0.0:443. %s\n", err2.Error())
-	}*/
+	}
 }
 
 // Tor-only server
