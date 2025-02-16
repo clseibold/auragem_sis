@@ -52,14 +52,14 @@ func HandleChat(s sis.ServerHandle) {
 	s.AddRoute("/chat/", func(request sis.Request) {
 		query, err := request.Query()
 		if err != nil {
-			request.TemporaryFailure(err.Error())
+			request.TemporaryFailure("%s", err.Error())
 			return
 		} else if query == "" {
 			request.RequestInput("Username? ")
 			return
 		} else {
 			//return c.NoContent(gig.StatusRedirectTemporary, "/chat/"+url.PathEscape(query))
-			request.Redirect("/chat/" + url.PathEscape(query))
+			request.Redirect("/chat/%s", url.PathEscape(query))
 			return
 		}
 	})
@@ -161,7 +161,7 @@ func HandleChat(s sis.ServerHandle) {
 			request.SetSpartanQueryLimit(1024 * 8) // For proxying to Spartan
 			query, err := request.Query()
 			if err != nil {
-				request.TemporaryFailure(err.Error())
+				request.TemporaryFailure("%s", err.Error())
 				return
 			} else if query == "" {
 				request.RequestInput("Message: ")
@@ -189,7 +189,7 @@ func HandleChat(s sis.ServerHandle) {
 			sendChan <- (ChatText{username, message, time.Now(), ""})
 		}
 		//return c.NoContent(gig.StatusRedirectTemporary, "gemini://auragem.ddns.net/chat/"+url.PathEscape(username))
-		request.Redirect(request.Server.Scheme() + "auragem.ddns.net/chat/" + url.PathEscape(username))
+		request.Redirect("%sauragem.ddns.net/chat/%s", request.Server.Scheme(), url.PathEscape(username))
 	}
 
 	s.AddRoute("/chat/:username/send", sendFunc)
