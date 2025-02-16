@@ -45,11 +45,13 @@ func RunServer(cmd *cobra.Command, args []string) {
 	}
 	//context.GetPortListener("0.0.0.0", "1995").AddCertificate("auragem.ddns.net", "auragem.pem")
 
+	chatContext := chat.NewChatContext()
+
 	setupWebServer()
 	go startTorOnlyWebServer()
 	setupTorOnly(context)
 
-	setupAuraGem(context)
+	setupAuraGem(context, chatContext)
 	setupScholasticDiversity(context)
 	setupScrollProtocol(context)
 	setupNewsfin(context)
@@ -131,7 +133,7 @@ func setupTorOnly(context *sis.SISContext) {
 	// spartanServer.AddProxyRoute("/*", "$varilib_gemini/*", '1')
 }
 
-func setupAuraGem(context *sis.SISContext) {
+func setupAuraGem(context *sis.SISContext, chatContext *chat.ChatContext) {
 	hostsConfig := []sis.HostConfig{
 		{BindAddress: "0.0.0.0", Hostname: "auragem.ddns.net", Upload: false, CertPath: "auragem.pem"},
 		{BindAddress: "0.0.0.0", Hostname: "auragem.ddns.net", Upload: true, CertPath: "auragem.pem"},
@@ -162,8 +164,10 @@ func setupAuraGem(context *sis.SISContext) {
 	// Services
 	handleDevlog(geminiServer)
 	handleWeather(geminiServer)
+
+	chatContext.Attach(geminiServer)
+
 	textgame.HandleTextGame(geminiServer)
-	chat.HandleChat(geminiServer)
 	textola.HandleTextola(geminiServer)
 	music.HandleMusic(geminiServer)
 	search.HandleSearchEngine(geminiServer)

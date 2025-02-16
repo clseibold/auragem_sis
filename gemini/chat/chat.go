@@ -20,6 +20,59 @@ type ChatContext struct {
 	//messages     *deque.Deque[ChatText]
 	messages     []ChatText
 	clientNumber atomic.Int64
+	sendChan     chan ChatText
+}
+
+func NewChatContext() *ChatContext {
+	context := &ChatContext{
+		changeInt: 0,
+		mutex:     sync.RWMutex{},
+		//messages:     deque.New[ChatText](0, 30),
+		messages:     make([]ChatText, 0, 100),
+		clientNumber: atomic.Int64{},
+	}
+	context.readCond = sync.NewCond(context.mutex.RLocker())
+	context.sendChan = make(chan ChatText, 500)
+
+	// Message sending handler
+	go func() {
+		//ticker := time.NewTicker(time.Hour * 24)
+		// minute hour day-of-month month day-of-week
+		ticker, err := cronticker.NewTicker("@daily") // UTC
+		if err != nil {
+			// TODO
+			fmt.Printf("Error creating cronticker: %s\n", err.Error())
+		}
+		for {
+			select {
+			case msg := <-context.sendChan:
+				{
+					context.mutex.Lock()
+					{
+						//context.messages.PushBack(msg)
+						context.messages = append(context.messages, msg)
+						//context.newMsgIndex = context.messages.Len()
+						context.changeInt += 1
+						context.readCond.Broadcast()
+					}
+					context.mutex.Unlock()
+				}
+			case t := <-ticker.C:
+				{
+					// Clear messages history every day
+					context.mutex.Lock()
+					//context.messages.Clear()
+					context.messages = context.messages[:0]
+					context.mutex.Unlock()
+
+					context.sendChan <- (ChatText{"SYSTEM", fmt.Sprintf("New Day: %s UTC\n", t.UTC().Format("2006-01-02")), t, ""})
+				}
+			}
+			time.Sleep(time.Second / 500)
+		}
+	}()
+
+	return context
 }
 
 type ChatText struct {
@@ -34,20 +87,9 @@ type UserInfo struct {
 	clientNumber atomic.Int64
 }
 
-func HandleChat(s sis.ServerHandle) {
+func (context *ChatContext) Attach(s sis.ServerHandle) {
 	publishDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-19T13:51:00", time.Local)
 	updateDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-19T13:51:00", time.Local)
-	context := ChatContext{
-		changeInt: 0,
-		mutex:     sync.RWMutex{},
-		//messages:     deque.New[ChatText](0, 30),
-		messages:     make([]ChatText, 0, 100),
-		clientNumber: atomic.Int64{},
-	}
-	context.readCond = sync.NewCond(context.mutex.RLocker())
-	sendChan := make(chan ChatText, 500)
-
-	//var usersMap cmap.ConcurrentMap = cmap.New() // Store pointers??
 
 	s.AddRoute("/chat/", func(request sis.Request) {
 		query, err := request.Query()
@@ -63,6 +105,7 @@ func HandleChat(s sis.ServerHandle) {
 			return
 		}
 	})
+
 	s.AddRoute("/chat/:username", func(request sis.Request) {
 		username := request.GetParam("username")
 		if username == "" {
@@ -186,7 +229,7 @@ func HandleChat(s sis.ServerHandle) {
 		message = strings.ReplaceAll(message, "\n-[", "")
 
 		if !request.ScrollMetadataRequested {
-			sendChan <- (ChatText{username, message, time.Now(), ""})
+			context.sendChan <- (ChatText{username, message, time.Now(), ""})
 		}
 		//return c.NoContent(gig.StatusRedirectTemporary, "gemini://auragem.ddns.net/chat/"+url.PathEscape(username))
 		request.Redirect("%sauragem.ddns.net/chat/%s", request.Server.Scheme(), url.PathEscape(username))
@@ -194,42 +237,4 @@ func HandleChat(s sis.ServerHandle) {
 
 	s.AddRoute("/chat/:username/send", sendFunc)
 	s.AddUploadRoute("/chat/:username/send", sendFunc) // Titan Upload
-
-	// Message sending handler
-	go func() {
-		//ticker := time.NewTicker(time.Hour * 24)
-		// minute hour day-of-month month day-of-week
-		ticker, err := cronticker.NewTicker("@daily") // UTC
-		if err != nil {
-			// TODO
-			fmt.Printf("Error creating cronticker: %s\n", err.Error())
-		}
-		for {
-			select {
-			case msg := <-sendChan:
-				{
-					context.mutex.Lock()
-					{
-						//context.messages.PushBack(msg)
-						context.messages = append(context.messages, msg)
-						//context.newMsgIndex = context.messages.Len()
-						context.changeInt += 1
-						context.readCond.Broadcast()
-					}
-					context.mutex.Unlock()
-				}
-			case t := <-ticker.C:
-				{
-					// Clear messages history every day
-					context.mutex.Lock()
-					//context.messages.Clear()
-					context.messages = context.messages[:0]
-					context.mutex.Unlock()
-
-					sendChan <- (ChatText{"SYSTEM", fmt.Sprintf("New Day: %s UTC\n", t.UTC().Format("2006-01-02")), t, ""})
-				}
-			}
-			time.Sleep(time.Second / 500)
-		}
-	}()
 }
