@@ -21,7 +21,7 @@ import (
 	"gitlab.com/clseibold/auragem_sis/gemini/textola"
 	"gitlab.com/clseibold/auragem_sis/gemini/texts"
 	"gitlab.com/clseibold/auragem_sis/gemini/youtube"
-	sis "gitlab.com/clseibold/smallnetinformationservices"
+	sis "gitlab.com/sis-suite/smallnetinformationservices"
 	/*"gitlab.com/clseibold/auragem_sis/twitch"*/)
 
 var Command = &cobra.Command{
@@ -45,7 +45,7 @@ func RunServer(cmd *cobra.Command, args []string) {
 	}
 	//context.GetPortListener("0.0.0.0", "1995").AddCertificate("auragem.ddns.net", "auragem.pem")
 
-	go startWebServer()
+	setupWebServer()
 	go startTorOnlyWebServer()
 	setupTorOnly(context)
 
@@ -90,22 +90,24 @@ func startTorWebServer(t *tor.Tor) {
 }
 */
 
-func startWebServer() {
+func setupWebServer() {
 	httpMuxer := http.NewServeMux()
 	httpMuxer.Handle("/", http.FileServer(http.Dir("/home/clseibold/ServerData/auragem_sis/SIS/auragem_http")))
-	//httpMuxer.Handle("/.well-known/", http.FileServer(http.Dir("/home/clseibold/ServerData/auragem_sis/SIS/auragem_http/.well-known")))
 	httpMuxer.Handle("scrollprotocol.us.to/", http.FileServer(http.Dir("/home/clseibold/ServerData/auragem_sis/SIS/scrollprotocol_http")))
 	httpMuxer.Handle("auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion/", http.FileServer(http.Dir("/home/clseibold/ServerData/auragem_sis/SIS/auragem_tor_http")))
+
 	go func() {
 		err := http.ListenAndServe("0.0.0.0:80", httpMuxer)
 		if err != nil {
 			fmt.Printf("Failed to start web server on 0.0.0.0:80. %s\n", err.Error())
 		}
 	}()
-	err2 := http.ListenAndServeTLS("0.0.0.0:443", "/etc/letsencrypt/live/auragem.ddns.net/fullchain.pem", "/etc/letsencrypt/live/auragem.ddns.net/privkey.pem", httpMuxer)
-	if err2 != nil {
-		fmt.Printf("Failed to start web server on 0.0.0.0:443. %s\n", err2.Error())
-	}
+	go func() {
+		err2 := http.ListenAndServeTLS("0.0.0.0:443", "/etc/letsencrypt/live/auragem.ddns.net/fullchain.pem", "/etc/letsencrypt/live/auragem.ddns.net/privkey.pem", httpMuxer)
+		if err2 != nil {
+			fmt.Printf("Failed to start web server on 0.0.0.0:443. %s\n", err2.Error())
+		}
+	}()
 }
 
 // Tor-only server

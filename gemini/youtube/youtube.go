@@ -17,7 +17,7 @@ import (
 
 	ytd "github.com/kkdai/youtube/v2"
 	"gitlab.com/clseibold/auragem_sis/config"
-	sis "gitlab.com/clseibold/smallnetinformationservices"
+	sis "gitlab.com/sis-suite/smallnetinformationservices"
 	"google.golang.org/api/option"
 	"google.golang.org/api/youtube/v3"
 )

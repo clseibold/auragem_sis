@@ -10,7 +10,7 @@ import (
 
 	"github.com/dhowden/tag"
 	"github.com/efarrer/iothrottler"
-	sis "gitlab.com/clseibold/smallnetinformationservices"
+	sis "gitlab.com/sis-suite/smallnetinformationservices"
 )
 
 /*

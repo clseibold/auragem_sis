@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	sis "gitlab.com/clseibold/smallnetinformationservices"
+	sis "gitlab.com/sis-suite/smallnetinformationservices"
 )
 
 func GetUser(conn *sql.DB, certHash string, oldCertHash string) (AskUser, bool) {

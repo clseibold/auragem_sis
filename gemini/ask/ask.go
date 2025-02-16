@@ -16,7 +16,7 @@ import (
 	gemini "git.sr.ht/~adnano/go-gemini"
 	gemini2 "github.com/clseibold/go-gemini"
 	"gitlab.com/clseibold/auragem_sis/db"
-	sis "gitlab.com/clseibold/smallnetinformationservices"
+	sis "gitlab.com/sis-suite/smallnetinformationservices"
 )
 
 var registerNotification = `# AuraGem Ask

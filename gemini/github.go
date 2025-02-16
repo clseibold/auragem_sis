@@ -12,7 +12,7 @@ import (
 
 	"github.com/google/go-github/v60/github"
 	"gitlab.com/clseibold/auragem_sis/config"
-	sis "gitlab.com/clseibold/smallnetinformationservices"
+	sis "gitlab.com/sis-suite/smallnetinformationservices"
 	"golang.org/x/oauth2"
 )
 

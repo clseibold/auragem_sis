@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/juju/ratelimit"
-	sis "gitlab.com/clseibold/smallnetinformationservices"
+	sis "gitlab.com/sis-suite/smallnetinformationservices"
 )
 
 func GetRadioGenre(currentTime time.Time, station *RadioStation) string {

@@ -5,7 +5,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	sis "gitlab.com/clseibold/smallnetinformationservices"
+	sis "gitlab.com/sis-suite/smallnetinformationservices"
 )
 
 func handleSearchFeedback(s sis.ServerHandle) {

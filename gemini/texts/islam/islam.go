@@ -17,7 +17,7 @@ import (
 
 	// "github.com/krixano/ponixserver/src/db"
 
-	sis "gitlab.com/clseibold/smallnetinformationservices"
+	sis "gitlab.com/sis-suite/smallnetinformationservices"
 	// "runtime"
 	// "golang.org/x/net/html"
 	// "github.com/microcosm-cc/bluemonday"

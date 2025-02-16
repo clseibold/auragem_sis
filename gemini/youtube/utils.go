@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	sis "gitlab.com/clseibold/smallnetinformationservices"
+	sis "gitlab.com/sis-suite/smallnetinformationservices"
 	"google.golang.org/api/youtube/v3"
 )
 

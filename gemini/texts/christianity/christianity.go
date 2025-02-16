@@ -14,7 +14,7 @@ import (
 	// "github.com/krixano/ponixserver/src/db"
 
 	"gitlab.com/clseibold/auragem_sis/config"
-	sis "gitlab.com/clseibold/smallnetinformationservices"
+	sis "gitlab.com/sis-suite/smallnetinformationservices"
 	// "runtime"
 	// "golang.org/x/net/html"
 	// "github.com/microcosm-cc/bluemonday"

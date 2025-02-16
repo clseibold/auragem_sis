@@ -13,7 +13,7 @@ Lastly, to handle Full-Text Search for the Search Engine, install the udr lucene
 ## License Info
 This capsule is currently licensed as BSD-3-Clause. Below is a list of libraries that are used and their licenses.
 
-* [clseibold/smallnetinformationservices](https://gitlab.com/clseibold/smallnetinformationservices) - BSD-2 Clause - My Server Software
+* [clseibold/smallnetinformationservices](https://gitlab.com/sis-suite/smallnetinformationservices) - BSD-2 Clause - My Server Software
 
 * [nakagami/firebirdsql](https://github.com/nakagami/firebirdsql) - [MIT](https://opensource.org/licenses/MIT)
 * [google/go-github](https://github.com/google/go-github/) - Used for GitHub proxy

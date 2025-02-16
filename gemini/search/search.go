@@ -16,7 +16,7 @@ import (
 	wiki "github.com/trietmn/go-wiki"
 	"gitlab.com/clseibold/auragem_sis/crawler"
 	"gitlab.com/clseibold/auragem_sis/db"
-	sis "gitlab.com/clseibold/smallnetinformationservices"
+	sis "gitlab.com/sis-suite/smallnetinformationservices"
 	"golang.org/x/text/language"
 )
 

@@ -13,7 +13,7 @@ import (
 	"gitlab.com/clseibold/auragem_sis/gemini/texts/christianity"
 	"gitlab.com/clseibold/auragem_sis/gemini/texts/islam"
 	"gitlab.com/clseibold/auragem_sis/gemini/texts/judaism"
-	sis "gitlab.com/clseibold/smallnetinformationservices"
+	sis "gitlab.com/sis-suite/smallnetinformationservices"
 )
 
 func HandleTexts(g sis.ServerHandle) {

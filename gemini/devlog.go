@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"gitlab.com/clseibold/auragem_sis/gemini/utils"
-	sis "gitlab.com/clseibold/smallnetinformationservices"
+	sis "gitlab.com/sis-suite/smallnetinformationservices"
 )
 
 func handleDevlog(s sis.ServerHandle) {

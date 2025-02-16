@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/krayzpipes/cronticker/cronticker"
-	sis "gitlab.com/clseibold/smallnetinformationservices"
+	sis "gitlab.com/sis-suite/smallnetinformationservices"
 )
 
 type ChatContext struct {

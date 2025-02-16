@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"gitlab.com/clseibold/auragem_sis/config"
-	sis "gitlab.com/clseibold/smallnetinformationservices"
+	sis "gitlab.com/sis-suite/smallnetinformationservices"
 )
 
 var apiKey = config.WeatherApiKey

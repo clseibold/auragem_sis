@@ -17,7 +17,7 @@ import (
 	"github.com/dhowden/tag"
 	"gitlab.com/clseibold/auragem_sis/config"
 	"gitlab.com/clseibold/auragem_sis/db"
-	sis "gitlab.com/clseibold/smallnetinformationservices"
+	sis "gitlab.com/sis-suite/smallnetinformationservices"
 	// "github.com/giorgisio/goav/avformat"
 	// "github.com/giorgisio/goav/avcodec"
 	// "github.com/giorgisio/goav/avutil"

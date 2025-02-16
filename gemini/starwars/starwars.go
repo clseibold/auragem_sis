@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"gitlab.com/clseibold/auragem_sis/db"
-	sis "gitlab.com/clseibold/smallnetinformationservices"
+	sis "gitlab.com/sis-suite/smallnetinformationservices"
 )
 
 var publishDate, _ = time.ParseInLocation(time.RFC3339, "2024-03-19T08:23:00", time.Local)

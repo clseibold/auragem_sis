@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/gammazero/deque"
-	sis "gitlab.com/clseibold/smallnetinformationservices"
+	sis "gitlab.com/sis-suite/smallnetinformationservices"
 )
 
 func NopSeekCloser(r io.ReadSeeker) io.ReadSeekCloser {

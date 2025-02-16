@@ -1,7 +1,7 @@
 package textgame
 
 import (
-	sis "gitlab.com/clseibold/smallnetinformationservices"
+	sis "gitlab.com/sis-suite/smallnetinformationservices"
 )
 
 func HandleTextGame(g sis.ServerHandle) {

@@ -16,7 +16,7 @@ import (
 
 	"runtime"
 
-	sis "gitlab.com/clseibold/smallnetinformationservices"
+	sis "gitlab.com/sis-suite/smallnetinformationservices"
 	"golang.org/x/net/html"
 	// "github.com/microcosm-cc/bluemonday"
 )
