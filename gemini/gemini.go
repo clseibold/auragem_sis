@@ -21,7 +21,7 @@ import (
 	"gitlab.com/clseibold/auragem_sis/gemini/textola"
 	"gitlab.com/clseibold/auragem_sis/gemini/texts"
 	"gitlab.com/clseibold/auragem_sis/gemini/youtube"
-	aurarepo "gitlab.com/sis-suite/aurarepo"
+	"gitlab.com/sis-suite/aurarepo"
 	sis "gitlab.com/sis-suite/smallnetinformationservices"
 	/*"gitlab.com/clseibold/auragem_sis/twitch"*/)
 

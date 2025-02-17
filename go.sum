@@ -189,6 +189,8 @@ gitlab.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b h1:7gd+rd8P3bqcn/9
 gitlab.com/nyarla/go-crypt v0.0.0-20160106005555-d9a5dc2b789b/go.mod h1:T3BPAOm2cqquPa0MKWeNkmOM5RQsRhkrwMWonFMN7fE=
 gitlab.com/sis-suite/aurarepo v0.0.0-20250217084957-243709af9d5d h1:uMINdL/5XkycNQ9rJygbJiGItzSMT3WEZGoeTSWKjZU=
 gitlab.com/sis-suite/aurarepo v0.0.0-20250217084957-243709af9d5d/go.mod h1:+i3NQ87UG5DtonqP7u0FCOEL9C0k/jp3LGPFO3VqZyM=
+gitlab.com/sis-suite/aurarepo v0.0.0-20250217093515-42fe081c73b2 h1:gwYp/G5oeOS0zdyJNozel6irLFHXS4P41sU5a26qhP0=
+gitlab.com/sis-suite/aurarepo v0.0.0-20250217093515-42fe081c73b2/go.mod h1:+i3NQ87UG5DtonqP7u0FCOEL9C0k/jp3LGPFO3VqZyM=
 gitlab.com/sis-suite/smallnetinformationservices v0.0.0-20250216061837-02a12e36ed10 h1:OIzUki64GiAGuzJ3Zjao2bQNjm5TPSHJJ9SnTHznm6s=
 gitlab.com/sis-suite/smallnetinformationservices v0.0.0-20250216061837-02a12e36ed10/go.mod h1:dJhYj9XLR/yDiSuiBu7vHSoUtAvnMDfM8SNQ69NgfDc=
 gitlab.com/sis-suite/smallnetinformationservices v0.0.0-20250216155918-439cd49de552 h1:yIlHRpWeNpJQScJfAHCn/1IT1lE4MSO1E3ih/7649ww=
