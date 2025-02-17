@@ -50,8 +50,8 @@ func RunServer(cmd *cobra.Command, args []string) {
 	aurarepoContext.AddRepo("aurarepo", "AuraRepo", "./aurarepo/", "A Git repository hosting forge SCGI application server for the Gemini Protocol, built using Smallnet Information Services and go-git.")
 
 	hosts := [...]sis.HostConfig{
-		{BindAddress: "localhost", BindPort: "5010", Hostname: "auragem.ddns.net", Port: "", Upload: false, SCGI: true},
-		{BindAddress: "localhost", BindPort: "5010", Hostname: "auragem.ddns.net", Port: "", Upload: true, SCGI: true},
+		{BindAddress: "localhost", BindPort: "5010", Hostname: "", Port: "", Upload: false, SCGI: true},
+		{BindAddress: "localhost", BindPort: "5010", Hostname: "", Port: "", Upload: true, SCGI: true},
 	}
 	scgi_gemini_server, _ := context.AddServer(sis.Server{Name: strings.ReplaceAll("AuraRepo", " ", "_"), Type: sis.ServerType_Gemini}, hosts[:]...)
 	aurarepoContext.Attach(scgi_gemini_server)
