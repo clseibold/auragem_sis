@@ -183,7 +183,7 @@ func HandleTextola(s sis.ServerHandle) {
 	//fmt.Printf("Textola Text: (Lines %d) %#v\n", len(context.currentText.lines), context.currentText.lines)
 
 	var connectedClients atomic.Int64
-	s.AddRoute("/textola/", func(request sis.Request) {
+	s.AddRoute("/textola/", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{PublishDate: publishDate, UpdateDate: updateDate, Language: "en", Abstract: "# Textola\n"})
 		if request.ScrollMetadataRequested {
 			request.SendAbstract("")

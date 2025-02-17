@@ -93,7 +93,7 @@ func HandleChristianTexts(g sis.ServerHandle) {
 	// Cache the books from the ASV version of the bible. These should be the same for the ESV bible as well. Note: This does not include the apocrypha.
 	asvBooks := GetBooks(englishBibleVersions[0].Id, apiKey)
 
-	g.AddRoute("/scriptures/christian/", func(request sis.Request) {
+	g.AddRoute("/scriptures/christian/", func(request *sis.Request) {
 		request.SetNoLanguage()
 		request.SetClassification(sis.ScrollResponseUDC_Scripture)
 		var builder strings.Builder
@@ -166,7 +166,7 @@ Tags: #bible #new #old #testament #septuagint #pentateuch
 `, builder.String()))
 	})
 
-	g.AddRoute("/scriptures/christian/bible/esv/", func(request sis.Request) {
+	g.AddRoute("/scriptures/christian/bible/esv/", func(request *sis.Request) {
 		request.SetLanguage("en-US")
 		request.SetClassification(sis.ScrollResponseUDC_Scripture)
 		var builder strings.Builder
@@ -188,7 +188,7 @@ Users may not copy or download more than 500 verses of the ESV Bible or more tha
 `, builder.String()))
 	})
 
-	g.AddRoute("/scriptures/christian/bible/esv/:text", func(request sis.Request) {
+	g.AddRoute("/scriptures/christian/bible/esv/:text", func(request *sis.Request) {
 		request.SetLanguage("en-US")
 		request.SetClassification(sis.ScrollResponseUDC_Scripture)
 		text := request.GetParam("text")
@@ -204,7 +204,7 @@ Users may not copy or download more than 500 verses of the ESV Bible or more tha
 `, resp.Canonical, builder.String()))
 	})
 
-	g.AddRoute("/scriptures/christian/bible/:id", func(request sis.Request) {
+	g.AddRoute("/scriptures/christian/bible/:id", func(request *sis.Request) {
 		versionId := request.GetParam("id")
 		version := GetBibleVersion(versionId, apiKey)
 		request.SetLanguage(version.Language.Id)
@@ -227,7 +227,7 @@ Copyright: %s
 => https://scripture.api.bible Powered by API.Bible`, version.Name, builder.String(), version.Description, version.Copyright))
 	})
 
-	g.AddRoute("/scriptures/christian/bible/:id/:book", func(request sis.Request) {
+	g.AddRoute("/scriptures/christian/bible/:id/:book", func(request *sis.Request) {
 		versionId := request.GetParam("id")
 		bookId := request.GetParam("book")
 		version := GetBibleVersion(versionId, apiKey)
@@ -250,7 +250,7 @@ Copyright: %s
 => https://scripture.api.bible Powered by API.Bible`, version.Abbreviation, book.Name, versionId, builder.String(), version.Copyright))
 	})
 
-	g.AddRoute("/scriptures/christian/bible/:id/chapter/:chapter", func(request sis.Request) {
+	g.AddRoute("/scriptures/christian/bible/:id/chapter/:chapter", func(request *sis.Request) {
 		versionId := request.GetParam("id")
 		chapterId := request.GetParam("chapter")
 		version := GetBibleVersion(versionId, apiKey)

@@ -13,7 +13,7 @@ func handleSearchFeedback(s sis.ServerHandle) {
 	s.AddUploadRoute("/search/feedback.gmi", searchFeedbackPage)
 }
 
-func searchFeedbackPage(request sis.Request) {
+func searchFeedbackPage(request *sis.Request) {
 	token := "auragemsearchfeedback"
 	/*feedbackPrefix := `# AuraGem Search Feedback
 

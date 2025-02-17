@@ -175,7 +175,7 @@ func setupAuraGem(context *sis.SISContext, chatContext *chat.ChatContext) {
 	ask.HandleAsk(geminiServer)
 
 	// Add "/texts/" redirect from AuraGem gemini server to scholastic diversity gemini server
-	geminiServer.AddRoute("/texts/*", func(request sis.Request) {
+	geminiServer.AddRoute("/texts/*", func(request *sis.Request) {
 		unescaped, err := url.PathUnescape(request.GlobString)
 		if err != nil {
 			_ = request.TemporaryFailure("%s", err.Error())
@@ -255,7 +255,7 @@ func setupNewsfin(context *sis.SISContext) {
 	newsfin_gemini.AddDirectory("/*", "./")
 }
 
-func handleGuestbook(request sis.Request) {
+func handleGuestbook(request *sis.Request) {
 	guestbookPrefix := `# AuraGem Guestbook
 
 This is the new guestbook! You can edit this page with the Titan protocol. Be sure to use the token "auragemguestbook" for upload.

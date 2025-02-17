@@ -10,7 +10,7 @@ import (
 	"google.golang.org/api/youtube/v3"
 )
 
-func searchYoutube(request sis.Request, service *youtube.Service, query string, rawQuery string, currentPage string) {
+func searchYoutube(request *sis.Request, service *youtube.Service, query string, rawQuery string, currentPage string) {
 	template := `# Search
 
 => /youtube/ Home
@@ -53,7 +53,7 @@ func searchYoutube(request sis.Request, service *youtube.Service, query string, 
 	request.Gemini(fmt.Sprintf(template, builder.String()))
 }
 
-func getChannelPlaylists(request sis.Request, service *youtube.Service, channelId string, currentPage string) {
+func getChannelPlaylists(request *sis.Request, service *youtube.Service, channelId string, currentPage string) {
 	request.SetNoLanguage()
 	template := `# Playlists for '%s'
 
@@ -93,7 +93,7 @@ func getChannelPlaylists(request sis.Request, service *youtube.Service, channelI
 	request.Gemini(fmt.Sprintf(template, html.UnescapeString(response.Items[0].Snippet.ChannelTitle), response.Items[0].Snippet.ChannelId, builder.String()))
 }
 
-func getChannelVideos(request sis.Request, service *youtube.Service, channelId string, currentPage string) {
+func getChannelVideos(request *sis.Request, service *youtube.Service, channelId string, currentPage string) {
 	template := `# Uploads for '%s'
 
 => /youtube/channel/%s/ Channel Page
@@ -140,7 +140,7 @@ func getChannelVideos(request sis.Request, service *youtube.Service, channelId s
 	request.Gemini(fmt.Sprintf(template, html.UnescapeString(channel.Snippet.Title), channel.Id, builder.String()))
 }
 
-func getChannelActivity(request sis.Request, service *youtube.Service, channelId string) {
+func getChannelActivity(request *sis.Request, service *youtube.Service, channelId string) {
 	template := `# Activity for '%s'
 
 %s`
@@ -177,7 +177,7 @@ func getChannelActivity(request sis.Request, service *youtube.Service, channelId
 	request.Gemini(fmt.Sprintf(template, html.UnescapeString(channel.Snippet.Title), builder.String()))
 }
 
-func getPlaylistVideos(request sis.Request, service *youtube.Service, playlistId string, currentPage string) {
+func getPlaylistVideos(request *sis.Request, service *youtube.Service, playlistId string, currentPage string) {
 	template := `# Playlist: %s
 
 => /youtube/channel/%s/ Created by %s

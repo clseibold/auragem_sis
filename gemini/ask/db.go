@@ -36,7 +36,7 @@ func GetUser(conn *sql.DB, certHash string, oldCertHash string) (AskUser, bool) 
 	return user, true
 }
 
-func RegisterUser(request sis.Request, conn *sql.DB, username string, certHash string) {
+func RegisterUser(request *sis.Request, conn *sql.DB, username string, certHash string) {
 	username = strings.TrimSpace(strings.TrimPrefix(strings.TrimPrefix(strings.TrimPrefix(username, "register"), "?"), "+"))
 	// Ensure user doesn't already exist
 	row := conn.QueryRowContext(context.Background(), "SELECT COUNT(*) FROM membercerts WHERE certificate=?", certHash)

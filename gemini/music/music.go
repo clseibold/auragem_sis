@@ -68,7 +68,7 @@ func HandleMusic(s sis.ServerHandle) {
 
 	handleRadioService(s, conn)
 
-	s.AddRoute("/music/", func(request sis.Request) {
+	s.AddRoute("/music/", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Music, PublishDate: publishDate, UpdateDate: updateDate, Language: "en", Abstract: "# AuraGem Music\nA music service where you can upload a limited number of mp3s over Titan and listen to your private music library over Scroll/Gemini/Spartan. Stream individual songs or full albums, or use the \"Shuffled Stream\" feature that acts like a private radio of random songs from your library.\n"})
 		if request.ScrollMetadataRequested {
 			request.SendAbstract("")
@@ -105,7 +105,7 @@ func HandleMusic(s sis.ServerHandle) {
 		}
 	})
 
-	s.AddRoute("/music/quota", func(request sis.Request) {
+	s.AddRoute("/music/quota", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Docs, PublishDate: publishDate, UpdateDate: updateDate, Language: "en", Abstract: "# AuraGem Music - How the Quota System Works\nDescribes the quota system.\n"})
 		if request.ScrollMetadataRequested {
 			request.SendAbstract("")
@@ -126,7 +126,7 @@ The idea behind this system is to take into account duplicate uploads as being c
 		request.Gemini(fmt.Sprintf(template, userSongQuota))
 	})
 
-	s.AddRoute("/music/about", func(request sis.Request) {
+	s.AddRoute("/music/about", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Docs, PublishDate: publishDate, UpdateDate: updateDate, Language: "en", Abstract: "# About AuraGem Music\n"})
 		if request.ScrollMetadataRequested {
 			request.SendAbstract("")
@@ -143,7 +143,7 @@ In order to save space, AuraGem Music deduplicates songs by taking the hash of t
 		request.Gemini(template)
 	})
 
-	s.AddRoute("/music/random", func(request sis.Request) {
+	s.AddRoute("/music/random", func(request *sis.Request) {
 		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate.")
 			return
@@ -175,7 +175,7 @@ In order to save space, AuraGem Music deduplicates songs by taking the hash of t
 		}
 	})
 
-	s.AddRoute("/music/upload", func(request sis.Request) {
+	s.AddRoute("/music/upload", func(request *sis.Request) {
 		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate.")
 			return
@@ -209,7 +209,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 `, uploadMethod, uploadMethod, uploadLink))
 	})
 
-	s.AddUploadRoute("/music/upload", func(request sis.Request) {
+	s.AddUploadRoute("/music/upload", func(request *sis.Request) {
 		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate.")
 			return
@@ -328,7 +328,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 		}
 	})
 
-	s.AddRoute("/music/*", func(request sis.Request) {
+	s.AddRoute("/music/*", func(request *sis.Request) {
 		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
@@ -388,7 +388,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 		}
 	})
 
-	s.AddRoute("/music/albums", func(request sis.Request) {
+	s.AddRoute("/music/albums", func(request *sis.Request) {
 		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
@@ -423,7 +423,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 		}
 	})
 
-	s.AddRoute("/music/artists", func(request sis.Request) {
+	s.AddRoute("/music/artists", func(request *sis.Request) {
 		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
@@ -458,7 +458,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 		}
 	})
 
-	s.AddRoute("/music/artist/*", func(request sis.Request) {
+	s.AddRoute("/music/artist/*", func(request *sis.Request) {
 		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
@@ -484,7 +484,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 		}
 	})
 
-	s.AddRoute("/music/stream/artist/*", func(request sis.Request) {
+	s.AddRoute("/music/stream/artist/*", func(request *sis.Request) {
 		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
@@ -514,7 +514,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 		}
 	})
 
-	s.AddRoute("/music/stream/random", func(request sis.Request) {
+	s.AddRoute("/music/stream/random", func(request *sis.Request) {
 		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
@@ -536,7 +536,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 		}
 	})
 
-	s.AddRoute("/music/register", func(request sis.Request) {
+	s.AddRoute("/music/register", func(request *sis.Request) {
 		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
@@ -557,7 +557,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 	})
 
 	// Admin pages
-	s.AddRoute("/music/admin", func(request sis.Request) {
+	s.AddRoute("/music/admin", func(request *sis.Request) {
 		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
@@ -573,7 +573,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 		}
 	})
 
-	s.AddRoute("/music/admin/genre", func(request sis.Request) {
+	s.AddRoute("/music/admin/genre", func(request *sis.Request) {
 		genre_string, err := request.Query()
 		if err != nil {
 			request.TemporaryFailure(err.Error())
@@ -596,7 +596,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 	})
 
 	// Library Management Handles
-	s.AddRoute("/music/manage", func(request sis.Request) {
+	s.AddRoute("/music/manage", func(request *sis.Request) {
 		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
@@ -612,7 +612,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 		}
 	})
 
-	s.AddRoute("/music/manage/delete", func(request sis.Request) {
+	s.AddRoute("/music/manage/delete", func(request *sis.Request) {
 		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate")
 			return
@@ -628,7 +628,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 		}
 	})
 
-	s.AddRoute("/music/manage/delete/:hash", func(request sis.Request) {
+	s.AddRoute("/music/manage/delete/:hash", func(request *sis.Request) {
 		hash := request.GetParam("hash")
 		query, err := request.Query()
 		if err != nil {
@@ -669,7 +669,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 
 // ---------------------
 
-func registerUser(request sis.Request, conn *sql.DB, username string, certHash string) {
+func registerUser(request *sis.Request, conn *sql.DB, username string, certHash string) {
 	// Ensure user doesn't already exist
 	row := conn.QueryRowContext(context.Background(), "SELECT COUNT(*) FROM members WHERE certificate=?", certHash)
 
@@ -705,7 +705,7 @@ func registerUser(request sis.Request, conn *sql.DB, username string, certHash s
 	request.Redirect("/music/")
 }
 
-func getUserDashboard(request sis.Request, conn *sql.DB, user MusicUser) {
+func getUserDashboard(request *sis.Request, conn *sql.DB, user MusicUser) {
 	template := `# AuraGem Music - %s
 
 Quota: %.2f / %d songs (%.1f%%)
@@ -746,7 +746,7 @@ Quota: %.2f / %d songs (%.1f%%)
 	request.Gemini(fmt.Sprintf(template, user.Username, user.QuotaCount, userSongQuota, user.QuotaCount/float64(userSongQuota)*100, builder.String()))
 }
 
-func artistAlbums(request sis.Request, conn *sql.DB, user MusicUser, artist string) {
+func artistAlbums(request *sis.Request, conn *sql.DB, user MusicUser, artist string) {
 	request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Music, Abstract: "# AuraGem Music - " + user.Username + "\n## Artist Albums: " + artist + "\n"})
 	if request.ScrollMetadataRequested {
 		request.SendAbstract("")
@@ -771,7 +771,7 @@ func artistAlbums(request sis.Request, conn *sql.DB, user MusicUser, artist stri
 `, user.Username, artist, url.PathEscape(artist), builder.String()))
 }
 
-func albumSongs(request sis.Request, conn *sql.DB, user MusicUser, artist string, album string) {
+func albumSongs(request *sis.Request, conn *sql.DB, user MusicUser, artist string, album string) {
 	request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Music, Abstract: "# AuraGem Music - " + user.Username + "\n## Album: " + album + " by " + artist + "\n"})
 	if request.ScrollMetadataRequested {
 		request.SendAbstract("")
@@ -804,7 +804,7 @@ func albumSongs(request sis.Request, conn *sql.DB, user MusicUser, artist string
 `, user.Username, album, artist, url.PathEscape(albumartist), albumartist, url.PathEscape(albumartist), url.PathEscape(album), builder.String()))
 }
 
-func adminPage(request sis.Request, conn *sql.DB, user MusicUser) {
+func adminPage(request *sis.Request, conn *sql.DB, user MusicUser) {
 	request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Unclassed, Abstract: "# AuraGem Music - Admin\n"})
 	if request.ScrollMetadataRequested {
 		request.SendAbstract("")
@@ -841,7 +841,7 @@ Album Count: %d
 	request.Gemini(fmt.Sprintf(template, globalQuotaCount, globalSongQuota, globalQuotaCount/globalSongQuota*100, avgUserQuotaCount, userSongQuota, avgUserQuotaCount/float64(userSongQuota)*100, userCount, artistCount, albumCount, builder.String()))
 }
 
-func adminGenrePage(request sis.Request, conn *sql.DB, user MusicUser, genre_string string) {
+func adminGenrePage(request *sis.Request, conn *sql.DB, user MusicUser, genre_string string) {
 	request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Unclassed, Abstract: "# AuraGem Music - Admin: Genre" + genre_string + "\n"})
 	if request.ScrollMetadataRequested {
 		request.SendAbstract("")
@@ -863,7 +863,7 @@ func adminGenrePage(request sis.Request, conn *sql.DB, user MusicUser, genre_str
 }
 
 // Streams all songs in album in one streams
-func streamAlbumSongs(request sis.Request, conn *sql.DB, user MusicUser, artist string, album string) {
+func streamAlbumSongs(request *sis.Request, conn *sql.DB, user MusicUser, artist string, album string) {
 	request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Music, Abstract: "# Stream Album " + album + " by " + artist + "\n"})
 	if request.ScrollMetadataRequested {
 		request.SendAbstract("")
@@ -881,7 +881,7 @@ func streamAlbumSongs(request sis.Request, conn *sql.DB, user MusicUser, artist 
 	StreamMultipleFiles(request, musicFiles)
 }
 
-func streamArtistSongs(request sis.Request, conn *sql.DB, user MusicUser, artist string) {
+func streamArtistSongs(request *sis.Request, conn *sql.DB, user MusicUser, artist string) {
 	request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Music, Abstract: "# Stream Songs by " + artist + "\n"})
 	if request.ScrollMetadataRequested {
 		request.SendAbstract("")
@@ -900,7 +900,7 @@ func streamArtistSongs(request sis.Request, conn *sql.DB, user MusicUser, artist
 
 // ----- Manage Library Functions -----
 
-func manageLibrary(request sis.Request, user MusicUser) {
+func manageLibrary(request *sis.Request, user MusicUser) {
 	request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Unclassed, PublishDate: user.Date_joined, Abstract: "# Manage Library - " + user.Username + "\n"})
 	if request.ScrollMetadataRequested {
 		request.SendAbstract("")
@@ -919,7 +919,7 @@ Choose what you want to do. These links will direct you to pages that will allow
 `, user.Username))
 }
 
-func manageLibrary_deleteSelection(request sis.Request, conn *sql.DB, user MusicUser) {
+func manageLibrary_deleteSelection(request *sis.Request, conn *sql.DB, user MusicUser) {
 	request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Unclassed, Abstract: "# Manage Library: Delete Selection - " + user.Username + "\n"})
 	if request.ScrollMetadataRequested {
 		request.SendAbstract("")
@@ -954,7 +954,7 @@ Click a song you want to delete. Once prompted, type 'yes' to delete. Then, you'
 `, user.Username, builder.String()))
 }
 
-func manageLibrary_deleteFile(request sis.Request, conn *sql.DB, user MusicUser, hash string) {
+func manageLibrary_deleteFile(request *sis.Request, conn *sql.DB, user MusicUser, hash string) {
 	file, exists := GetFileInUserLibrary_hash(conn, hash, user.Id)
 	if !exists {
 		request.TemporaryFailure("File not in user library.")

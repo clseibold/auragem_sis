@@ -91,7 +91,7 @@ func (context *ChatContext) Attach(s sis.ServerHandle) {
 	publishDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-19T13:51:00", time.Local)
 	updateDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-19T13:51:00", time.Local)
 
-	s.AddRoute("/chat/", func(request sis.Request) {
+	s.AddRoute("/chat/", func(request *sis.Request) {
 		query, err := request.Query()
 		if err != nil {
 			request.TemporaryFailure("%s", err.Error())
@@ -106,7 +106,7 @@ func (context *ChatContext) Attach(s sis.ServerHandle) {
 		}
 	})
 
-	s.AddRoute("/chat/:username", func(request sis.Request) {
+	s.AddRoute("/chat/:username", func(request *sis.Request) {
 		username := request.GetParam("username")
 		if username == "" {
 			request.Redirect("/chat/")
@@ -178,7 +178,7 @@ func (context *ChatContext) Attach(s sis.ServerHandle) {
 		}*/
 	})
 
-	sendFunc := func(request sis.Request) {
+	sendFunc := func(request *sis.Request) {
 		username := request.GetParam("username")
 		var message string = ""
 		if username == "" {

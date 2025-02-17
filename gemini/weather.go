@@ -16,10 +16,10 @@ var apiKey = config.WeatherApiKey
 
 func handleWeather(g sis.ServerHandle) {
 	publishDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-19T13:51:00", time.Local)
-	g.AddRoute("/weather", func(request sis.Request) {
+	g.AddRoute("/weather", func(request *sis.Request) {
 		request.Redirect("/weather/")
 	})
-	g.AddRoute("/weather/", func(request sis.Request) {
+	g.AddRoute("/weather/", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Reference, PublishDate: publishDate, UpdateDate: time.Now(), Language: "en", Abstract: "# Weather\n"})
 		if request.ScrollMetadataRequested {
 			_ = request.SendAbstract("")
@@ -45,7 +45,7 @@ Powered by IQAir
 
 // Gets nearest city location using IP Address geolocation
 // http://api.airvisual.com/v2/nearest_city?key={{YOUR_API_KEY}}
-func getNearestLocation(request sis.Request) IQAirResponse {
+func getNearestLocation(request *sis.Request) IQAirResponse {
 	url := "https://api.airvisual.com/v2/nearest_city?key=" + apiKey + "&x-forwarded-for=" + request.IP
 	if !IsPublicIP(net.ParseIP(request.IP)) {
 		url = "https://api.airvisual.com/v2/nearest_city?key=" + apiKey

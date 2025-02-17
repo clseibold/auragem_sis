@@ -27,7 +27,7 @@ func HandleJewishTexts(g sis.ServerHandle) {
 	index := GetFullIndex()
 	//indexMap := make(map[string]int)
 
-	g.AddRoute("/scriptures/jewish/", func(request sis.Request) {
+	g.AddRoute("/scriptures/jewish/", func(request *sis.Request) {
 		query, err := request.Query()
 		if err != nil {
 			request.TemporaryFailure(err.Error())
@@ -39,13 +39,13 @@ func HandleJewishTexts(g sis.ServerHandle) {
 		}
 	})
 
-	g.AddRoute("/scriptures/jewish/t/:ref", func(request sis.Request) {
+	g.AddRoute("/scriptures/jewish/t/:ref", func(request *sis.Request) {
 		ref := request.GetParam("ref")
 		handleText(ref, request)
 	})
 }
 
-func handleIndex(index []SefariaIndexCategoryOrText, request sis.Request) {
+func handleIndex(index []SefariaIndexCategoryOrText, request *sis.Request) {
 	request.SetClassification(sis.ScrollResponseUDC_Scripture)
 	var builder strings.Builder
 	for _, category := range index {
@@ -86,7 +86,7 @@ func handleIndex(index []SefariaIndexCategoryOrText, request sis.Request) {
 	request.Gemini(fmt.Sprintf(template, builder.String()))
 }
 
-func handleCategory(index []SefariaIndexCategoryOrText, query string, request sis.Request) {
+func handleCategory(index []SefariaIndexCategoryOrText, query string, request *sis.Request) {
 	request.SetClassification(sis.ScrollResponseUDC_Scripture)
 	categories := strings.Split(query, "/")
 	var categoryStringBuilder strings.Builder
@@ -121,7 +121,7 @@ func handleCategory(index []SefariaIndexCategoryOrText, query string, request si
 `, categoryStringBuilder.String(), builder.String()))
 }
 
-func handleText(ref string, request sis.Request) {
+func handleText(ref string, request *sis.Request) {
 	text := GetText(ref, "", "" /*"Tanakh: The Holy Scriptures, published by JPS"*/)
 	request.SetClassification(sis.ScrollResponseUDC_Scripture)
 

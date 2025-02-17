@@ -32,13 +32,13 @@ func HandleAsk(s sis.ServerHandle) {
 	conn.SetMaxIdleConns(3)
 	conn.SetConnMaxLifetime(time.Hour * 4)
 
-	s.AddRoute("/ask", func(request sis.Request) {
+	s.AddRoute("/ask", func(request *sis.Request) {
 		request.Redirect("/~ask/")
 	})
-	s.AddRoute("/~ask", func(request sis.Request) {
+	s.AddRoute("/~ask", func(request *sis.Request) {
 		request.Redirect("/~ask/")
 	})
-	s.AddRoute("/~ask/", func(request sis.Request) {
+	s.AddRoute("/~ask/", func(request *sis.Request) {
 		query, err2 := request.Query()
 		if err2 != nil {
 			return
@@ -76,7 +76,7 @@ func HandleAsk(s sis.ServerHandle) {
 		}
 	})
 
-	s.AddRoute("/~ask/register", func(request sis.Request) {
+	s.AddRoute("/~ask/register", func(request *sis.Request) {
 		if !request.HasUserCert() {
 			request.Redirect("/~ask/?register")
 		} else {
@@ -100,7 +100,7 @@ func HandleAsk(s sis.ServerHandle) {
 		}
 	})
 
-	s.AddRoute("/~ask/recent", func(request sis.Request) {
+	s.AddRoute("/~ask/recent", func(request *sis.Request) {
 		var recentQuestionsBuilder strings.Builder
 
 		activities := getRecentActivity_Questions(conn)
@@ -130,7 +130,7 @@ func HandleAsk(s sis.ServerHandle) {
 `, recentQuestionsBuilder.String()))
 	})
 
-	s.AddRoute("/~ask/dailydigest", func(request sis.Request) {
+	s.AddRoute("/~ask/dailydigest", func(request *sis.Request) {
 		dates := getRecentActivity_dates(conn)
 
 		var builder strings.Builder
@@ -151,7 +151,7 @@ func HandleAsk(s sis.ServerHandle) {
 
 		request.Gemini(builder.String())
 	})
-	s.AddRoute("/~ask/dailydigest/:date", func(request sis.Request) {
+	s.AddRoute("/~ask/dailydigest/:date", func(request *sis.Request) {
 		dateString := request.GetParam("date")
 		date, err := time.Parse("2006-01-02", dateString)
 		if err != nil {
@@ -180,7 +180,7 @@ func HandleAsk(s sis.ServerHandle) {
 `, date.Format("2006-01-02"), builder.String()))
 	})
 
-	s.AddRoute("/~ask/myquestions", func(request sis.Request) {
+	s.AddRoute("/~ask/myquestions", func(request *sis.Request) {
 		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate.")
 			return
@@ -195,7 +195,7 @@ func HandleAsk(s sis.ServerHandle) {
 		}
 	})
 
-	s.AddRoute("/~ask/:topicid", func(request sis.Request) {
+	s.AddRoute("/~ask/:topicid", func(request *sis.Request) {
 		if !request.HasUserCert() {
 			getTopicHomepage(request, conn, (AskUser{}), false)
 		} else {
@@ -204,7 +204,7 @@ func HandleAsk(s sis.ServerHandle) {
 		}
 	})
 
-	s.AddUploadRoute("/~ask/:topicid/create", func(request sis.Request) {
+	s.AddUploadRoute("/~ask/:topicid/create", func(request *sis.Request) {
 		if !request.HasUserCert() {
 			getCreateQuestion(request, conn, (AskUser{}), false)
 		} else if request.Upload {
@@ -212,7 +212,7 @@ func HandleAsk(s sis.ServerHandle) {
 			doCreateQuestion(request, conn, user, isRegistered)
 		}
 	})
-	s.AddRoute("/~ask/:topicid/create", func(request sis.Request) {
+	s.AddRoute("/~ask/:topicid/create", func(request *sis.Request) {
 		if !request.HasUserCert() {
 			getCreateQuestion(request, conn, (AskUser{}), false)
 		} else {
@@ -221,7 +221,7 @@ func HandleAsk(s sis.ServerHandle) {
 		}
 	})
 
-	s.AddRoute("/~ask/:topicid/create/title", func(request sis.Request) {
+	s.AddRoute("/~ask/:topicid/create/title", func(request *sis.Request) {
 		query, err2 := request.Query()
 		if err2 != nil {
 			return
@@ -238,7 +238,7 @@ func HandleAsk(s sis.ServerHandle) {
 		}
 	})
 
-	s.AddRoute("/~ask/:topicid/create/text", func(request sis.Request) {
+	s.AddRoute("/~ask/:topicid/create/text", func(request *sis.Request) {
 		query, err2 := request.Query()
 		if err2 != nil {
 			return
@@ -255,7 +255,7 @@ func HandleAsk(s sis.ServerHandle) {
 		}
 	})
 
-	s.AddRoute("/~ask/:topicid/:questionid", func(request sis.Request) {
+	s.AddRoute("/~ask/:topicid/:questionid", func(request *sis.Request) {
 		if !request.HasUserCert() {
 			getQuestionPage(request, conn, (AskUser{}), false)
 		} else {
@@ -264,7 +264,7 @@ func HandleAsk(s sis.ServerHandle) {
 		}
 	})
 
-	s.AddRoute("/~ask/:topicid/:questionid/addtitle", func(request sis.Request) {
+	s.AddRoute("/~ask/:topicid/:questionid/addtitle", func(request *sis.Request) {
 		query, err2 := request.Query()
 		if err2 != nil {
 			return
@@ -286,7 +286,7 @@ func HandleAsk(s sis.ServerHandle) {
 		}
 	})
 
-	s.AddRoute("/~ask/:topicid/:questionid/addtext", func(request sis.Request) {
+	s.AddRoute("/~ask/:topicid/:questionid/addtext", func(request *sis.Request) {
 		query, err2 := request.Query()
 		if err2 != nil {
 			return
@@ -308,7 +308,7 @@ func HandleAsk(s sis.ServerHandle) {
 		}
 	})
 
-	s.AddRoute("/~ask/:topicid/:questionid/raw", func(request sis.Request) { // TODO
+	s.AddRoute("/~ask/:topicid/:questionid/raw", func(request *sis.Request) { // TODO
 		// Used for titan edits
 		if !request.HasUserCert() {
 			//return getQuestionPage(c, conn, (AskUser{}), false)
@@ -326,7 +326,7 @@ func HandleAsk(s sis.ServerHandle) {
 		}
 	})
 
-	s.AddUploadRoute("/~ask/:topicid/:questionid/a/create", func(request sis.Request) {
+	s.AddUploadRoute("/~ask/:topicid/:questionid/a/create", func(request *sis.Request) {
 		if !request.HasUserCert() {
 			getCreateAnswer(request, conn, (AskUser{}), false)
 		} else if request.Upload {
@@ -334,7 +334,7 @@ func HandleAsk(s sis.ServerHandle) {
 			doCreateAnswer(request, conn, user, isRegistered)
 		}
 	})
-	s.AddRoute("/~ask/:topicid/:questionid/a/create", func(request sis.Request) {
+	s.AddRoute("/~ask/:topicid/:questionid/a/create", func(request *sis.Request) {
 		if !request.HasUserCert() {
 			getCreateAnswer(request, conn, (AskUser{}), false)
 		} else {
@@ -343,7 +343,7 @@ func HandleAsk(s sis.ServerHandle) {
 		}
 	})
 
-	s.AddRoute("/~ask/:topicid/:questionid/a/create/text", func(request sis.Request) {
+	s.AddRoute("/~ask/:topicid/:questionid/a/create/text", func(request *sis.Request) {
 		query, err2 := request.Query()
 		if err2 != nil {
 			return
@@ -360,7 +360,7 @@ func HandleAsk(s sis.ServerHandle) {
 		}
 	})
 
-	s.AddRoute("/~ask/:topicid/:questionid/a/create/gemlog", func(request sis.Request) {
+	s.AddRoute("/~ask/:topicid/:questionid/a/create/gemlog", func(request *sis.Request) {
 		query, err2 := request.Query()
 		if err2 != nil {
 			return
@@ -377,7 +377,7 @@ func HandleAsk(s sis.ServerHandle) {
 		}
 	})
 
-	s.AddRoute("/~ask/:topicid/:questionid/a/:answerid", func(request sis.Request) {
+	s.AddRoute("/~ask/:topicid/:questionid/a/:answerid", func(request *sis.Request) {
 		if !request.HasUserCert() {
 			getAnswerPage(request, conn, (AskUser{}), false)
 		} else {
@@ -386,7 +386,7 @@ func HandleAsk(s sis.ServerHandle) {
 		}
 	})
 
-	s.AddRoute("/~ask/:topicid/:questionid/a/:answerid/addtext", func(request sis.Request) {
+	s.AddRoute("/~ask/:topicid/:questionid/a/:answerid/addtext", func(request *sis.Request) {
 		query, err2 := request.Query()
 		if err2 != nil {
 			return
@@ -408,7 +408,7 @@ func HandleAsk(s sis.ServerHandle) {
 		}
 	})
 
-	s.AddRoute("/~ask/:topicid/:questionid/a/:answerid/upvote", func(request sis.Request) {
+	s.AddRoute("/~ask/:topicid/:questionid/a/:answerid/upvote", func(request *sis.Request) {
 		query, err2 := request.Query()
 		if err2 != nil {
 			return
@@ -432,7 +432,7 @@ func HandleAsk(s sis.ServerHandle) {
 		}
 	})
 
-	s.AddRoute("/~ask/:topicid/:questionid/a/:answerid/removeupvote", func(request sis.Request) {
+	s.AddRoute("/~ask/:topicid/:questionid/a/:answerid/removeupvote", func(request *sis.Request) {
 		query, err2 := request.Query()
 		if err2 != nil {
 			return
@@ -459,7 +459,7 @@ func HandleAsk(s sis.ServerHandle) {
 
 // -- Homepages Handling --
 
-func getHomepage(request sis.Request, conn *sql.DB) {
+func getHomepage(request *sis.Request, conn *sql.DB) {
 	topics := GetTopics(conn)
 
 	// TODO: Show user's questions
@@ -489,7 +489,7 @@ You must register first before being able to post. Registering will simply assoc
 `, builder.String()))
 }
 
-func getUserDashboard(request sis.Request, conn *sql.DB, user AskUser) {
+func getUserDashboard(request *sis.Request, conn *sql.DB, user AskUser) {
 	topics := GetTopics(conn)
 
 	// TODO: Show user's questions
@@ -511,7 +511,7 @@ func getUserDashboard(request sis.Request, conn *sql.DB, user AskUser) {
 `, user.Username, builder.String()))
 }
 
-func getUserQuestionsPage(request sis.Request, conn *sql.DB, user AskUser) {
+func getUserQuestionsPage(request *sis.Request, conn *sql.DB, user AskUser) {
 	var builder strings.Builder
 	userQuestions := GetUserQuestions(conn, user)
 	for _, question := range userQuestions {
@@ -527,7 +527,7 @@ func getUserQuestionsPage(request sis.Request, conn *sql.DB, user AskUser) {
 }
 
 // TODO: Pagination for all questions
-func getTopicHomepage(request sis.Request, conn *sql.DB, user AskUser, isRegistered bool) {
+func getTopicHomepage(request *sis.Request, conn *sql.DB, user AskUser, isRegistered bool) {
 	topicId, err := strconv.Atoi(request.GetParam("topicid"))
 	if err != nil {
 		return
@@ -565,7 +565,7 @@ func getTopicHomepage(request sis.Request, conn *sql.DB, user AskUser, isRegiste
 
 // -- Question Handling --
 
-func getCreateQuestion(request sis.Request, conn *sql.DB, user AskUser, isRegistered bool) {
+func getCreateQuestion(request *sis.Request, conn *sql.DB, user AskUser, isRegistered bool) {
 	if !isRegistered {
 		request.Gemini(registerNotification)
 		return
@@ -605,7 +605,7 @@ To create a new question, you can do one of the following:
 `, topic.Title, topic.Id, topic.Title, titanHost, topic.Id, topic.Id, topic.Id))
 }
 
-func doCreateQuestion(request sis.Request, conn *sql.DB, user AskUser, isRegistered bool) {
+func doCreateQuestion(request *sis.Request, conn *sql.DB, user AskUser, isRegistered bool) {
 	if !isRegistered {
 		request.TemporaryFailure("You must be registered.")
 		return
@@ -655,7 +655,7 @@ func doCreateQuestion(request sis.Request, conn *sql.DB, user AskUser, isRegiste
 	request.Redirect(fmt.Sprintf("%s%s/~ask/%d/%d", request.Server.Scheme(), request.Hostname(), topic.Id, question.Id))
 }
 
-func getQuestionPage(request sis.Request, conn *sql.DB, user AskUser, isRegistered bool) {
+func getQuestionPage(request *sis.Request, conn *sql.DB, user AskUser, isRegistered bool) {
 	topicId, err := strconv.Atoi(request.GetParam("topicid"))
 	if err != nil {
 		return
@@ -726,7 +726,7 @@ func getQuestionPage(request sis.Request, conn *sql.DB, user AskUser, isRegister
 	request.Gemini(builder.String())
 }
 
-func getCreateQuestionTitle(request sis.Request, conn *sql.DB, user AskUser, isRegistered bool, questionId int, title string) {
+func getCreateQuestionTitle(request *sis.Request, conn *sql.DB, user AskUser, isRegistered bool, questionId int, title string) {
 	if !isRegistered {
 		request.Gemini(registerNotification)
 		return
@@ -784,7 +784,7 @@ func getCreateQuestionTitle(request sis.Request, conn *sql.DB, user AskUser, isR
 	}
 }
 
-func getCreateQuestionText(request sis.Request, conn *sql.DB, user AskUser, isRegistered bool, questionId int, text string) {
+func getCreateQuestionText(request *sis.Request, conn *sql.DB, user AskUser, isRegistered bool, questionId int, text string) {
 	if !isRegistered {
 		request.Gemini(registerNotification)
 		return
@@ -840,7 +840,7 @@ func getCreateQuestionText(request sis.Request, conn *sql.DB, user AskUser, isRe
 
 // -- Answer Handling --
 
-func getCreateAnswer(request sis.Request, conn *sql.DB, user AskUser, isRegistered bool) {
+func getCreateAnswer(request *sis.Request, conn *sql.DB, user AskUser, isRegistered bool) {
 	if !isRegistered {
 		request.Gemini(registerNotification)
 		return
@@ -892,7 +892,7 @@ To create a new answer, you can do one of the following:
 `, topic.Title, topic.Id, topic.Title, topic.Id, question.Id, titanHost, topic.Id, question.Id, topic.Id, question.Id, topic.Id, question.Id))
 }
 
-func doCreateAnswer(request sis.Request, conn *sql.DB, user AskUser, isRegistered bool) {
+func doCreateAnswer(request *sis.Request, conn *sql.DB, user AskUser, isRegistered bool) {
 	if !isRegistered {
 		request.TemporaryFailure("You must be registered.")
 		return
@@ -951,7 +951,7 @@ func doCreateAnswer(request sis.Request, conn *sql.DB, user AskUser, isRegistere
 	request.Redirect(fmt.Sprintf("%s%s/~ask/%d/%d/a/%d", request.Server.Scheme(), request.Hostname(), topic.Id, question.Id, answer.Id))
 }
 
-func getCreateAnswerText(request sis.Request, conn *sql.DB, user AskUser, isRegistered bool, answerId int, text string) {
+func getCreateAnswerText(request *sis.Request, conn *sql.DB, user AskUser, isRegistered bool, answerId int, text string) {
 	if !isRegistered {
 		request.Gemini(registerNotification)
 		return
@@ -1015,7 +1015,7 @@ func getCreateAnswerText(request sis.Request, conn *sql.DB, user AskUser, isRegi
 	}
 }
 
-func getCreateAnswerGemlog(request sis.Request, conn *sql.DB, user AskUser, isRegistered bool, gemlogUrl string) {
+func getCreateAnswerGemlog(request *sis.Request, conn *sql.DB, user AskUser, isRegistered bool, gemlogUrl string) {
 	if !isRegistered {
 		request.Gemini(registerNotification)
 		return
@@ -1082,7 +1082,7 @@ func getCreateAnswerGemlog(request sis.Request, conn *sql.DB, user AskUser, isRe
 	request.Redirect(fmt.Sprintf("/~ask/%d/%d", topic.Id, question.Id))
 }
 
-func getAnswerPage(request sis.Request, conn *sql.DB, user AskUser, isRegistered bool) {
+func getAnswerPage(request *sis.Request, conn *sql.DB, user AskUser, isRegistered bool) {
 	// Get Topic
 	topicId, err := strconv.Atoi(request.GetParam("topicid"))
 	if err != nil {
@@ -1171,7 +1171,7 @@ func getAnswerPage(request sis.Request, conn *sql.DB, user AskUser, isRegistered
 	request.Gemini(builder.String())
 }
 
-func getUpvoteAnswer(request sis.Request, conn *sql.DB, user AskUser, query string) {
+func getUpvoteAnswer(request *sis.Request, conn *sql.DB, user AskUser, query string) {
 	// Get Topic
 	topicId, err := strconv.Atoi(request.GetParam("topicid"))
 	if err != nil {
@@ -1215,7 +1215,7 @@ func getUpvoteAnswer(request sis.Request, conn *sql.DB, user AskUser, query stri
 	request.Redirect("/~ask/%d/%d/a/%d", topic.Id, question.Id, answer.Id)
 }
 
-func getRemoveUpvoteAnswer(request sis.Request, conn *sql.DB, user AskUser, query string) {
+func getRemoveUpvoteAnswer(request *sis.Request, conn *sql.DB, user AskUser, query string) {
 	// Get Topic
 	topicId, err := strconv.Atoi(request.GetParam("topicid"))
 	if err != nil {

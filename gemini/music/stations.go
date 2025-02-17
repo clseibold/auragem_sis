@@ -28,7 +28,7 @@ func setupStation(s sis.ServerHandle, conn *sql.DB, station *RadioStation, total
 	go radioService(conn, radioBuffer, station)
 	go fakeClient(radioBuffer, station)
 
-	s.AddRoute("/music/public_radio/"+url.PathEscape(station.Name), func(request sis.Request) {
+	s.AddRoute("/music/public_radio/"+url.PathEscape(station.Name), func(request *sis.Request) {
 		creationDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-14T18:07:00", time.Local)
 		creationDate = creationDate.UTC()
 		abstract := fmt.Sprintf("# AuraGem Public Radio - %s Station\n\n%s\nClients Connected: %d\n", station.Name, station.Description, radioBuffer.clientCount)
@@ -163,7 +163,7 @@ Current song playing: %s by %s
 		request.Gemini(fmt.Sprintf(template, station.Name, station.Description, url.PathEscape(station.Name), url.PathEscape(station.Name), radioBuffer.clientCount, currentTime.Format("03:04 PM"), radioGenre, radioBuffer.currentMusicFile.Title, radioBuffer.currentMusicFile.Artist, attribution, scheduleBuilder.String()))
 	})
 
-	s.AddRoute("/music/public_radio/"+url.PathEscape(station.Name)+"/schedule_feed", func(request sis.Request) {
+	s.AddRoute("/music/public_radio/"+url.PathEscape(station.Name)+"/schedule_feed", func(request *sis.Request) {
 		creationDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-14T18:07:00", time.Local)
 		creationDate = creationDate.UTC()
 		abstract := fmt.Sprintf("# AuraGem Public Radio - %s Station Schedule\n", station.Name)
@@ -211,13 +211,13 @@ Current song playing: %s by %s
 		request.Gemini(fmt.Sprintf(template, station.Name, station.Description, url.PathEscape(station.Name), url.PathEscape(station.Name), timeOfProgram.UTC().Format("2006-01-02"), timeOfProgram.UTC().Format("03:04 PM"), program, episode))
 	})
 
-	s.AddRoute("/music/stream/public_radio", func(request sis.Request) {
+	s.AddRoute("/music/stream/public_radio", func(request *sis.Request) {
 		request.Redirect("/music/stream/public_radio/" + url.PathEscape(RadioStation_Diverse.Name) + ".mp3")
 	})
-	s.AddRoute("/music/stream/public_radio/"+url.PathEscape(station.Name), func(request sis.Request) {
+	s.AddRoute("/music/stream/public_radio/"+url.PathEscape(station.Name), func(request *sis.Request) {
 		request.Redirect("/music/stream/public_radio/" + url.PathEscape(station.Name) + ".mp3")
 	})
-	s.AddRoute("/music/stream/public_radio/"+url.PathEscape(station.Name)+".mp3", func(request sis.Request) {
+	s.AddRoute("/music/stream/public_radio/"+url.PathEscape(station.Name)+".mp3", func(request *sis.Request) {
 		creationDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-14T18:07:00", time.Local)
 		creationDate = creationDate.UTC()
 		abstract := ""

@@ -168,13 +168,13 @@ func handleRadioService(s sis.ServerHandle, conn *sql.DB) {
 	setupStation(s, conn, &RadioStation_Piano, &totalClientsConnected)
 	setupStation(s, conn, &RadioStation_Religious, &totalClientsConnected)
 
-	s.AddRoute("/music/public_radio/schedule", func(request sis.Request) {
+	s.AddRoute("/music/public_radio/schedule", func(request *sis.Request) {
 		request.Redirect("/music/public_radio/Diverse")
 	})
-	s.AddRoute("/music/public_radio/", func(request sis.Request) {
+	s.AddRoute("/music/public_radio/", func(request *sis.Request) {
 		request.Redirect("/music/public_radio")
 	})
-	s.AddRoute("/music/public_radio", func(request sis.Request) {
+	s.AddRoute("/music/public_radio", func(request *sis.Request) {
 		creationDate, _ := time.ParseInLocation(time.RFC3339, "2023-09-19T00:00:00", time.Local)
 		updateDate, _ := time.ParseInLocation(time.RFC3339, "2023-11-30T00:00:00", time.Local)
 		abstract := `# AuraGem Music: Public Radio

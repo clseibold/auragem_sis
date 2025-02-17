@@ -56,16 +56,16 @@ ORDER BY GROUPED_SCORE DESC
 `
 
 func HandleSearchEngineDown(s sis.ServerHandle) {
-	s.AddRoute("/searchengine", func(request sis.Request) {
+	s.AddRoute("/searchengine", func(request *sis.Request) {
 		request.Redirect("/search/")
 	})
-	s.AddRoute("/searchengine/", func(request sis.Request) {
+	s.AddRoute("/searchengine/", func(request *sis.Request) {
 		request.Redirect("/search/")
 	})
-	s.AddRoute("/search", func(request sis.Request) {
+	s.AddRoute("/search", func(request *sis.Request) {
 		request.Redirect("/search/")
 	})
-	s.AddRoute("/search/*", func(request sis.Request) {
+	s.AddRoute("/search/*", func(request *sis.Request) {
 		request.ServerUnavailable("AuraGem Search is currently down due to upgrades.")
 	})
 }
@@ -178,57 +178,57 @@ func HandleSearchEngine(s sis.ServerHandle) {
 	}()
 
 	// Outdated Link Handles
-	s.AddRoute("/searchengine", func(request sis.Request) {
+	s.AddRoute("/searchengine", func(request *sis.Request) {
 		request.Redirect("/search/")
 	})
-	s.AddRoute("/searchengine/", func(request sis.Request) {
+	s.AddRoute("/searchengine/", func(request *sis.Request) {
 		request.Redirect("/search/")
 	})
-	s.AddRoute("/searchengine/search", func(request sis.Request) {
+	s.AddRoute("/searchengine/search", func(request *sis.Request) {
 		request.Redirect("/search/s")
 	})
-	s.AddRoute("/searchengine/random", func(request sis.Request) {
+	s.AddRoute("/searchengine/random", func(request *sis.Request) {
 		request.Redirect("/search/random")
 	})
-	s.AddRoute("/searchengine/capsules", func(request sis.Request) {
+	s.AddRoute("/searchengine/capsules", func(request *sis.Request) {
 		request.Redirect("/search/capsules")
 	})
-	s.AddRoute("/searchengine/tags", func(request sis.Request) {
+	s.AddRoute("/searchengine/tags", func(request *sis.Request) {
 		request.Redirect("/search/tags")
 	})
-	s.AddRoute("/searchengine/mimetype", func(request sis.Request) {
+	s.AddRoute("/searchengine/mimetype", func(request *sis.Request) {
 		request.Redirect("/search/mimetype")
 	})
-	s.AddRoute("/searchengine/recent", func(request sis.Request) {
+	s.AddRoute("/searchengine/recent", func(request *sis.Request) {
 		request.Redirect("/search/recent")
 	})
-	s.AddRoute("/searchengine/yearposts", func(request sis.Request) {
+	s.AddRoute("/searchengine/yearposts", func(request *sis.Request) {
 		request.Redirect("/search/yearposts")
 	})
-	s.AddRoute("/searchengine/feeds", func(request sis.Request) {
+	s.AddRoute("/searchengine/feeds", func(request *sis.Request) {
 		request.Redirect("/search/feeds")
 	})
-	s.AddRoute("/searchengine/audio", func(request sis.Request) {
+	s.AddRoute("/searchengine/audio", func(request *sis.Request) {
 		request.Redirect("/search/audio")
 	})
-	s.AddRoute("/searchengine/images", func(request sis.Request) {
+	s.AddRoute("/searchengine/images", func(request *sis.Request) {
 		request.Redirect("/search/images")
 	})
-	s.AddRoute("/searchengine/twtxt", func(request sis.Request) {
+	s.AddRoute("/searchengine/twtxt", func(request *sis.Request) {
 		request.Redirect("/search/twtxt")
 	})
-	s.AddRoute("/searchengine/security", func(request sis.Request) {
+	s.AddRoute("/searchengine/security", func(request *sis.Request) {
 		request.Redirect("/search/security")
 	})
 
 	// Search Engine Handles
-	s.AddRoute("/search", func(request sis.Request) {
+	s.AddRoute("/search", func(request *sis.Request) {
 		request.Redirect("/search/")
 	})
 	// TODO: Removed Tag Index (=> /search/tags 🏷️ Tag Index)
 	publishDate, _ := time.ParseInLocation(time.RFC3339, "2021-07-01T00:00:00", time.Local)
 	updateDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-13T00:00:00", time.Local)
-	s.AddRoute("/search/", func(request sis.Request) {
+	s.AddRoute("/search/", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search\n"})
 		if request.ScrollMetadataRequested {
 			request.SendAbstract("")
@@ -292,7 +292,7 @@ Note that AuraGem Search does not ensure or rank based on the popularity or accu
 		// => https://www.patreon.com/krixano Patreon
 	})
 
-	s.AddRoute("/search/crawl", func(request sis.Request) {
+	s.AddRoute("/search/crawl", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Docs, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# Crawl a link\n"})
 		if request.ScrollMetadataRequested {
 			request.SendAbstract("")
@@ -342,7 +342,7 @@ Note that AuraGem Search does not ensure or rank based on the popularity or accu
 
 	// Goes through all pages that haven't been crawled in a long time and sets them to hidden if they are no longer available
 	/*inCleanup := false
-	s.AddRoute("/search/cleanup", func(request sis.Request) {
+	s.AddRoute("/search/cleanup", func(request *sis.Request) {
 		if inCleanup {
 			request.TemporaryFailure("Cleanup already running.")
 			return
@@ -358,7 +358,7 @@ Note that AuraGem Search does not ensure or rank based on the popularity or accu
 		request.Redirect("/search/")
 	})*/
 
-	s.AddRoute("/search/configure_default", func(request sis.Request) {
+	s.AddRoute("/search/configure_default", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Docs, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# Configure Default Search Engine in Lagrange\n"})
 		if request.ScrollMetadataRequested {
 			request.SendAbstract("")
@@ -373,7 +373,7 @@ Note that AuraGem Search does not ensure or rank based on the popularity or accu
 `)
 	})
 
-	s.AddRoute("/search/features", func(request sis.Request) {
+	s.AddRoute("/search/features", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Docs, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search Features\n"})
 		if request.ScrollMetadataRequested {
 			request.SendAbstract("")
@@ -445,11 +445,11 @@ When I type "Station", I want an exact match for Station itself. However, when I
 `)
 	})
 
-	/*s.AddRoute("/search/index", func(request sis.Request) {
+	/*s.AddRoute("/search/index", func(request *sis.Request) {
 		handleSearchIndex(request, conn)
 	})*/
 
-	s.AddRoute("/search/scrollspace/", func(request sis.Request) {
+	s.AddRoute("/search/scrollspace/", func(request *sis.Request) {
 		request.Gemini(`# Scrollspace Index
 
 => /search/scrollspace/0/ 0. Science and Knowledge. Organization. Computer Science and Computer Technology. Information. Documentation. Librarianship. Institutions. Publications
@@ -468,7 +468,7 @@ When I type "Station", I want an exact match for Station itself. However, when I
 `)
 	})
 
-	s.AddRoute("/search/scrollspace/:class/", func(request sis.Request) {
+	s.AddRoute("/search/scrollspace/:class/", func(request *sis.Request) {
 		classStr := request.GetParam("class")
 		if classStr != "0" && classStr != "1" && classStr != "2" && classStr != "3" && classStr != "4" && classStr != "5" && classStr != "6" && classStr != "7" && classStr != "8" && classStr != "9" {
 			request.BadRequest("UDC class doesn't exist.")
@@ -490,7 +490,7 @@ When I type "Station", I want an exact match for Station itself. However, when I
 		request.Gemini("\n")
 	})
 
-	s.AddRoute("/search/scrollspace/:class/:page", func(request sis.Request) {
+	s.AddRoute("/search/scrollspace/:class/:page", func(request *sis.Request) {
 		classStr := request.GetParam("class")
 		if classStr != "0" && classStr != "1" && classStr != "2" && classStr != "3" && classStr != "4" && classStr != "5" && classStr != "6" && classStr != "7" && classStr != "8" && classStr != "9" {
 			request.BadRequest("UDC class doesn't exist.")
@@ -528,7 +528,7 @@ When I type "Station", I want an exact match for Station itself. However, when I
 	var totalSizeTextCache float64 = -1
 	var lastCacheTime time.Time
 
-	s.AddRoute("/search/stats", func(request sis.Request) {
+	s.AddRoute("/search/stats", func(request *sis.Request) {
 		currentTime := time.Now()
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: currentTime, Abstract: "# AuraGem Search Stats\n"})
 		if request.ScrollMetadataRequested {
@@ -607,7 +607,7 @@ Number of Domains that responded with an empty META field: %d
 
 	handleSearchFeedback(s)
 
-	s.AddRoute("/search/add_capsule", func(request sis.Request) {
+	s.AddRoute("/search/add_capsule", func(request *sis.Request) {
 		query, err := request.Query()
 		if err != nil {
 			request.TemporaryFailure("%s", err.Error())
@@ -647,7 +647,7 @@ Number of Domains that responded with an empty META field: %d
 		}
 	})
 
-	s.AddRoute("/search/backlinks", func(request sis.Request) {
+	s.AddRoute("/search/backlinks", func(request *sis.Request) {
 		query, err := request.Query()
 		if err != nil {
 			request.TemporaryFailure("%s", err.Error())
@@ -684,7 +684,7 @@ Number of Domains that responded with an empty META field: %d
 	})
 
 	// Smallnet search
-	s.AddRoute("/search/s", func(request sis.Request) {
+	s.AddRoute("/search/s", func(request *sis.Request) {
 		query, err := request.Query()
 		if err != nil {
 			request.TemporaryFailure("%s", err.Error())
@@ -705,7 +705,7 @@ Number of Domains that responded with an empty META field: %d
 		}
 	})
 
-	s.AddRoute("/search/s/:page", func(request sis.Request) {
+	s.AddRoute("/search/s/:page", func(request *sis.Request) {
 		pageStr := request.GetParam("page")
 		page, err := strconv.Atoi(pageStr)
 		if err != nil {
@@ -733,7 +733,7 @@ Number of Domains that responded with an empty META field: %d
 	})
 
 	// Geminispace search
-	s.AddRoute("/search/gemini", func(request sis.Request) {
+	s.AddRoute("/search/gemini", func(request *sis.Request) {
 		query, err := request.Query()
 		if err != nil {
 			request.TemporaryFailure("%s", err.Error())
@@ -754,7 +754,7 @@ Number of Domains that responded with an empty META field: %d
 		}
 	})
 
-	s.AddRoute("/search/gemini/:page", func(request sis.Request) {
+	s.AddRoute("/search/gemini/:page", func(request *sis.Request) {
 		pageStr := request.GetParam("page")
 		page, err := strconv.Atoi(pageStr)
 		if err != nil {
@@ -782,7 +782,7 @@ Number of Domains that responded with an empty META field: %d
 	})
 
 	// Scroll protocol search
-	s.AddRoute("/search/scroll", func(request sis.Request) {
+	s.AddRoute("/search/scroll", func(request *sis.Request) {
 		query, err := request.Query()
 		if err != nil {
 			request.TemporaryFailure("%s", err.Error())
@@ -803,7 +803,7 @@ Number of Domains that responded with an empty META field: %d
 		}
 	})
 
-	s.AddRoute("/search/scroll/:page", func(request sis.Request) {
+	s.AddRoute("/search/scroll/:page", func(request *sis.Request) {
 		pageStr := request.GetParam("page")
 		page, err := strconv.Atoi(pageStr)
 		if err != nil {
@@ -831,7 +831,7 @@ Number of Domains that responded with an empty META field: %d
 	})
 
 	// Spartanspace search
-	s.AddRoute("/search/spartan", func(request sis.Request) {
+	s.AddRoute("/search/spartan", func(request *sis.Request) {
 		query, err := request.Query()
 		if err != nil {
 			request.TemporaryFailure("%s", err.Error())
@@ -852,7 +852,7 @@ Number of Domains that responded with an empty META field: %d
 		}
 	})
 
-	s.AddRoute("/search/spartan/:page", func(request sis.Request) {
+	s.AddRoute("/search/spartan/:page", func(request *sis.Request) {
 		pageStr := request.GetParam("page")
 		page, err := strconv.Atoi(pageStr)
 		if err != nil {
@@ -880,7 +880,7 @@ Number of Domains that responded with an empty META field: %d
 	})
 
 	// Debug searching - shows the Score numbers
-	s.AddRoute("/search/debug_s", func(request sis.Request) {
+	s.AddRoute("/search/debug_s", func(request *sis.Request) {
 		query, err := request.Query()
 		if err != nil {
 			request.TemporaryFailure("%s", err.Error())
@@ -895,7 +895,7 @@ Number of Domains that responded with an empty META field: %d
 		}
 	})
 
-	s.AddRoute("/search/debug_s/:page", func(request sis.Request) {
+	s.AddRoute("/search/debug_s/:page", func(request *sis.Request) {
 		pageStr := request.GetParam("page")
 		page, err := strconv.Atoi(pageStr)
 		if err != nil {
@@ -916,7 +916,7 @@ Number of Domains that responded with an empty META field: %d
 		}
 	})
 
-	s.AddRoute("/search/recent", func(request sis.Request) {
+	s.AddRoute("/search/recent", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - 50 Most Recently Indexed\n"})
 		if request.ScrollMetadataRequested {
 			request.SendAbstract("")
@@ -937,7 +937,7 @@ Number of Domains that responded with an empty META field: %d
 `, builder.String()))
 	})
 
-	s.AddRoute("/search/capsules", func(request sis.Request) {
+	s.AddRoute("/search/capsules", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - List of Capsules\n"})
 		if request.ScrollMetadataRequested {
 			request.SendAbstract("")
@@ -972,7 +972,7 @@ Number of Domains that responded with an empty META field: %d
 `, builder.String()))
 	})
 
-	s.AddRoute("/search/feeds", func(request sis.Request) {
+	s.AddRoute("/search/feeds", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Indexed Feeds\n"})
 		if request.ScrollMetadataRequested {
 			request.SendAbstract("")
@@ -994,7 +994,7 @@ Number of Domains that responded with an empty META field: %d
 	})
 
 	/*
-			s.AddRoute("/search/yearposts", func(request sis.Request) {
+			s.AddRoute("/search/yearposts", func(request *sis.Request) {
 				request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Posts From The Past Year\n"})
 				if request.ScrollMetadataRequested {
 					request.SendAbstract("")
@@ -1035,7 +1035,7 @@ Number of Domains that responded with an empty META field: %d
 		`, builder.String()))
 			})
 
-			s.AddRoute("/search/yearposts/:page", func(request sis.Request) {
+			s.AddRoute("/search/yearposts/:page", func(request *sis.Request) {
 				pageStr := request.GetParam("page")
 				request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Posts From The Past Year, Page " + pageStr + "\n"})
 				if request.ScrollMetadataRequested {
@@ -1083,7 +1083,7 @@ Number of Domains that responded with an empty META field: %d
 			})
 	*/
 
-	s.AddRoute("/search/audio", func(request sis.Request) {
+	s.AddRoute("/search/audio", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Indexed Audio Files\n"})
 		if request.ScrollMetadataRequested {
 			request.SendAbstract("")
@@ -1118,7 +1118,7 @@ Number of Domains that responded with an empty META field: %d
 `, builder.String()))
 	})
 
-	s.AddRoute("/search/audio/:page", func(request sis.Request) {
+	s.AddRoute("/search/audio/:page", func(request *sis.Request) {
 		pageStr := request.GetParam("page")
 		page_int, parse_err := strconv.ParseInt(pageStr, 10, 64)
 		if parse_err != nil {
@@ -1153,7 +1153,7 @@ Number of Domains that responded with an empty META field: %d
 `, builder.String()))
 	})
 
-	s.AddRoute("/search/audio/s", func(request sis.Request) {
+	s.AddRoute("/search/audio/s", func(request *sis.Request) {
 		query, err := request.Query()
 		if err != nil {
 			request.TemporaryFailure("%s", err.Error())
@@ -1167,7 +1167,7 @@ Number of Domains that responded with an empty META field: %d
 			return
 		}
 	})
-	s.AddRoute("/search/audio/s/:page", func(request sis.Request) {
+	s.AddRoute("/search/audio/s/:page", func(request *sis.Request) {
 		pageStr := request.GetParam("page")
 		page, err := strconv.Atoi(pageStr)
 		if err != nil {
@@ -1189,7 +1189,7 @@ Number of Domains that responded with an empty META field: %d
 		}
 	})
 
-	s.AddRoute("/search/images", func(request sis.Request) {
+	s.AddRoute("/search/images", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Indexed Image Files\n"})
 		if request.ScrollMetadataRequested {
 			request.SendAbstract("")
@@ -1225,7 +1225,7 @@ Number of Domains that responded with an empty META field: %d
 `, builder.String()))
 	})
 
-	s.AddRoute("/search/images/:page", func(request sis.Request) {
+	s.AddRoute("/search/images/:page", func(request *sis.Request) {
 		pageStr := request.GetParam("page")
 		page_int, parse_err := strconv.ParseInt(pageStr, 10, 64)
 		if parse_err != nil {
@@ -1265,7 +1265,7 @@ Number of Domains that responded with an empty META field: %d
 `, builder.String()))
 	})
 
-	s.AddRoute("/search/twtxt", func(request sis.Request) {
+	s.AddRoute("/search/twtxt", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Indexed Twtxt Files\n"})
 		if request.ScrollMetadataRequested {
 			request.SendAbstract("")
@@ -1297,7 +1297,7 @@ Number of Domains that responded with an empty META field: %d
 `, builder.String()))
 	})
 
-	s.AddRoute("/search/security", func(request sis.Request) {
+	s.AddRoute("/search/security", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Indexed Security.txt Files\n"})
 		if request.ScrollMetadataRequested {
 			request.SendAbstract("")
@@ -1328,7 +1328,7 @@ Number of Domains that responded with an empty META field: %d
 `, builder.String()))
 	})
 
-	s.AddRoute("/search/mimetype", func(request sis.Request) {
+	s.AddRoute("/search/mimetype", func(request *sis.Request) {
 		query, err := request.Query()
 		if err != nil {
 			request.TemporaryFailure("%s", err.Error())
@@ -1380,7 +1380,7 @@ Number of Domains that responded with an empty META field: %d
 		}
 	})
 
-	s.AddRoute("/search/random", func(request sis.Request) {
+	s.AddRoute("/search/random", func(request *sis.Request) {
 		q := `SELECT FIRST 1 'gemini://' || r.DOMAIN || '/'
 FROM DOMAINS r
 ORDER BY (r.ID + cast(? as bigint))*4294967291-((r.ID + cast(? as bigint))*4294967291/49157)*49157`
@@ -1400,7 +1400,7 @@ ORDER BY (r.ID + cast(? as bigint))*4294967291-((r.ID + cast(? as bigint))*42949
 	})
 }
 
-func handleBacklinks(request sis.Request, conn *sql.DB, url *url.URL) {
+func handleBacklinks(request *sis.Request, conn *sql.DB, url *url.URL) {
 	q := `SELECT COUNT(*) OVER () totalCount, r.ID, P_FROM.ID, P_FROM.URL, r.TITLE, r.CROSSHOST, r.CRAWLINDEX,
     r.DATE_ADDED
 FROM LINKS r
@@ -1443,7 +1443,7 @@ ORDER BY r.CROSSHOST ASC`
 `, url.String(), builder.String()))
 }
 
-func handleSearch(request sis.Request, conn *sql.DB, query string, page int, showScores bool, gemini_only bool, scroll_only bool, spartan_only bool) {
+func handleSearch(request *sis.Request, conn *sql.DB, query string, page int, showScores bool, gemini_only bool, scroll_only bool, spartan_only bool) {
 	//rawQuery := c.URL().RawQuery
 	rawQuery, err := request.RawQuery()
 	if err != nil {
@@ -1624,7 +1624,7 @@ func handleSearchIndex(request sis.Request, conn *sql.DB) {
 	}
 }
 
-func handleAudioSearch(request sis.Request, conn *sql.DB, query string, page int) {
+func handleAudioSearch(request *sis.Request, conn *sql.DB, query string, page int) {
 	rawQuery, err := request.RawQuery()
 	if err != nil {
 		request.TemporaryFailure("%s", err.Error())

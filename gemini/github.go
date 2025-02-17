@@ -26,7 +26,7 @@ func handleGithub(g sis.ServerHandle) {
 	tc := oauth2.NewClient(ctx, ts)
 	client := github.NewClient(tc)
 
-	g.AddRoute("/github", func(request sis.Request) {
+	g.AddRoute("/github", func(request *sis.Request) {
 		request.SetClassification(sis.ScrollResponseUDC_Reference)
 		request.Gemini(`# AuraGem Github Proxy
 
@@ -36,7 +36,7 @@ Welcome to the AuraGem Github proxy!
 `)
 	})
 
-	g.AddRoute("/github/search/:page", func(request sis.Request) {
+	g.AddRoute("/github/search/:page", func(request *sis.Request) {
 		//query, err2 := c.QueryString()
 		query, err := request.Query()
 		if err != nil {
@@ -49,7 +49,7 @@ Welcome to the AuraGem Github proxy!
 			handleGithubSearch(ctx, request, client, query, request.GetParam("page"))
 		}
 	})
-	g.AddRoute("/github/search", func(request sis.Request) {
+	g.AddRoute("/github/search", func(request *sis.Request) {
 		//query, err2 := c.QueryString()
 		query, err := request.Query()
 		if err != nil {
@@ -63,7 +63,7 @@ Welcome to the AuraGem Github proxy!
 		}
 	})
 
-	g.AddRoute("/github/repo/:id", func(request sis.Request) {
+	g.AddRoute("/github/repo/:id", func(request *sis.Request) {
 		request.SetClassification(sis.ScrollResponseUDC_Docs)
 		id := request.GetParam("id")
 		template := `# Repo: %s
@@ -113,7 +113,7 @@ Homepage: %s
 		request.Gemini(fmt.Sprintf(template, repository.GetFullName(), repository.GetDescription(), repository.GetSSHURL(), repository.GetHTMLURL(), repository.GetHomepage(), repository.GetLicense().GetURL(), repository.GetLicense().GetName(), repository.GetID(), repository.GetID(), repository.GetDefaultBranch(), rootContents))
 	})
 
-	g.AddRoute("/github/repo/:id/b", func(request sis.Request) {
+	g.AddRoute("/github/repo/:id/b", func(request *sis.Request) {
 		request.SetClassification(sis.ScrollResponseUDC_Docs)
 		id := request.GetParam("id")
 
@@ -147,7 +147,7 @@ Homepage: %s
 		request.Gemini(fmt.Sprintf(template, repository.GetFullName(), repository.GetID(), builder.String()))
 	})
 
-	g.AddRoute("/github/repo/:id/issues/", func(request sis.Request) {
+	g.AddRoute("/github/repo/:id/issues/", func(request *sis.Request) {
 		request.SetClassification(sis.ScrollResponseUDC_Docs)
 		id := request.GetParam("id")
 
@@ -185,7 +185,7 @@ Homepage: %s
 `, repository.GetFullName(), len(issues), repository.GetID(), builder.String()))
 	})
 
-	g.AddRoute("/github/repo/:id/issues/:issue", func(request sis.Request) {
+	g.AddRoute("/github/repo/:id/issues/:issue", func(request *sis.Request) {
 		request.SetClassification(sis.ScrollResponseUDC_Docs)
 		id := request.GetParam("id")
 		issueParam := request.GetParam("issue")
@@ -238,7 +238,7 @@ Homepage: %s
 `, repository.GetFullName(), issue.GetNumber(), issue.GetTitle(), repository.GetID(), repository.GetID(), issue.GetCreatedAt().Format("2006-01-02 15:04:05"), issue.GetUser().GetLogin(), issue.GetBody(), len(comments), builder.String()))
 	})
 
-	g.AddRoute("/github/repo/:id/files/*", func(request sis.Request) {
+	g.AddRoute("/github/repo/:id/files/*", func(request *sis.Request) {
 		id := request.GetParam("id")
 		route := fmt.Sprintf("/github/repo/%s/files", id)
 		p := strings.Replace(request.RawPath(), route, "", 1)
@@ -312,7 +312,7 @@ func getRepoContents(ctx context.Context, client *github.Client, repository *git
 	return builder.String(), false
 }
 
-func handleGithubSearch(ctx context.Context, request sis.Request, client *github.Client, query string, page string) {
+func handleGithubSearch(ctx context.Context, request *sis.Request, client *github.Client, query string, page string) {
 	template := `# Github Search
 
 => /github/search New Search

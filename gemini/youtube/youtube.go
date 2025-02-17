@@ -41,7 +41,7 @@ func HandleYoutube(s sis.ServerHandle) {
 	videoPageRoute := getVideoPageRouteFunc(service)
 	videoDownloadRoute := getVideoDownloadRouteFunc()
 
-	s.AddRoute("/cgi-bin/youtube.cgi", func(request sis.Request) {
+	s.AddRoute("/cgi-bin/youtube.cgi", func(request *sis.Request) {
 		request.Redirect("/youtube/") // TODO: Temporary Redirect
 	})
 	s.AddRoute("/youtube", indexRoute)
@@ -55,7 +55,7 @@ func HandleYoutube(s sis.ServerHandle) {
 	handlePlaylistPage(s, service)
 }
 
-func indexRoute(request sis.Request) {
+func indexRoute(request *sis.Request) {
 	creationDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-17T11:57:00", time.Local)
 	abstract := "#AuraGem YouTube Proxy\n\nProxies YouTube to Scroll/Gemini. Lets you search and download videos and playlists.\n"
 	request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: creationDate.UTC(), UpdateDate: creationDate.UTC(), Language: "en", Abstract: abstract})
@@ -70,7 +70,7 @@ func indexRoute(request sis.Request) {
 	request.Gemini("=> gemini://kwiecien.us/gemcast/20210425.gmi See This Proxy Featured on Gemini Radio\n")
 }
 func getSearchRouteFunc(service *youtube.Service) sis.RequestHandler {
-	return func(request sis.Request) {
+	return func(request *sis.Request) {
 		request.SetNoLanguage()
 		query, err := request.Query()
 		if err != nil {
@@ -104,7 +104,7 @@ func getSearchRouteFunc(service *youtube.Service) sis.RequestHandler {
 	}
 }
 
-func handleVideoClassification(video *youtube.Video, request sis.Request) {
+func handleVideoClassification(video *youtube.Video, request *sis.Request) {
 	handleTopicId := false
 	switch video.Snippet.CategoryId {
 	case "1": // Film & Animation
@@ -243,7 +243,7 @@ func handleVideoClassification(video *youtube.Video, request sis.Request) {
 }
 
 func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
-	return func(request sis.Request) {
+	return func(request *sis.Request) {
 		id := request.GetParam("id")
 		call := service.Videos.List([]string{"id", "snippet", "status"}).Id(id).MaxResults(1)
 		response, err := call.Do()
@@ -353,7 +353,7 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 }
 
 func handleCaptionDownload(s sis.ServerHandle) {
-	s.AddRoute("/youtube/video/:id/transcript", func(request sis.Request) {
+	s.AddRoute("/youtube/video/:id/transcript", func(request *sis.Request) {
 		client := ytd.Client{}
 		videoId := request.GetParam("id")
 		video, err := client.GetVideo(videoId)
@@ -397,7 +397,7 @@ func handleCaptionDownload(s sis.ServerHandle) {
 		request.Gemini(transcript.String())
 	})
 
-	s.AddRoute("/youtube/video/:id/caption/:caption", func(request sis.Request) {
+	s.AddRoute("/youtube/video/:id/caption/:caption", func(request *sis.Request) {
 		client := ytd.Client{}
 		videoId := request.GetParam("id")
 		video, err := client.GetVideo(videoId)
@@ -469,7 +469,7 @@ func getVideoDownloadRouteFunc() sis.RequestHandler {
 	ipsDownloading := make(map[string]struct{})
 	videoQualities := []string{"hd1080", "hd720", "medium", "tiny"}
 
-	return func(request sis.Request) {
+	return func(request *sis.Request) {
 		_, ok := ipsDownloading[request.IPHash()]
 		if ok {
 			request.TemporaryFailure("You are already downloading a video from the proxy. Please wait until that is finished before downloading another.\n")
@@ -600,7 +600,7 @@ func getVideoDownloadRouteFunc() sis.RequestHandler {
 
 func handleChannelPage(g sis.ServerHandle, service *youtube.Service) {
 	// Channel Home
-	g.AddRoute("/youtube/channel/:id", func(request sis.Request) {
+	g.AddRoute("/youtube/channel/:id", func(request *sis.Request) {
 		template := `# Channel: %s
 
 => /youtube/channel/%s/videos/ All Videos
@@ -636,31 +636,31 @@ func handleChannelPage(g sis.ServerHandle, service *youtube.Service) {
 	})
 
 	// Channel Playlists
-	g.AddRoute("/youtube/channel/:id/playlists/:page", func(request sis.Request) {
+	g.AddRoute("/youtube/channel/:id/playlists/:page", func(request *sis.Request) {
 		getChannelPlaylists(request, service, request.GetParam("id"), request.GetParam("page"))
 	})
-	g.AddRoute("/youtube/channel/:id/playlists", func(request sis.Request) {
+	g.AddRoute("/youtube/channel/:id/playlists", func(request *sis.Request) {
 		getChannelPlaylists(request, service, request.GetParam("id"), "")
 	})
 
 	// Channel Videos/Uploads
-	g.AddRoute("/youtube/channel/:id/videos/:page", func(request sis.Request) {
+	g.AddRoute("/youtube/channel/:id/videos/:page", func(request *sis.Request) {
 		getChannelVideos(request, service, request.GetParam("id"), request.GetParam("page"))
 	})
-	g.AddRoute("/youtube/channel/:id/videos", func(request sis.Request) {
+	g.AddRoute("/youtube/channel/:id/videos", func(request *sis.Request) {
 		getChannelVideos(request, service, request.GetParam("id"), "")
 	})
 
-	g.AddRoute("/youtube/channel/:id/activity", func(request sis.Request) {
+	g.AddRoute("/youtube/channel/:id/activity", func(request *sis.Request) {
 		getChannelActivity(request, service, request.GetParam("id"))
 	})
 }
 
 func handlePlaylistPage(g sis.ServerHandle, service *youtube.Service) {
-	g.AddRoute("/youtube/playlist/:id/:page", func(request sis.Request) {
+	g.AddRoute("/youtube/playlist/:id/:page", func(request *sis.Request) {
 		getPlaylistVideos(request, service, request.GetParam("id"), request.GetParam("page"))
 	})
-	g.AddRoute("/youtube/playlist/:id", func(request sis.Request) {
+	g.AddRoute("/youtube/playlist/:id", func(request *sis.Request) {
 		getPlaylistVideos(request, service, request.GetParam("id"), "")
 	})
 }

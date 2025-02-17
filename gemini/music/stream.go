@@ -93,7 +93,7 @@ func SMB_DeleteFile(filename string) {
 }
 */
 
-func StreamFile(request sis.Request, music_file MusicFile) error {
+func StreamFile(request *sis.Request, music_file MusicFile) error {
 	throttlePool := iothrottler.NewIOThrottlerPool(iothrottler.Bandwidth(music_file.CbrKbps * 1000 / 8 * 2))
 	defer throttlePool.ReleasePool()
 
@@ -123,7 +123,7 @@ func StreamFile(request sis.Request, music_file MusicFile) error {
 	return result_err
 }
 
-func StreamMultipleFiles(request sis.Request, musicFiles []MusicFile) error {
+func StreamMultipleFiles(request *sis.Request, musicFiles []MusicFile) error {
 	throttlePool := iothrottler.NewIOThrottlerPool(320 * 1000 / 8)
 	defer throttlePool.ReleasePool()
 
@@ -173,7 +173,7 @@ func StreamMultipleFiles(request sis.Request, musicFiles []MusicFile) error {
 	return result_err
 }
 
-func StreamRandomFiles(request sis.Request, conn *sql.DB, user MusicUser) error {
+func StreamRandomFiles(request *sis.Request, conn *sql.DB, user MusicUser) error {
 	throttlePool := iothrottler.NewIOThrottlerPool(320 * 1000 / 8)
 	defer throttlePool.ReleasePool()
 

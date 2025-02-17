@@ -107,7 +107,7 @@ func HandleIslamicTexts(g sis.ServerHandle) {
 
 	versionNames["arabic"] = "Qur'an"
 
-	g.AddRoute("/scriptures/islam", func(request sis.Request) {
+	g.AddRoute("/scriptures/islam", func(request *sis.Request) {
 		request.SetNoLanguage()
 		request.SetClassification(sis.ScrollResponseUDC_Scripture)
 		var builder strings.Builder
@@ -171,7 +171,7 @@ Tags: #quran #qur'an #koran #القرآن
 `, builder.String()))
 	})
 
-	g.AddRoute("/scriptures/islam/quran/:version", func(request sis.Request) {
+	g.AddRoute("/scriptures/islam/quran/:version", func(request *sis.Request) {
 		request.SetClassification(sis.ScrollResponseUDC_Scripture)
 		versionId := request.GetParam("version")
 		var builder strings.Builder
@@ -189,7 +189,7 @@ Tags: #quran #qur'an #koran #القرآن
 `, versionNames[versionId], builder.String()))
 	})
 
-	g.AddRoute("/scriptures/islam/quran/:version/:surah", func(request sis.Request) {
+	g.AddRoute("/scriptures/islam/quran/:version/:surah", func(request *sis.Request) {
 		versionId := request.GetParam("version")
 		surahNumber := request.GetParam("surah")
 
