@@ -21,6 +21,7 @@ import (
 	"gitlab.com/clseibold/auragem_sis/gemini/textola"
 	"gitlab.com/clseibold/auragem_sis/gemini/texts"
 	"gitlab.com/clseibold/auragem_sis/gemini/youtube"
+	aurarepo "gitlab.com/sis-suite/aurarepo"
 	sis "gitlab.com/sis-suite/smallnetinformationservices"
 	/*"gitlab.com/clseibold/auragem_sis/twitch"*/)
 
@@ -36,16 +37,24 @@ func RunServer(cmd *cobra.Command, args []string) {
 	if err != nil {
 		panic(err)
 	}
-	//context.AdminServer().BindAddress = "0.0.0.0"
-	//context.AdminServer().Hostname = "auragem.ddns.net"
-	//context.AdminServer().AddCertificate("auragem.pem")
 	err = context.SaveConfiguration()
 	if err != nil {
 		panic(err)
 	}
-	//context.GetPortListener("0.0.0.0", "1995").AddCertificate("auragem.ddns.net", "auragem.pem")
 
 	chatContext := chat.NewChatContext()
+
+	// Setup AuraRepo SCGI Application Server
+	aurarepoContext := aurarepo.NewAuraRepoContext("AuraRepo", "/home/clseibold/repos")
+	aurarepoContext.AddRepo("smallnetinformationservices", "Smallnet Information Services", "./smallnetinformationservices/", "Server software suite for smallnet internet ecosystem, managed with a Gemini admin dashboard.")
+	aurarepoContext.AddRepo("aurarepo", "AuraRepo", "./aurarepo/", "A Git repository hosting forge SCGI application server for the Gemini Protocol, built using Smallnet Information Services and go-git.")
+
+	hosts := [...]sis.HostConfig{
+		{BindAddress: "localhost", BindPort: "5010", Hostname: "auragem.ddns.net", Port: "", Upload: false, SCGI: true},
+		{BindAddress: "localhost", BindPort: "5010", Hostname: "auragem.ddns.net", Port: "", Upload: true, SCGI: true},
+	}
+	scgi_gemini_server, _ := context.AddServer(sis.Server{Name: strings.ReplaceAll("AuraRepo", " ", "_"), Type: sis.ServerType_Gemini}, hosts[:]...)
+	aurarepoContext.Attach(scgi_gemini_server)
 
 	setupWebServer()
 	go startTorOnlyWebServer()
@@ -166,6 +175,7 @@ func setupAuraGem(context *sis.SISContext, chatContext *chat.ChatContext) {
 	handleWeather(geminiServer)
 
 	chatContext.Attach(geminiServer)
+	geminiServer.AddSCGIRoute("/~aurarepo/", "localhost:5010")
 
 	textgame.HandleTextGame(geminiServer)
 	textola.HandleTextola(geminiServer)
