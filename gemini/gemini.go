@@ -164,6 +164,7 @@ func setupAuraGem(context *sis.SISContext, chatContext *chat.ChatContext) {
 	geminiServer.AddFile("/.well-known/security.txt", "./security.txt")
 	geminiServer.AddProxyRoute("/nex/*", "$auragem_nex/*", '1')
 	geminiServer.AddUploadRoute("/guestbook.gmi", handleGuestbook)
+	geminiServer.AddCGIRoute("/debug", "/home/clseibold/ServerData/cgi_test")
 
 	// Proxies
 	youtube.HandleYoutube(geminiServer)
