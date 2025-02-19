@@ -44,18 +44,11 @@ func RunServer(cmd *cobra.Command, args []string) {
 
 	chatContext := chat.NewChatContext()
 
-	// Setup AuraRepo SCGI Application Server
+	// Setup AuraRepo Server
 	aurarepoContext := aurarepo.NewAuraRepoContext("AuraRepo", "/home/clseibold/repos")
 	aurarepoContext.AddRepo("smallnetinformationservices", "Smallnet Information Services", "./smallnetinformationservices/", "Server software suite for smallnet internet ecosystem, managed with a Gemini admin dashboard.")
 	aurarepoContext.AddRepo("aurarepo", "AuraRepo", "./aurarepo/", "A Git repository hosting forge SCGI application server for the Gemini Protocol, built using Smallnet Information Services and go-git.")
 	aurarepoContext.AddRepo("auramuse-lite", "AuraMuse Lite", "./auramuse-lite/", "An SCGI application server that provides radio over Gemini.")
-
-	hosts := [...]sis.HostConfig{
-		{BindAddress: "localhost", BindPort: "5010", Hostname: "", Port: "", Upload: false, SCGI: true},
-		{BindAddress: "localhost", BindPort: "5010", Hostname: "", Port: "", Upload: true, SCGI: true},
-	}
-	scgi_gemini_server, _ := context.AddServer(sis.Server{Name: strings.ReplaceAll("AuraRepo", " ", "_"), Type: sis.ServerType_Gemini}, hosts[:]...)
-	aurarepoContext.Attach(scgi_gemini_server)
 
 	setupWebServer()
 	go startTorOnlyWebServer()
@@ -177,8 +170,7 @@ func setupAuraGem(context *sis.SISContext, chatContext *chat.ChatContext, aurare
 	handleWeather(geminiServer)
 
 	chatContext.Attach(geminiServer)
-	geminiServer.AddSCGIRoute("/~aurarepo/*", "localhost:5010")
-	aurarepoContext.Attach(geminiServer.Group("/~aurarepo2/"))
+	aurarepoContext.Attach(geminiServer.Group("/~aurarepo/"))
 
 	textgame.HandleTextGame(geminiServer)
 	textola.HandleTextola(geminiServer)
