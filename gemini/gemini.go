@@ -49,6 +49,7 @@ func RunServer(cmd *cobra.Command, args []string) {
 	aurarepoContext.AddRepo("smallnetinformationservices", "Smallnet Information Services", "./smallnetinformationservices/", "Server software suite for smallnet internet ecosystem, managed with a Gemini admin dashboard.")
 	aurarepoContext.AddRepo("aurarepo", "AuraRepo", "./aurarepo/", "A Git repository hosting forge SCGI application server for the Gemini Protocol, built using Smallnet Information Services and go-git.")
 	aurarepoContext.AddRepo("auramuse-lite", "AuraMuse Lite", "./auramuse-lite/", "An SCGI application server that provides radio over Gemini.")
+	aurarepoContext.AddRepo("auragem", "AuraGem Servers", "./auragem/", "The code for AuraGem and related servers.")
 
 	setupWebServer()
 	go startTorOnlyWebServer()
