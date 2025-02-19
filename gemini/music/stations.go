@@ -33,7 +33,7 @@ func setupStation(s sis.ServerHandle, conn *sql.DB, station *RadioStation, total
 		creationDate = creationDate.UTC()
 		abstract := fmt.Sprintf("# AuraGem Public Radio - %s Station\n\n%s\nClients Connected: %d\n", station.Name, station.Description, radioBuffer.clientCount)
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Music, Author: "Christian Lee Seibold", PublishDate: creationDate, UpdateDate: creationDate, Language: "en", Abstract: abstract})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -168,7 +168,7 @@ Current song playing: %s by %s
 		creationDate = creationDate.UTC()
 		abstract := fmt.Sprintf("# AuraGem Public Radio - %s Station Schedule\n", station.Name)
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Music, Author: "Christian Lee Seibold", PublishDate: creationDate, UpdateDate: time.Now(), Language: "en", Abstract: abstract})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -221,7 +221,7 @@ Current song playing: %s by %s
 		creationDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-14T18:07:00", time.Local)
 		creationDate = creationDate.UTC()
 		abstract := ""
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			currentTime := time.Now()
 			radioGenre := GetRadioGenre(currentTime, station)
 			attribution := ""
@@ -233,7 +233,7 @@ Current song playing: %s by %s
 		}
 
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Music, Author: "Christian Lee Seibold", PublishDate: creationDate, UpdateDate: time.Now(), Language: "en", Abstract: abstract})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("audio/mpeg")
 			return
 		}

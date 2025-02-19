@@ -230,7 +230,7 @@ func HandleSearchEngine(s sis.ServerHandle) {
 	updateDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-13T00:00:00", time.Local)
 	s.AddRoute("/search/", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -294,7 +294,7 @@ Note that AuraGem Search does not ensure or rank based on the popularity or accu
 
 	s.AddRoute("/search/crawl", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Docs, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# Crawl a link\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -360,7 +360,7 @@ Note that AuraGem Search does not ensure or rank based on the popularity or accu
 
 	s.AddRoute("/search/configure_default", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Docs, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# Configure Default Search Engine in Lagrange\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -375,7 +375,7 @@ Note that AuraGem Search does not ensure or rank based on the popularity or accu
 
 	s.AddRoute("/search/features", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Docs, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search Features\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -531,7 +531,7 @@ When I type "Station", I want an exact match for Station itself. However, when I
 	s.AddRoute("/search/stats", func(request *sis.Request) {
 		currentTime := time.Now()
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: currentTime, Abstract: "# AuraGem Search Stats\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -617,7 +617,7 @@ Number of Domains that responded with an empty META field: %d
 			return
 		} else {
 			request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Add Capsule to Index\n"})
-			if request.ScrollMetadataRequested {
+			if request.ScrollMetadataRequested() {
 				request.SendAbstract("")
 				return
 			}
@@ -657,7 +657,7 @@ Number of Domains that responded with an empty META field: %d
 			return
 		} else {
 			request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Backlinks\n"})
-			if request.ScrollMetadataRequested {
+			if request.ScrollMetadataRequested() {
 				request.SendAbstract("")
 				return
 			}
@@ -694,7 +694,7 @@ Number of Domains that responded with an empty META field: %d
 			return
 		} else {
 			request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - '" + query + "'\n"})
-			if request.ScrollMetadataRequested {
+			if request.ScrollMetadataRequested() {
 				request.SendAbstract("")
 				return
 			}
@@ -722,7 +722,7 @@ Number of Domains that responded with an empty META field: %d
 			return
 		} else {
 			request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - '" + query + "' Page " + pageStr + "\n"})
-			if request.ScrollMetadataRequested {
+			if request.ScrollMetadataRequested() {
 				request.SendAbstract("")
 				return
 			}
@@ -743,7 +743,7 @@ Number of Domains that responded with an empty META field: %d
 			return
 		} else {
 			request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - '" + query + "'\n"})
-			if request.ScrollMetadataRequested {
+			if request.ScrollMetadataRequested() {
 				request.SendAbstract("")
 				return
 			}
@@ -771,7 +771,7 @@ Number of Domains that responded with an empty META field: %d
 			return
 		} else {
 			request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - '" + query + "' Page " + pageStr + "\n"})
-			if request.ScrollMetadataRequested {
+			if request.ScrollMetadataRequested() {
 				request.SendAbstract("")
 				return
 			}
@@ -792,7 +792,7 @@ Number of Domains that responded with an empty META field: %d
 			return
 		} else {
 			request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - '" + query + "'\n"})
-			if request.ScrollMetadataRequested {
+			if request.ScrollMetadataRequested() {
 				request.SendAbstract("")
 				return
 			}
@@ -820,7 +820,7 @@ Number of Domains that responded with an empty META field: %d
 			return
 		} else {
 			request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - '" + query + "' Page " + pageStr + "\n"})
-			if request.ScrollMetadataRequested {
+			if request.ScrollMetadataRequested() {
 				request.SendAbstract("")
 				return
 			}
@@ -841,7 +841,7 @@ Number of Domains that responded with an empty META field: %d
 			return
 		} else {
 			request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - '" + query + "'\n"})
-			if request.ScrollMetadataRequested {
+			if request.ScrollMetadataRequested() {
 				request.SendAbstract("")
 				return
 			}
@@ -869,7 +869,7 @@ Number of Domains that responded with an empty META field: %d
 			return
 		} else {
 			request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - '" + query + "' Page " + pageStr + "\n"})
-			if request.ScrollMetadataRequested {
+			if request.ScrollMetadataRequested() {
 				request.SendAbstract("")
 				return
 			}
@@ -918,7 +918,7 @@ Number of Domains that responded with an empty META field: %d
 
 	s.AddRoute("/search/recent", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - 50 Most Recently Indexed\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -939,7 +939,7 @@ Number of Domains that responded with an empty META field: %d
 
 	s.AddRoute("/search/capsules", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - List of Capsules\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -974,7 +974,7 @@ Number of Domains that responded with an empty META field: %d
 
 	s.AddRoute("/search/feeds", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Indexed Feeds\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -996,7 +996,7 @@ Number of Domains that responded with an empty META field: %d
 	/*
 			s.AddRoute("/search/yearposts", func(request *sis.Request) {
 				request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Posts From The Past Year\n"})
-				if request.ScrollMetadataRequested {
+				if request.ScrollMetadataRequested() {
 					request.SendAbstract("")
 					return
 				}
@@ -1038,7 +1038,7 @@ Number of Domains that responded with an empty META field: %d
 			s.AddRoute("/search/yearposts/:page", func(request *sis.Request) {
 				pageStr := request.GetParam("page")
 				request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Posts From The Past Year, Page " + pageStr + "\n"})
-				if request.ScrollMetadataRequested {
+				if request.ScrollMetadataRequested() {
 					request.SendAbstract("")
 					return
 				}
@@ -1085,7 +1085,7 @@ Number of Domains that responded with an empty META field: %d
 
 	s.AddRoute("/search/audio", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Indexed Audio Files\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -1126,7 +1126,7 @@ Number of Domains that responded with an empty META field: %d
 			return
 		}
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Indexed Audio Files, Page " + pageStr + "\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -1191,7 +1191,7 @@ Number of Domains that responded with an empty META field: %d
 
 	s.AddRoute("/search/images", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Indexed Image Files\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -1233,7 +1233,7 @@ Number of Domains that responded with an empty META field: %d
 			return
 		}
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Indexed Image Files, Page " + pageStr + "\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -1267,7 +1267,7 @@ Number of Domains that responded with an empty META field: %d
 
 	s.AddRoute("/search/twtxt", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Indexed Twtxt Files\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -1299,7 +1299,7 @@ Number of Domains that responded with an empty META field: %d
 
 	s.AddRoute("/search/security", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Indexed Security.txt Files\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -1335,7 +1335,7 @@ Number of Domains that responded with an empty META field: %d
 			return
 		} else if query == "" {
 			request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Mimetypes\n"})
-			if request.ScrollMetadataRequested {
+			if request.ScrollMetadataRequested() {
 				request.SendAbstract("")
 				return
 			}
@@ -1355,7 +1355,7 @@ Number of Domains that responded with an empty META field: %d
 `, mimetypes.String()))
 		} else {
 			request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# AuraGem Search - Indexed of Mimetype '" + query + "'\n"})
-			if request.ScrollMetadataRequested {
+			if request.ScrollMetadataRequested() {
 				request.SendAbstract("")
 				return
 			}

@@ -185,7 +185,7 @@ func HandleTextola(s sis.ServerHandle) {
 	var connectedClients atomic.Int64
 	s.AddRoute("/textola/", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{PublishDate: publishDate, UpdateDate: updateDate, Language: "en", Abstract: "# Textola\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}

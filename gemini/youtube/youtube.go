@@ -59,7 +59,7 @@ func indexRoute(request *sis.Request) {
 	creationDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-17T11:57:00", time.Local)
 	abstract := "#AuraGem YouTube Proxy\n\nProxies YouTube to Scroll/Gemini. Lets you search and download videos and playlists.\n"
 	request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: "Christian Lee Seibold", PublishDate: creationDate.UTC(), UpdateDate: creationDate.UTC(), Language: "en", Abstract: abstract})
-	if request.ScrollMetadataRequested {
+	if request.ScrollMetadataRequested() {
 		request.Scroll(abstract)
 		return
 	}
@@ -89,7 +89,7 @@ func getSearchRouteFunc(service *youtube.Service) sis.RequestHandler {
 
 			abstract := fmt.Sprintf("# AuraGem YouTube Proxy Search - Query %s\n", query)
 			request.SetScrollMetadataResponse(sis.ScrollMetadata{Language: "en", Abstract: abstract})
-			if request.ScrollMetadataRequested {
+			if request.ScrollMetadataRequested() {
 				request.Scroll(abstract)
 				return
 			}
@@ -270,7 +270,7 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 		publishDateParsed, _ := time.Parse(time.RFC3339, publishDate)
 		abstract := fmt.Sprintf("# Video - %s\n%s\n", html.UnescapeString(video.Snippet.Title), html.UnescapeString(video.Snippet.Description))
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: html.UnescapeString(video.Snippet.ChannelTitle), PublishDate: publishDateParsed.UTC(), UpdateDate: publishDateParsed.UTC(), Language: lang, Abstract: abstract})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.Scroll(abstract)
 			return
 		}
@@ -573,7 +573,7 @@ func getVideoDownloadRouteFunc() sis.RequestHandler {
 		abstract := fmt.Sprintf("# %s\n%s\n", video.Title, video.Description)
 		// TODO: The language should be a BCP47 string
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: video.Author, PublishDate: video.PublishDate.UTC(), Language: format.LanguageDisplayName(), Abstract: abstract})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.Scroll(abstract)
 			return
 		}
@@ -627,7 +627,7 @@ func handleChannelPage(g sis.ServerHandle, service *youtube.Service) {
 		// Handle Scroll Protocol Metadata
 		abstract := fmt.Sprintf("# Channel: %s\n%s\n", html.UnescapeString(channel.Snippet.Title), html.UnescapeString(channel.Snippet.Description))
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: html.UnescapeString(channel.Snippet.Title), Language: channel.Snippet.DefaultLanguage, Abstract: abstract})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.Scroll(abstract)
 			return
 		}

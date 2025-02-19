@@ -207,7 +207,7 @@ func HandleAsk(s sis.ServerHandle) {
 	s.AddUploadRoute("/~ask/:topicid/create", func(request *sis.Request) {
 		if !request.HasUserCert() {
 			getCreateQuestion(request, conn, (AskUser{}), false)
-		} else if request.Upload {
+		} else if request.Upload() {
 			user, isRegistered := GetUser(conn, request.UserCertHash(), request.UserCertOldGeminiHash())
 			doCreateQuestion(request, conn, user, isRegistered)
 		}
@@ -329,7 +329,7 @@ func HandleAsk(s sis.ServerHandle) {
 	s.AddUploadRoute("/~ask/:topicid/:questionid/a/create", func(request *sis.Request) {
 		if !request.HasUserCert() {
 			getCreateAnswer(request, conn, (AskUser{}), false)
-		} else if request.Upload {
+		} else if request.Upload() {
 			user, isRegistered := GetUser(conn, request.UserCertHash(), request.UserCertOldGeminiHash())
 			doCreateAnswer(request, conn, user, isRegistered)
 		}

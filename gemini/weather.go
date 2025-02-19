@@ -21,7 +21,7 @@ func handleWeather(g sis.ServerHandle) {
 	})
 	g.AddRoute("/weather/", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Reference, PublishDate: publishDate, UpdateDate: time.Now(), Language: "en", Abstract: "# Weather\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			_ = request.SendAbstract("")
 			return
 		}

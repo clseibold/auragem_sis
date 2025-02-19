@@ -113,7 +113,7 @@ func (context *ChatContext) Attach(s sis.ServerHandle) {
 			return
 		}
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{PublishDate: publishDate, UpdateDate: updateDate, Language: "en", Abstract: "# AuraGem Live Chat\nThis chat is heavily inspired by Mozz's chat, but the UI has been tailored for most gemini browsers. Message history is cleared every 24 hours. This chat makes use of keepalive packets so that clients (that support them) will not timeout.\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -185,7 +185,7 @@ func (context *ChatContext) Attach(s sis.ServerHandle) {
 			//return c.NoContent(gig.StatusRedirectTemporary, "/chat/")
 			request.Redirect("/chat/")
 		}
-		if request.Upload {
+		if request.Upload() {
 			//mimetype, hasMimetype := c.Get("mime").(string)
 			mimetype := request.DataMime
 			if mimetype != "text/gemini" && mimetype != "text/plain" && mimetype != "" {
@@ -228,7 +228,7 @@ func (context *ChatContext) Attach(s sis.ServerHandle) {
 		message = strings.ReplaceAll(message, "\n#", "")
 		message = strings.ReplaceAll(message, "\n-[", "")
 
-		if !request.ScrollMetadataRequested {
+		if !request.ScrollMetadataRequested() {
 			context.sendChan <- (ChatText{username, message, time.Now(), ""})
 		}
 		//return c.NoContent(gig.StatusRedirectTemporary, "gemini://auragem.ddns.net/chat/"+url.PathEscape(username))

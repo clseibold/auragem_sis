@@ -25,7 +25,7 @@ func HandleStarWars(s sis.ServerHandle) {
 	s.AddRoute("/starwars2/", func(request *sis.Request) {
 		updateDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-19T08:23:00", time.Local)
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Entertainment, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: updateDate, Language: "en", Abstract: "# Star Wars Database\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -68,7 +68,7 @@ Welcome to the Star Wars Database.
 	s.AddRoute("/starwars2/timeline/shows", func(request *sis.Request) {
 		shows, lastUpdate := GetShows(conn)
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Entertainment, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: lastUpdate, Language: "en", Abstract: "# Star Wars Database: TV Shows (Timeline)\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -104,7 +104,7 @@ Welcome to the Star Wars Database.
 		}
 
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Literature, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: lastUpdate, Language: "en", Abstract: "# Star Wars Database: Comics (Timeline)\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -156,7 +156,7 @@ Welcome to the Star Wars Database.
 		}
 
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Literature, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: lastUpdate, Language: "en", Abstract: "# Star Wars Database: Comics (Publication)\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -195,7 +195,7 @@ Welcome to the Star Wars Database.
 	s.AddRoute("/starwars2/timeline/comics/tpbs", func(request *sis.Request) {
 		tpbs, lastUpdate := GetTPBs(conn, true)
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Literature, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: lastUpdate, Language: "en", Abstract: "# Star Wars Database: Comic TPBs (Timeline)\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -220,7 +220,7 @@ Welcome to the Star Wars Database.
 	s.AddRoute("/starwars2/publication/comics/tpbs", func(request *sis.Request) {
 		tpbs, lastUpdate := GetTPBs(conn, false)
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Literature, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: lastUpdate, Language: "en", Abstract: "# Star Wars Database: Comic TPBs (Publication)\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -245,7 +245,7 @@ Welcome to the Star Wars Database.
 	s.AddRoute("/starwars2/timeline/comics/issues", func(request *sis.Request) {
 		issues, lastUpdate := GetComicIssues(conn, true)
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Literature, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: lastUpdate, Language: "en", Abstract: "# Star Wars Database: Comic Issues (Timeline)\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -270,7 +270,7 @@ Welcome to the Star Wars Database.
 	s.AddRoute("/starwars2/publication/comics/issues", func(request *sis.Request) {
 		issues, lastUpdate := GetComicIssues(conn, false)
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Literature, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: lastUpdate, Language: "en", Abstract: "# Star Wars Database: Comic Issues (Publication)\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -305,7 +305,7 @@ Welcome to the Star Wars Database.
 			lastUpdate = lastUpdate2
 		}
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Literature, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: lastUpdate, Language: "en", Abstract: "# Star Wars Database: Book Series (Timeline)\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -327,7 +327,7 @@ Welcome to the Star Wars Database.
 	s.AddRoute("/starwars2/timeline/books", func(request *sis.Request) {
 		books, lastUpdate := GetBooks(conn)
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Literature, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: lastUpdate, Language: "en", Abstract: "# Star Wars Database: Books (Timeline)\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -352,7 +352,7 @@ Welcome to the Star Wars Database.
 func handleMovies(request *sis.Request, conn *sql.DB, timeline bool) {
 	movies, lastUpdate := GetMovies(conn, timeline)
 	request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Entertainment, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: lastUpdate, Language: "en", Abstract: "# Star Wars Database: Movies\n"})
-	if request.ScrollMetadataRequested {
+	if request.ScrollMetadataRequested() {
 		request.SendAbstract("")
 		return
 	}
@@ -375,7 +375,7 @@ func handleMovies(request *sis.Request, conn *sql.DB, timeline bool) {
 func handleMoviesCSV(request *sis.Request, conn *sql.DB, timeline bool) {
 	movies, lastUpdate := GetMovies(conn, timeline)
 	request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Entertainment, Author: "Christian Lee Seibold", PublishDate: publishDate, UpdateDate: lastUpdate, Language: "en", Abstract: "# Star Wars Database: Movies CSV\n"})
-	if request.ScrollMetadataRequested {
+	if request.ScrollMetadataRequested() {
 		request.SendAbstract("text/csv")
 		return
 	}

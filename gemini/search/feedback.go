@@ -26,7 +26,7 @@ func searchFeedbackPage(request *sis.Request) {
 	---
 	`*/
 
-	if request.Upload {
+	if request.Upload() {
 		if request.GetParam("token") != token {
 			request.TemporaryFailure("A token is required.")
 			return

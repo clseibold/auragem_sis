@@ -182,7 +182,7 @@ func handleRadioService(s sis.ServerHandle, conn *sql.DB) {
 This is AuraGem Music's public radio that plays public domain and royalty free music. All music is collected from sources like the Free Music Archive, archive.org, and Chosic, and stored on my server. This radio does not proxy from the web, unlike other radios over on Gopherspace.
 `
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Music, Author: "Christian Lee Seibold", PublishDate: creationDate.UTC(), UpdateDate: updateDate.UTC(), Language: "en", Abstract: abstract})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}

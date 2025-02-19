@@ -70,7 +70,7 @@ func HandleMusic(s sis.ServerHandle) {
 
 	s.AddRoute("/music/", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Music, PublishDate: publishDate, UpdateDate: updateDate, Language: "en", Abstract: "# AuraGem Music\nA music service where you can upload a limited number of mp3s over Titan and listen to your private music library over Scroll/Gemini/Spartan. Stream individual songs or full albums, or use the \"Shuffled Stream\" feature that acts like a private radio of random songs from your library.\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -95,7 +95,7 @@ func HandleMusic(s sis.ServerHandle) {
 				return
 			} else {
 				request.SetScrollMetadataResponse(sis.ScrollMetadata{PublishDate: publishDate, UpdateDate: updateDate, Language: "en", Abstract: "# AuraGem Music - " + user.Username + "\n"})
-				if request.ScrollMetadataRequested {
+				if request.ScrollMetadataRequested() {
 					request.SendAbstract("")
 					return
 				}
@@ -107,7 +107,7 @@ func HandleMusic(s sis.ServerHandle) {
 
 	s.AddRoute("/music/quota", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Docs, PublishDate: publishDate, UpdateDate: updateDate, Language: "en", Abstract: "# AuraGem Music - How the Quota System Works\nDescribes the quota system.\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -128,7 +128,7 @@ The idea behind this system is to take into account duplicate uploads as being c
 
 	s.AddRoute("/music/about", func(request *sis.Request) {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Docs, PublishDate: publishDate, UpdateDate: updateDate, Language: "en", Abstract: "# About AuraGem Music\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -164,7 +164,7 @@ In order to save space, AuraGem Music deduplicates songs by taking the hash of t
 				}
 				request.SetScrollMetadataResponse(sis.ScrollMetadata{Abstract: "# Random Music File\n", Classification: sis.ScrollResponseUDC_Music})
 				request.SetNoLanguage()
-				if request.ScrollMetadataRequested {
+				if request.ScrollMetadataRequested() {
 					request.SendAbstract("audio/mpeg")
 					return
 				}
@@ -194,7 +194,7 @@ In order to save space, AuraGem Music deduplicates songs by taking the hash of t
 		}
 
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Docs, PublishDate: publishDate, UpdateDate: updateDate, Abstract: "# Upload File with " + uploadMethod + "\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -213,7 +213,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 		if !request.HasUserCert() {
 			request.RequestClientCert("Please enable a certificate.")
 			return
-		} else if request.Upload {
+		} else if request.Upload() {
 			user, isRegistered := GetUser(conn, request.UserCertHash())
 			if !isRegistered {
 				//return c.Gemini(registerNotification)
@@ -376,7 +376,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 				}
 				request.SetScrollMetadataResponse(sis.ScrollMetadata{Author: file.Artist, Abstract: abstract, Classification: sis.ScrollResponseUDC_Music})
 				request.SetNoLanguage()
-				if request.ScrollMetadataRequested {
+				if request.ScrollMetadataRequested() {
 					request.SendAbstract("audio/mpeg")
 					return
 				}
@@ -401,7 +401,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 				albums := GetAlbumsInUserLibrary(conn, user.Id)
 
 				request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Music, PublishDate: user.Date_joined, Abstract: "# AuraGem Music - " + user.Username + "\n## Albums\n"})
-				if request.ScrollMetadataRequested {
+				if request.ScrollMetadataRequested() {
 					request.SendAbstract("")
 					return
 				}
@@ -436,7 +436,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 				artists := GetArtistsInUserLibrary(conn, user.Id)
 
 				request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Music, PublishDate: user.Date_joined, Abstract: "# AuraGem Music - " + user.Username + "\n## Artists\n"})
-				if request.ScrollMetadataRequested {
+				if request.ScrollMetadataRequested() {
 					request.SendAbstract("")
 					return
 				}
@@ -525,7 +525,7 @@ Upload an mp3 music file to this page with %s. It will then be automatically add
 				return
 			} else {
 				request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Music, Abstract: "# AuraGem Music Shuffled Stream - " + user.Username + "\n"})
-				if request.ScrollMetadataRequested {
+				if request.ScrollMetadataRequested() {
 					request.SendAbstract("audio/mpeg")
 					return
 				}
@@ -680,7 +680,7 @@ func registerUser(request *sis.Request, conn *sql.DB, username string, certHash 
 	}
 	if numRows < 1 {
 		request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Unclassed, Abstract: "# AuraGem Music - Register User " + username + "\n"})
-		if request.ScrollMetadataRequested {
+		if request.ScrollMetadataRequested() {
 			request.SendAbstract("")
 			return
 		}
@@ -748,7 +748,7 @@ Quota: %.2f / %d songs (%.1f%%)
 
 func artistAlbums(request *sis.Request, conn *sql.DB, user MusicUser, artist string) {
 	request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Music, Abstract: "# AuraGem Music - " + user.Username + "\n## Artist Albums: " + artist + "\n"})
-	if request.ScrollMetadataRequested {
+	if request.ScrollMetadataRequested() {
 		request.SendAbstract("")
 		return
 	}
@@ -773,7 +773,7 @@ func artistAlbums(request *sis.Request, conn *sql.DB, user MusicUser, artist str
 
 func albumSongs(request *sis.Request, conn *sql.DB, user MusicUser, artist string, album string) {
 	request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Music, Abstract: "# AuraGem Music - " + user.Username + "\n## Album: " + album + " by " + artist + "\n"})
-	if request.ScrollMetadataRequested {
+	if request.ScrollMetadataRequested() {
 		request.SendAbstract("")
 		return
 	}
@@ -806,7 +806,7 @@ func albumSongs(request *sis.Request, conn *sql.DB, user MusicUser, artist strin
 
 func adminPage(request *sis.Request, conn *sql.DB, user MusicUser) {
 	request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Unclassed, Abstract: "# AuraGem Music - Admin\n"})
-	if request.ScrollMetadataRequested {
+	if request.ScrollMetadataRequested() {
 		request.SendAbstract("")
 		return
 	}
@@ -843,7 +843,7 @@ Album Count: %d
 
 func adminGenrePage(request *sis.Request, conn *sql.DB, user MusicUser, genre_string string) {
 	request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Unclassed, Abstract: "# AuraGem Music - Admin: Genre" + genre_string + "\n"})
-	if request.ScrollMetadataRequested {
+	if request.ScrollMetadataRequested() {
 		request.SendAbstract("")
 		return
 	}
@@ -865,7 +865,7 @@ func adminGenrePage(request *sis.Request, conn *sql.DB, user MusicUser, genre_st
 // Streams all songs in album in one streams
 func streamAlbumSongs(request *sis.Request, conn *sql.DB, user MusicUser, artist string, album string) {
 	request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Music, Abstract: "# Stream Album " + album + " by " + artist + "\n"})
-	if request.ScrollMetadataRequested {
+	if request.ScrollMetadataRequested() {
 		request.SendAbstract("")
 		return
 	}
@@ -883,7 +883,7 @@ func streamAlbumSongs(request *sis.Request, conn *sql.DB, user MusicUser, artist
 
 func streamArtistSongs(request *sis.Request, conn *sql.DB, user MusicUser, artist string) {
 	request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Music, Abstract: "# Stream Songs by " + artist + "\n"})
-	if request.ScrollMetadataRequested {
+	if request.ScrollMetadataRequested() {
 		request.SendAbstract("")
 		return
 	}
@@ -902,7 +902,7 @@ func streamArtistSongs(request *sis.Request, conn *sql.DB, user MusicUser, artis
 
 func manageLibrary(request *sis.Request, user MusicUser) {
 	request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Unclassed, PublishDate: user.Date_joined, Abstract: "# Manage Library - " + user.Username + "\n"})
-	if request.ScrollMetadataRequested {
+	if request.ScrollMetadataRequested() {
 		request.SendAbstract("")
 		return
 	}
@@ -921,7 +921,7 @@ Choose what you want to do. These links will direct you to pages that will allow
 
 func manageLibrary_deleteSelection(request *sis.Request, conn *sql.DB, user MusicUser) {
 	request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Unclassed, Abstract: "# Manage Library: Delete Selection - " + user.Username + "\n"})
-	if request.ScrollMetadataRequested {
+	if request.ScrollMetadataRequested() {
 		request.SendAbstract("")
 		return
 	}
@@ -962,7 +962,7 @@ func manageLibrary_deleteFile(request *sis.Request, conn *sql.DB, user MusicUser
 	}
 
 	request.SetScrollMetadataResponse(sis.ScrollMetadata{Classification: sis.ScrollResponseUDC_Unclassed, Abstract: "# Manage Library: Delete File - " + user.Username + "\nDelete " + file.Title + " by " + file.Artist + " (" + file.Album + ")\n"})
-	if request.ScrollMetadataRequested {
+	if request.ScrollMetadataRequested() {
 		request.SendAbstract("")
 		return
 	}
