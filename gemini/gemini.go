@@ -51,7 +51,7 @@ func RunServer(cmd *cobra.Command, args []string) {
 	aurarepoContext.AddRepo("auramuse-lite", "AuraMuse Lite", "./auramuse-lite/", "An SCGI application server that provides radio over Gemini.")
 	aurarepoContext.AddRepo("auragem", "AuraGem Servers", "./auragem/", "The code for AuraGem and related servers.")
 
-	setupWebServer()
+	setupWebServer(aurarepoContext)
 	go startTorOnlyWebServer()
 	setupTorOnly(context)
 
@@ -96,11 +96,15 @@ func startTorWebServer(t *tor.Tor) {
 }
 */
 
-func setupWebServer() {
+func setupWebServer(aurarepoContext *aurarepo.AuraRepoContext) {
 	httpMuxer := http.NewServeMux()
 	httpMuxer.Handle("/", http.FileServer(http.Dir("/home/clseibold/ServerData/auragem_sis/SIS/auragem_http")))
 	httpMuxer.Handle("scrollprotocol.us.to/", http.FileServer(http.Dir("/home/clseibold/ServerData/auragem_sis/SIS/scrollprotocol_http")))
 	httpMuxer.Handle("auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion/", http.FileServer(http.Dir("/home/clseibold/ServerData/auragem_sis/SIS/auragem_tor_http")))
+
+	aurarepoMuxer := http.NewServeMux()
+	aurarepoContext.AttachHTTPSmart(aurarepoMuxer)
+	httpMuxer.Handle("/~aurarepo/", aurarepoMuxer)
 
 	go func() {
 		err := http.ListenAndServe("0.0.0.0:80", httpMuxer)
