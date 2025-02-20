@@ -44,11 +44,16 @@ func RegularCrawler(globalData *GlobalData, wg *sync.WaitGroup) {
 			wg.Done()
 		}
 	}()
-	ticker, _ := cronticker.NewTicker("@monthly")
+	ticker, _ := cronticker.NewTicker("@monthly") // Run on first day of every month
 	wg2 := &sync.WaitGroup{}
 	// globalData := NewGlobalData(false, true) // Follows internal links only
 
 	for {
+		_, ok := <-ticker.C
+		if !ok {
+			break
+		}
+
 		globalData.Reset()
 		fmt.Printf("[0-5] Starting Search Engine Crawler.\n")
 		seeds := GetSeeds(globalData)
@@ -74,10 +79,6 @@ func RegularCrawler(globalData *GlobalData, wg *sync.WaitGroup) {
 		globalData.dbConn.Exec("EXECUTE PROCEDURE FTS$MANAGEMENT.FTS$REBUILD_INDEX('FTS_PAGE_ID_EN');")
 
 		time.Sleep(time.Minute * 30)
-		_, ok := <-ticker.C
-		if !ok {
-			break
-		}
 	}
 }
 
@@ -91,7 +92,7 @@ func FeedCrawler(globalData *GlobalData, hourDuration int, wg *sync.WaitGroup, f
 	}()
 
 	// Sleep to offset the start of the feed crawler until 2 days into the regular crawler
-	time.Sleep(time.Duration(float32(time.Hour*13) * 3.64))
+	//time.Sleep(time.Duration(float32(time.Hour*13) * 3.64))
 
 	ticker := time.NewTicker(time.Hour * time.Duration(hourDuration)) // Every 13 hours
 	wg2 := &sync.WaitGroup{}
