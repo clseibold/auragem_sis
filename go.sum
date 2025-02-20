@@ -231,6 +231,8 @@ gitlab.com/sis-suite/aurarepo v0.0.0-20250220182917-8e32c3235a0f h1:+SNJWBbPwZ/e
 gitlab.com/sis-suite/aurarepo v0.0.0-20250220182917-8e32c3235a0f/go.mod h1:uXrHTKpfIp80TKtX3m+e9D40UEVyGEjmd3NkKzeHbbg=
 gitlab.com/sis-suite/aurarepo v0.0.0-20250220183607-85d08a4a9217 h1:vhyt5XJ41oHsXwOG6cRmkNOcnswMW7wJWgsS8iMTHjU=
 gitlab.com/sis-suite/aurarepo v0.0.0-20250220183607-85d08a4a9217/go.mod h1:uXrHTKpfIp80TKtX3m+e9D40UEVyGEjmd3NkKzeHbbg=
+gitlab.com/sis-suite/aurarepo v0.0.0-20250220183912-f3fbc09bc70e h1:t/lfaRAM3N6sbp+M/WshyUoiv8YCM2+HlXEr7/2dhFA=
+gitlab.com/sis-suite/aurarepo v0.0.0-20250220183912-f3fbc09bc70e/go.mod h1:uXrHTKpfIp80TKtX3m+e9D40UEVyGEjmd3NkKzeHbbg=
 gitlab.com/sis-suite/smallnetinformationservices v0.0.0-20250216061837-02a12e36ed10 h1:OIzUki64GiAGuzJ3Zjao2bQNjm5TPSHJJ9SnTHznm6s=
 gitlab.com/sis-suite/smallnetinformationservices v0.0.0-20250216061837-02a12e36ed10/go.mod h1:dJhYj9XLR/yDiSuiBu7vHSoUtAvnMDfM8SNQ69NgfDc=
 gitlab.com/sis-suite/smallnetinformationservices v0.0.0-20250216155918-439cd49de552 h1:yIlHRpWeNpJQScJfAHCn/1IT1lE4MSO1E3ih/7649ww=
