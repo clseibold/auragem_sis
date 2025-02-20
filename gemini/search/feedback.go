@@ -8,7 +8,7 @@ import (
 	sis "gitlab.com/sis-suite/smallnetinformationservices"
 )
 
-func handleSearchFeedback(s sis.ServerHandle) {
+func handleSearchFeedback(s sis.VirtualServerHandle) {
 	s.AddRoute("/search/feedback.gmi", searchFeedbackPage)
 	s.AddUploadRoute("/search/feedback.gmi", searchFeedbackPage)
 }

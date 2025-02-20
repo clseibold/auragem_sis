@@ -47,7 +47,7 @@ var index_gmi string
 //go:embed music_index_scroll.scroll
 var index_scroll string
 
-func HandleMusic(s sis.ServerHandle) {
+func HandleMusic(s sis.VirtualServerHandle) {
 	publishDate, _ := time.ParseInLocation(time.RFC3339, "2022-07-15T00:00:00", time.Local)
 	updateDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-19T13:51:00", time.Local)
 	// ffmpeg (goav) Stuff: Register all formats and codecs

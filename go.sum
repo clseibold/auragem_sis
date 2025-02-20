@@ -219,6 +219,8 @@ gitlab.com/sis-suite/aurarepo v0.0.0-20250220140430-e23ad56017b5 h1:NkArEY14VvXr
 gitlab.com/sis-suite/aurarepo v0.0.0-20250220140430-e23ad56017b5/go.mod h1:WYcVrN4XI9HBq6quJYdueHUXGksKGssKHHmt2Tk48Q4=
 gitlab.com/sis-suite/aurarepo v0.0.0-20250220142336-9ee9a96c55bb h1:+b+KKG+LrD0oG+ZZaQCWtXte7wDBZe853FxBqyt7OdY=
 gitlab.com/sis-suite/aurarepo v0.0.0-20250220142336-9ee9a96c55bb/go.mod h1:WYcVrN4XI9HBq6quJYdueHUXGksKGssKHHmt2Tk48Q4=
+gitlab.com/sis-suite/aurarepo v0.0.0-20250220162205-2c30f1587240 h1:7tXntta5M0ojVId/D9XnIID6vN62pHoMX0uHCiDk5OA=
+gitlab.com/sis-suite/aurarepo v0.0.0-20250220162205-2c30f1587240/go.mod h1:uXrHTKpfIp80TKtX3m+e9D40UEVyGEjmd3NkKzeHbbg=
 gitlab.com/sis-suite/smallnetinformationservices v0.0.0-20250216061837-02a12e36ed10 h1:OIzUki64GiAGuzJ3Zjao2bQNjm5TPSHJJ9SnTHznm6s=
 gitlab.com/sis-suite/smallnetinformationservices v0.0.0-20250216061837-02a12e36ed10/go.mod h1:dJhYj9XLR/yDiSuiBu7vHSoUtAvnMDfM8SNQ69NgfDc=
 gitlab.com/sis-suite/smallnetinformationservices v0.0.0-20250216155918-439cd49de552 h1:yIlHRpWeNpJQScJfAHCn/1IT1lE4MSO1E3ih/7649ww=
@@ -231,6 +233,8 @@ gitlab.com/sis-suite/smallnetinformationservices v0.0.0-20250219091229-e7f07f494
 gitlab.com/sis-suite/smallnetinformationservices v0.0.0-20250219091229-e7f07f49406f/go.mod h1:dJhYj9XLR/yDiSuiBu7vHSoUtAvnMDfM8SNQ69NgfDc=
 gitlab.com/sis-suite/smallnetinformationservices v0.0.0-20250219091918-33fd95668e1c h1:O4MDvFY1hv8jVp0RvcY2qjygRBCD3UVW7T0IBr5Ncmk=
 gitlab.com/sis-suite/smallnetinformationservices v0.0.0-20250219091918-33fd95668e1c/go.mod h1:dJhYj9XLR/yDiSuiBu7vHSoUtAvnMDfM8SNQ69NgfDc=
+gitlab.com/sis-suite/smallnetinformationservices v0.0.0-20250220160549-5f3da2152bc2 h1:mJ2CMHlWCjzdO9AfOA60JQePze3gmdAObqdKNZzsbPo=
+gitlab.com/sis-suite/smallnetinformationservices v0.0.0-20250220160549-5f3da2152bc2/go.mod h1:dJhYj9XLR/yDiSuiBu7vHSoUtAvnMDfM8SNQ69NgfDc=
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.54.0 h1:TT4fX+nBOA/+LUkobKGW1ydGcn+G3vRw9+g5HwCphpk=
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.54.0/go.mod h1:L7UH0GbB0p47T4Rri3uHjbpCFYrVrwc1I25QhNPiGK8=
 go.opentelemetry.io/otel v1.31.0 h1:NsJcKPIW0D0H3NgzPDHmo0WW6SptzPdqg/L1zsIm2hY=

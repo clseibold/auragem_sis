@@ -21,7 +21,7 @@ import (
 	// "github.com/microcosm-cc/bluemonday"
 )
 
-func HandleJewishTexts(g sis.ServerHandle) {
+func HandleJewishTexts(g sis.VirtualServerHandle) {
 	//stripTags := bluemonday.StripTagsPolicy()
 
 	index := GetFullIndex()

@@ -4,7 +4,7 @@ import (
 	sis "gitlab.com/sis-suite/smallnetinformationservices"
 )
 
-func HandleTextGame(g sis.ServerHandle) {
+func HandleTextGame(g sis.VirtualServerHandle) {
 	g.AddRoute("/textgame/", Homepage)
 }
 

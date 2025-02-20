@@ -14,7 +14,7 @@ import (
 
 var apiKey = config.WeatherApiKey
 
-func handleWeather(g sis.ServerHandle) {
+func handleWeather(g sis.VirtualServerHandle) {
 	publishDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-19T13:51:00", time.Local)
 	g.AddRoute("/weather", func(request *sis.Request) {
 		request.Redirect("/weather/")

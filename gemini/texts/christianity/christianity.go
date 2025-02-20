@@ -30,7 +30,7 @@ type BibleVersionListItem struct {
 
 var apiKey = config.APIBibleApiKey
 
-func HandleChristianTexts(g sis.ServerHandle) {
+func HandleChristianTexts(g sis.VirtualServerHandle) {
 	//apiKey := "df9786562778d4ff76d7a9ac6bcb149f"
 
 	englishBibleVersions := []BibleVersionListItem{

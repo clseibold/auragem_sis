@@ -16,7 +16,7 @@ import (
 	sis "gitlab.com/sis-suite/smallnetinformationservices"
 )
 
-func HandleTexts(g sis.ServerHandle) {
+func HandleTexts(g sis.VirtualServerHandle) {
 	g.AddRoute("/scriptures/", func(request *sis.Request) {
 		request.SetClassification(sis.ScrollResponseUDC_Scripture)
 		request.Gemini(`# Religious Texts

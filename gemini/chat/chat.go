@@ -87,7 +87,7 @@ type UserInfo struct {
 	clientNumber atomic.Int64
 }
 
-func (context *ChatContext) Attach(s sis.ServerHandle) {
+func (context *ChatContext) Attach(s sis.VirtualServerHandle) {
 	publishDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-19T13:51:00", time.Local)
 	updateDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-19T13:51:00", time.Local)
 

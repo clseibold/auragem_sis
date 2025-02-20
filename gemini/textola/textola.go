@@ -146,7 +146,7 @@ var schedule = map[int]string{
 	23: "",
 }
 
-func getTextFromSchedule(s sis.ServerHandle) TextolaText {
+func getTextFromSchedule(s sis.VirtualServerHandle) TextolaText {
 	currentTime := time.Now()
 	scheduleString := schedule[currentTime.Hour()]
 	switch scheduleString {
@@ -171,7 +171,7 @@ func getTextFromSchedule(s sis.ServerHandle) TextolaText {
 	return makeTextFromString("Presenting Edgar Allan Poe's The Cask of Amontillado", string(filedata), TextolaContentType_OldClassicsFiction)
 }
 
-func HandleTextola(s sis.ServerHandle) {
+func HandleTextola(s sis.VirtualServerHandle) {
 	publishDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-19T13:51:00", time.Local)
 	updateDate, _ := time.ParseInLocation(time.RFC3339, "2024-03-19T13:51:00", time.Local)
 	var context *TextolaContext = &TextolaContext{
@@ -254,7 +254,7 @@ func HandleTextola(s sis.ServerHandle) {
 	go fakeClient(s, context)
 }
 
-func fakeClient(s sis.ServerHandle, context *TextolaContext) {
+func fakeClient(s sis.VirtualServerHandle, context *TextolaContext) {
 	// Seconds Ticker
 	//ticker := time.NewTicker(time.Millisecond / 100)
 	limiter := rate.NewLimiter(rate.Every(time.Second), 1)

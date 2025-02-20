@@ -26,7 +26,7 @@ You have selected a certificate that has not been registered yet. Registering as
 => /~ask/?register Register Cert
 `
 
-func HandleAsk(s sis.ServerHandle) {
+func HandleAsk(s sis.VirtualServerHandle) {
 	conn := db.NewConn(db.AskDB)
 	conn.SetMaxOpenConns(500)
 	conn.SetMaxIdleConns(3)

@@ -152,7 +152,7 @@ func setupAuraGem(context *sis.SISContext, chatContext *chat.ChatContext, aurare
 		{BindAddress: "0.0.0.0", Hostname: "auragem.ddns.net", Upload: false, CertPath: "auragem.pem"},
 		{BindAddress: "0.0.0.0", Hostname: "auragem.ddns.net", Upload: true, CertPath: "auragem.pem"},
 	}
-	geminiServer, _ := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "auragem_gemini", DefaultLanguage: "en"}, hostsConfig...)
+	geminiServer, _ := context.AddServer(sis.VirtualServer{Type: sis.ServerType_Gemini, Name: "auragem_gemini", DefaultLanguage: "en"}, hostsConfig...)
 	// context.GetPortListener("0.0.0.0", "1965").AddCertificate("auragem.ddns.net", "auragem.pem")
 
 	// Add Onion Address handling for server
@@ -194,25 +194,25 @@ func setupAuraGem(context *sis.SISContext, chatContext *chat.ChatContext, aurare
 		request.Redirect("gemini://scholasticdiversity.us.to/scriptures/%s", unescaped)
 	})
 
-	scrollServer, _ := context.AddServer(sis.Server{Type: sis.ServerType_Scroll, Name: "auragem_scroll", DefaultLanguage: "en"}, hostsConfig...)
+	scrollServer, _ := context.AddServer(sis.VirtualServer{Type: sis.ServerType_Scroll, Name: "auragem_scroll", DefaultLanguage: "en"}, hostsConfig...)
 	// context.GetPortListener("0.0.0.0", "5699").AddCertificate("auragem.ddns.net", "auragem.pem")
 	// context.AddServerRoute("0.0.0.0", "5699", sis.ProtocolType_Scroll, "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", scrollServer)
 	// context.GetPortListener("0.0.0.0", "5699").AddCertificate("auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", "auragem.pem")
 	scrollServer.AddProxyRoute("/*", "$auragem_gemini/*", '1')
 
-	nexServer, _ := context.AddServer(sis.Server{Type: sis.ServerType_Nex, Name: "auragem_nex", DefaultLanguage: "en"}, hostsConfig2...)
+	nexServer, _ := context.AddServer(sis.VirtualServer{Type: sis.ServerType_Nex, Name: "auragem_nex", DefaultLanguage: "en"}, hostsConfig2...)
 	//context.AddServerRoute("0.0.0.0", "1900", sis.ProtocolType_Nex, "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", nexServer)
 	nexServer.AddDirectory("/*", "./")
 	nexServer.AddProxyRoute("/gemini/*", "$auragem_gemini/*", '1')
 	nexServer.AddProxyRoute("/scholasticdiversity/*", "$scholasticdiversity_gemini/*", '1')
 	nexServer.AddProxyRoute("/scrollprotocol/*", "$scrollprotocol_gemini/*", '1')
 
-	spartanServer, _ := context.AddServer(sis.Server{Type: sis.ServerType_Spartan, Name: "spartan", DefaultLanguage: "en"}, hostsConfig...)
+	spartanServer, _ := context.AddServer(sis.VirtualServer{Type: sis.ServerType_Spartan, Name: "spartan", DefaultLanguage: "en"}, hostsConfig...)
 	// context.AddServerRoute("0.0.0.0", "300", sis.ProtocolType_Spartan, "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", spartanServer)
 	spartanServer.AddFile("/", "./index.gmi")
 	spartanServer.AddProxyRoute("/*", "$auragem_gemini/*", '1')
 
-	gopherServer, _ := context.AddServer(sis.Server{Type: sis.ServerType_Gopher, Name: "gopher", DefaultLanguage: "en"}, hostsConfig2...)
+	gopherServer, _ := context.AddServer(sis.VirtualServer{Type: sis.ServerType_Gopher, Name: "gopher", DefaultLanguage: "en"}, hostsConfig2...)
 	//context.AddServerRoute("0.0.0.0", "70", sis.ProtocolType_Gopher, "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", gopherServer)
 	gopherServer.AddDirectory("/*", "./")
 	gopherServer.AddProxyRoute("/g/*", "$auragem_gemini/*", '1')
@@ -225,13 +225,13 @@ func setupScholasticDiversity(context *sis.SISContext) {
 		{BindAddress: "0.0.0.0", Hostname: "scholasticdiversity.us.to", Upload: false, CertPath: "scholasticdiversity.pem"},
 		{BindAddress: "0.0.0.0", Hostname: "scholasticdiversity.us.to", Upload: true, CertPath: "scholasticdiversity.pem"},
 	}
-	scholasticdiversity_gemini, _ := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "scholasticdiversity_gemini", DefaultLanguage: "en"}, hostsConfig...)
+	scholasticdiversity_gemini, _ := context.AddServer(sis.VirtualServer{Type: sis.ServerType_Gemini, Name: "scholasticdiversity_gemini", DefaultLanguage: "en"}, hostsConfig...)
 	// context.GetPortListener("0.0.0.0", "1965").AddCertificate("scholasticdiversity.us.to", "scholasticdiversity.pem")
 	scholasticdiversity_gemini.AddDirectory("/*", "./")
 
 	texts.HandleTexts(scholasticdiversity_gemini)
 
-	scholasticdiversity_scroll, _ := context.AddServer(sis.Server{Type: sis.ServerType_Scroll, Name: "scholasticdiversity_scroll", DefaultLanguage: "en"}, hostsConfig...)
+	scholasticdiversity_scroll, _ := context.AddServer(sis.VirtualServer{Type: sis.ServerType_Scroll, Name: "scholasticdiversity_scroll", DefaultLanguage: "en"}, hostsConfig...)
 	// context.GetPortListener("0.0.0.0", "5699").AddCertificate("scholasticdiversity.us.to", "scholasticdiversity.pem")
 	scholasticdiversity_scroll.AddProxyRoute("/*", "$scholasticdiversity_gemini/*", '1')
 }
@@ -241,11 +241,11 @@ func setupScrollProtocol(context *sis.SISContext) {
 		{BindAddress: "0.0.0.0", Hostname: "scrollprotocol.us.to", Upload: false, CertPath: "scrollprotocol.pem"},
 		{BindAddress: "0.0.0.0", Hostname: "scrollprotocol.us.to", Upload: true, CertPath: "scrollprotocol.pem"},
 	}
-	scrollProtocol_scroll, _ := context.AddServer(sis.Server{Type: sis.ServerType_Scroll, Name: "scrollprotocol_scroll", DefaultLanguage: "en"}, hostsConfig...)
+	scrollProtocol_scroll, _ := context.AddServer(sis.VirtualServer{Type: sis.ServerType_Scroll, Name: "scrollprotocol_scroll", DefaultLanguage: "en"}, hostsConfig...)
 	// context.GetPortListener("0.0.0.0", "5699").AddCertificate("scrollprotocol.us.to", "scrollprotocol.pem")
 	scrollProtocol_scroll.AddDirectory("/*", "./")
 
-	scrollProtocol_gemini, _ := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "scrollprotocol_gemini", DefaultLanguage: "en"}, hostsConfig...)
+	scrollProtocol_gemini, _ := context.AddServer(sis.VirtualServer{Type: sis.ServerType_Gemini, Name: "scrollprotocol_gemini", DefaultLanguage: "en"}, hostsConfig...)
 	// context.GetPortListener("0.0.0.0", "1965").AddCertificate("scrollprotocol.us.to", "scrollprotocol.pem")
 	scrollProtocol_gemini.AddProxyRoute("/*", "$scrollprotocol_scroll/*", '1')
 }
@@ -260,7 +260,7 @@ func setupNewsfin(context *sis.SISContext) {
 	context.GetPortListener("0.0.0.0", "5699").AddCertificate("scrollprotocol.us.to", "scrollprotocol.pem")
 	scrollProtocol_scroll.AddDirectory("/*", "./")*/
 
-	newsfin_gemini, _ := context.AddServer(sis.Server{Type: sis.ServerType_Gemini, Name: "newsfin_gemini", DefaultLanguage: "en"}, hostsConfig...)
+	newsfin_gemini, _ := context.AddServer(sis.VirtualServer{Type: sis.ServerType_Gemini, Name: "newsfin_gemini", DefaultLanguage: "en"}, hostsConfig...)
 	// context.GetPortListener("0.0.0.0", "1965").AddCertificate("newsfin.us.to", "newsfin.pem")
 	newsfin_gemini.AddDirectory("/*", "./")
 }

@@ -152,7 +152,7 @@ func NewRadioBuffer() (*RadioBuf, error) {
 	return radioBuffer, nil
 }
 
-func handleRadioService(s sis.ServerHandle, conn *sql.DB) {
+func handleRadioService(s sis.VirtualServerHandle, conn *sql.DB) {
 	//var file_buffer_mutex sync.RWMutex
 
 	/*radioBuffer, _ := NewRadioBuffer()

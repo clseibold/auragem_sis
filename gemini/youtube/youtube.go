@@ -30,7 +30,7 @@ var (
 //go:embed index.gmi
 var content embed.FS
 
-func HandleYoutube(s sis.ServerHandle) {
+func HandleYoutube(s sis.VirtualServerHandle) {
 	// Create Youtube Service
 	service, err1 := youtube.NewService(context.Background(), option.WithAPIKey(youtubeAPIKey))
 	if err1 != nil {
@@ -352,7 +352,7 @@ func getVideoPageRouteFunc(service *youtube.Service) sis.RequestHandler {
 	}
 }
 
-func handleCaptionDownload(s sis.ServerHandle) {
+func handleCaptionDownload(s sis.VirtualServerHandle) {
 	s.AddRoute("/youtube/video/:id/transcript", func(request *sis.Request) {
 		client := ytd.Client{}
 		videoId := request.GetParam("id")
@@ -598,7 +598,7 @@ func getVideoDownloadRouteFunc() sis.RequestHandler {
 	}
 }
 
-func handleChannelPage(g sis.ServerHandle, service *youtube.Service) {
+func handleChannelPage(g sis.VirtualServerHandle, service *youtube.Service) {
 	// Channel Home
 	g.AddRoute("/youtube/channel/:id", func(request *sis.Request) {
 		template := `# Channel: %s
@@ -656,7 +656,7 @@ func handleChannelPage(g sis.ServerHandle, service *youtube.Service) {
 	})
 }
 
-func handlePlaylistPage(g sis.ServerHandle, service *youtube.Service) {
+func handlePlaylistPage(g sis.VirtualServerHandle, service *youtube.Service) {
 	g.AddRoute("/youtube/playlist/:id/:page", func(request *sis.Request) {
 		getPlaylistVideos(request, service, request.GetParam("id"), request.GetParam("page"))
 	})

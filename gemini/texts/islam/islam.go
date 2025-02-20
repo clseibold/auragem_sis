@@ -28,7 +28,7 @@ type QuranVersionListItem struct {
 	Identifier string
 }
 
-func HandleIslamicTexts(g sis.ServerHandle) {
+func HandleIslamicTexts(g sis.VirtualServerHandle) {
 	quranSurahs := GetSurahs()
 
 	// en.yusufali, en.pickthall, en.sahih, en.asad, en.sarwar (Shi'a)

@@ -12,7 +12,7 @@ import (
 
 var publishDate, _ = time.ParseInLocation(time.RFC3339, "2024-03-19T08:23:00", time.Local)
 
-func HandleStarWars(s sis.ServerHandle) {
+func HandleStarWars(s sis.VirtualServerHandle) {
 	conn := db.NewConn(db.StarWarsDB)
 	conn.SetMaxOpenConns(500)
 	conn.SetMaxIdleConns(3)

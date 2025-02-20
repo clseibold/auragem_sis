@@ -18,7 +18,7 @@ import (
 
 var apiToken = config.GithubToken
 
-func handleGithub(g sis.ServerHandle) {
+func handleGithub(g sis.VirtualServerHandle) {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: apiToken},

@@ -55,7 +55,7 @@ GROUP BY HIGHLIGHT, ID, URL, SCHEME, DOMAINID, CONTENTTYPE, CHARSET, LANGUAGE, L
 ORDER BY GROUPED_SCORE DESC
 `
 
-func HandleSearchEngineDown(s sis.ServerHandle) {
+func HandleSearchEngineDown(s sis.VirtualServerHandle) {
 	s.AddRoute("/searchengine", func(request *sis.Request) {
 		request.Redirect("/search/")
 	})
@@ -124,7 +124,7 @@ func UdcClassStringToTitle(udc string) string {
 	}
 }
 
-func HandleSearchEngine(s sis.ServerHandle) {
+func HandleSearchEngine(s sis.VirtualServerHandle) {
 	//crawling := make(map[string]bool, 10)
 	//crawling_ips := make(map[string]bool, 10)
 

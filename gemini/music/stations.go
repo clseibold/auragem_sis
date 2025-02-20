@@ -22,7 +22,7 @@ func GetRadioGenre(currentTime time.Time, station *RadioStation) string {
 	}
 }
 
-func setupStation(s sis.ServerHandle, conn *sql.DB, station *RadioStation, totalClientsConnected *int64) {
+func setupStation(s sis.VirtualServerHandle, conn *sql.DB, station *RadioStation, totalClientsConnected *int64) {
 	radioBuffer, _ := NewRadioBuffer()
 
 	go radioService(conn, radioBuffer, station)
