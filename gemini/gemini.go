@@ -104,7 +104,7 @@ func setupWebServer(aurarepoContext *aurarepo.AuraRepoContext) {
 
 	aurarepoMuxer := http.NewServeMux()
 	aurarepoContext.AttachHTTPSmart(aurarepoMuxer)
-	httpMuxer.Handle("/~aurarepo/", aurarepoMuxer)
+	httpMuxer.Handle("/~aurarepo/", http.StripPrefix("/~aurarepo", aurarepoMuxer))
 
 	go func() {
 		err := http.ListenAndServe("0.0.0.0:80", httpMuxer)
