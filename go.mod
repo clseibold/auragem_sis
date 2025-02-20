@@ -44,7 +44,7 @@ require (
 	github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3 // indirect
 	github.com/skeema/knownhosts v1.3.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	gitlab.com/sis-suite/aurarepo v0.0.0-20250220162205-2c30f1587240 // indirect
+	gitlab.com/sis-suite/aurarepo v0.0.0-20250220163847-5de884e5fcff // indirect
 	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/tools v0.27.0 // indirect
