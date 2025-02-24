@@ -46,10 +46,11 @@ func RunServer(cmd *cobra.Command, args []string) {
 
 	// Setup AuraRepo Server
 	aurarepoContext := aurarepo.NewAuraRepoContext("AuraRepo", "/home/clseibold/repos")
-	aurarepoContext.AddRepo("smallnetinformationservices", "Smallnet Information Services", "./smallnetinformationservices/", "Server software suite for smallnet internet ecosystem, managed with a Gemini admin dashboard.")
-	aurarepoContext.AddRepo("aurarepo", "AuraRepo", "./aurarepo/", "A Git repository hosting forge SCGI application server for the Gemini Protocol, built using Smallnet Information Services and go-git.")
-	aurarepoContext.AddRepo("auramuse-lite", "AuraMuse Lite", "./auramuse-lite/", "An SCGI application server that provides radio over Gemini.")
-	aurarepoContext.AddRepo("auragem", "AuraGem Servers", "./auragem/", "The code for AuraGem and related servers.")
+	aurarepoContext.AddRepo(aurarepo.AuraRepoType_Git, "smallnetinformationservices", "Smallnet Information Services", "./smallnetinformationservices/", "Server software suite for smallnet internet ecosystem, managed with a Gemini admin dashboard.")
+	aurarepoContext.AddRepo(aurarepo.AuraRepoType_Git, "aurarepo", "AuraRepo", "./aurarepo/", "A Git repository hosting forge SCGI application server for the Gemini Protocol, built using Smallnet Information Services and go-git.")
+	aurarepoContext.AddRepo(aurarepo.AuraRepoType_Git, "auramuse-lite", "AuraMuse Lite", "./auramuse-lite/", "An SCGI application server that provides radio over Gemini.")
+	aurarepoContext.AddRepo(aurarepo.AuraRepoType_Git, "auragem", "AuraGem Servers", "./auragem/", "The code for AuraGem and related servers.")
+	aurarepoContext.AddRepo(aurarepo.AuraRepoType_Prism, "prism", "Prism VCS", "./prism/", "Distributed version control through a clearer lens. A new VCS that builds on the good ideas of git, fossil, subversion, and mercurial, while simplifying the UI, and introducing unique concepts to Distributed VCSs.")
 
 	setupWebServer(aurarepoContext)
 	go startTorOnlyWebServer()
