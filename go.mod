@@ -11,15 +11,15 @@ require (
 	github.com/go-stack/stack v1.8.1
 	github.com/google/go-github/v60 v60.0.0
 	github.com/juju/ratelimit v1.0.2
-	github.com/kkdai/youtube/v2 v2.10.2
+	github.com/kkdai/youtube/v2 v2.10.3
 	github.com/krayzpipes/cronticker v0.0.1
 	github.com/nakagami/firebirdsql v0.9.13
 	github.com/rivo/uniseg v0.4.7
 	github.com/rs/zerolog v1.32.0
-	github.com/spf13/cobra v1.8.1
+	github.com/spf13/cobra v1.9.1
 	github.com/trietmn/go-wiki v1.0.3
 	gitlab.com/sis-suite/smallnetinformationservices v0.0.0-20250220160549-5f3da2152bc2
-	golang.org/x/net v0.34.0
+	golang.org/x/net v0.35.0
 	golang.org/x/oauth2 v0.25.0
 	golang.org/x/text v0.22.0
 	golang.org/x/time v0.9.0
@@ -46,9 +46,9 @@ require (
 	github.com/skeema/knownhosts v1.3.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	gitlab.com/sis-suite/aurarepo v0.0.0-20250228215051-bef49b269bd4 // indirect
-	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f // indirect
-	golang.org/x/mod v0.22.0 // indirect
-	golang.org/x/tools v0.27.0 // indirect
+	golang.org/x/exp v0.0.0-20250218142911-aa4b98e5adaa // indirect
+	golang.org/x/mod v0.23.0 // indirect
+	golang.org/x/tools v0.30.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
 
@@ -61,8 +61,8 @@ require (
 	github.com/bitly/go-simplejson v0.5.1 // indirect
 	github.com/cretz/bine v0.2.0 // indirect
 	github.com/djherbis/times v1.6.0 // indirect
-	github.com/dlclark/regexp2 v1.11.4 // indirect
-	github.com/dop251/goja v0.0.0-20241024094426-79f3a7efcdbd // indirect
+	github.com/dlclark/regexp2 v1.11.5 // indirect
+	github.com/dop251/goja v0.0.0-20250125213203-5ef83b82af17 // indirect
 	github.com/eidolon/wordwrap v0.0.0-20161011182207-e0f54129b8bb // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3
@@ -71,7 +71,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-sourcemap/sourcemap v2.1.4+incompatible // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
-	github.com/google/pprof v0.0.0-20241203143554-1e3fdc7de467 // indirect
+	github.com/google/pprof v0.0.0-20250208200701-d0013a598941 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.4 // indirect
@@ -87,7 +87,7 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/temoto/robotstxt v1.1.2
 	github.com/warpfork/go-fsx v0.4.0 // indirect
 	gitlab.com/clseibold/gonex v0.0.0-20240510073418-5058258917b4
