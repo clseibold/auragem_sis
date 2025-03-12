@@ -53,6 +53,7 @@ func RunServer(cmd *cobra.Command, args []string) {
 	aurarepoContext.AddRepo(aurarepo.AuraRepoType_Prism, "prism", "Prism VCS", "./prism/", "Distributed version control through a clearer lens. A new VCS that builds on the good ideas of git, fossil, subversion, and mercurial, while simplifying the UI, and introducing unique concepts to Distributed VCSs.")
 	aurarepoContext.AddRepo(aurarepo.AuraRepoType_Git, "linux-mirror", "Linux Stable Mirror", "./linux-mirror/", "Mirror of kernel.org's kernel/git/stable/linux.git")
 	aurarepoContext.AddRepo(aurarepo.AuraRepoType_Git, "git-mirror", "Git Mirror", "./git-mirror/", "Mirror of kernel.org's git.git")
+	aurarepoContext.AddRepo(aurarepo.AuraRepoType_Git, "aocl", "AOCL", "./aocl/", "AuraGem Opensource Copyleft License")
 
 	setupWebServer(aurarepoContext)
 	go startTorOnlyWebServer()
