@@ -106,75 +106,77 @@ func getSearchRouteFunc(service *youtube.Service) sis.RequestHandler {
 
 func handleVideoClassification(video *youtube.Video, request *sis.Request) {
 	handleTopicId := false
-	switch video.Snippet.CategoryId {
-	case "1": // Film & Animation
-		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
-	case "2": // Autos & Vehicles
-		request.SetClassification(sis.ScrollResponseUDC_Engineering)
-	case "10": // Music
-		request.SetClassification(sis.ScrollResponseUDC_Music)
-	case "15": // Pets and Animals
-		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
-	case "17": // Sports
-		request.SetClassification(sis.ScrollResponseUDC_Sport)
-	case "18": // Short Movies
-		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
-	case "19": // Travel & Events
-		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
-	case "20": // Gaming
-		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
-	case "21": // Videoblogging
-		request.SetClassification(sis.ScrollResponseUDC_PersonalLog)
-	case "22": // People & Blogs
-		request.SetClassification(sis.ScrollResponseUDC_PersonalLog)
-	case "23": // Comedy
-		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
-	case "24": // Entertainment
-		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
-	case "25": // News and Politics
-		request.SetClassification(sis.ScrollResponseUDC_SocialScience)
-	case "26": // Howto and Style
-		request.SetClassification(sis.ScrollResponseUDC_Reference)
-	case "27": // Education
-		request.SetClassification(sis.ScrollResponseUDC_SocialScience)
-	case "28": // Science and Technology
-		handleTopicId = true
-		//request.SetClassification(sis.ScrollResponseUDC_Technology) // TODO
-	case "29": // Nonprofits & Activism
-		request.SetClassification(sis.ScrollResponseUDC_SocialScience)
-	case "30": // Movies
-		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
-	case "31": // Anime/Animation
-		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
-	case "32": // Action/Adventure
-		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
-	case "33": // Classics
-		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
-	case "34": // Comedy
-		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
-	case "35": // Documentary
-		handleTopicId = true
-	case "36": // Drama
-		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
-	case "37": // Family
-		request.SetClassification(sis.ScrollResponseUDC_PersonalLog)
-	case "38": // Foreign
-		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
-	case "39": // Horror
-		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
-	case "40": // Sci-Fi/Fantasy
-		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
-	case "41": // Thriller
-		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
-	case "42": // Shorts
-		handleTopicId = true
-	case "43": // Shows
-		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
-	case "44": // Trailers
-		request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+	if video.Snippet != nil {
+		switch video.Snippet.CategoryId {
+		case "1": // Film & Animation
+			request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+		case "2": // Autos & Vehicles
+			request.SetClassification(sis.ScrollResponseUDC_Engineering)
+		case "10": // Music
+			request.SetClassification(sis.ScrollResponseUDC_Music)
+		case "15": // Pets and Animals
+			request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+		case "17": // Sports
+			request.SetClassification(sis.ScrollResponseUDC_Sport)
+		case "18": // Short Movies
+			request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+		case "19": // Travel & Events
+			request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+		case "20": // Gaming
+			request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+		case "21": // Videoblogging
+			request.SetClassification(sis.ScrollResponseUDC_PersonalLog)
+		case "22": // People & Blogs
+			request.SetClassification(sis.ScrollResponseUDC_PersonalLog)
+		case "23": // Comedy
+			request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+		case "24": // Entertainment
+			request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+		case "25": // News and Politics
+			request.SetClassification(sis.ScrollResponseUDC_SocialScience)
+		case "26": // Howto and Style
+			request.SetClassification(sis.ScrollResponseUDC_Reference)
+		case "27": // Education
+			request.SetClassification(sis.ScrollResponseUDC_SocialScience)
+		case "28": // Science and Technology
+			handleTopicId = true
+			//request.SetClassification(sis.ScrollResponseUDC_Technology) // TODO
+		case "29": // Nonprofits & Activism
+			request.SetClassification(sis.ScrollResponseUDC_SocialScience)
+		case "30": // Movies
+			request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+		case "31": // Anime/Animation
+			request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+		case "32": // Action/Adventure
+			request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+		case "33": // Classics
+			request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+		case "34": // Comedy
+			request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+		case "35": // Documentary
+			handleTopicId = true
+		case "36": // Drama
+			request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+		case "37": // Family
+			request.SetClassification(sis.ScrollResponseUDC_PersonalLog)
+		case "38": // Foreign
+			request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+		case "39": // Horror
+			request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+		case "40": // Sci-Fi/Fantasy
+			request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+		case "41": // Thriller
+			request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+		case "42": // Shorts
+			handleTopicId = true
+		case "43": // Shows
+			request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+		case "44": // Trailers
+			request.SetClassification(sis.ScrollResponseUDC_Entertainment)
+		}
 	}
 
-	if handleTopicId {
+	if handleTopicId && video.TopicDetails != nil {
 	outer:
 		for _, topic := range video.TopicDetails.TopicIds {
 			switch topic {
