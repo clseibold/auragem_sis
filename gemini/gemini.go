@@ -55,11 +55,15 @@ func RunServer(cmd *cobra.Command, args []string) {
 	aurarepoContext.AddRepo(aurarepo.AuraRepoType_Git, "git-mirror", "Git Mirror", "./git-mirror/", "Mirror of kernel.org's git.git")
 	aurarepoContext.AddRepo(aurarepo.AuraRepoType_Git, "aocl", "AOCL", "./aocl/", "AuraGem Opensource Copyleft License")
 
-	setupWebServer(aurarepoContext)
+	// Setup BinTree server
+	bintreeContext := aurarepo.NewAuraRepoContext("BinTree", "/home/clseibold/bintree-repos")
+	bintreeContext.AddRepo(aurarepo.AuraRepoType_Git, "profectus", "Profectus", "./profectus/", "Smallnet GUI browser.")
+
+	setupWebServer(aurarepoContext, bintreeContext)
 	go startTorOnlyWebServer()
 	setupTorOnly(context)
 
-	setupAuraGem(context, chatContext, aurarepoContext)
+	setupAuraGem(context, chatContext, aurarepoContext, bintreeContext)
 	setupScholasticDiversity(context)
 	setupScrollProtocol(context)
 	setupNewsfin(context)
@@ -100,7 +104,7 @@ func startTorWebServer(t *tor.Tor) {
 }
 */
 
-func setupWebServer(aurarepoContext *aurarepo.AuraRepoContext) {
+func setupWebServer(aurarepoContext *aurarepo.AuraRepoContext, bintreeContext *aurarepo.AuraRepoContext) {
 	httpMuxer := http.NewServeMux()
 	httpMuxer.Handle("/", http.FileServer(http.Dir("/home/clseibold/ServerData/auragem_sis/SIS/auragem_http")))
 	httpMuxer.Handle("scrollprotocol.us.to/", http.FileServer(http.Dir("/home/clseibold/ServerData/auragem_sis/SIS/scrollprotocol_http")))
@@ -109,6 +113,10 @@ func setupWebServer(aurarepoContext *aurarepo.AuraRepoContext) {
 	aurarepoMuxer := http.NewServeMux()
 	aurarepoContext.AttachHTTPSmart(aurarepoMuxer)
 	httpMuxer.Handle("/~aurarepo/", http.StripPrefix("/~aurarepo", aurarepoMuxer))
+
+	bintreeMuxer := http.NewServeMux()
+	bintreeContext.AttachHTTPSmart(bintreeMuxer)
+	httpMuxer.Handle("/~bintree/", http.StripPrefix("/~bintree", bintreeMuxer))
 
 	go func() {
 		err := http.ListenAndServe("0.0.0.0:80", httpMuxer)
@@ -145,7 +153,7 @@ func setupTorOnly(context *sis.SISContext) {
 	// spartanServer.AddProxyRoute("/*", "$varilib_gemini/*", '1')
 }
 
-func setupAuraGem(context *sis.SISContext, chatContext *chat.ChatContext, aurarepoContext *aurarepo.AuraRepoContext) {
+func setupAuraGem(context *sis.SISContext, chatContext *chat.ChatContext, aurarepoContext *aurarepo.AuraRepoContext, bintreeContext *aurarepo.AuraRepoContext) {
 	hostsConfig := []sis.HostConfig{
 		{BindAddress: "0.0.0.0", Hostname: "auragem.ddns.net", Upload: false, CertPath: "auragem.pem"},
 		{BindAddress: "0.0.0.0", Hostname: "auragem.ddns.net", Upload: true, CertPath: "auragem.pem"},
@@ -180,6 +188,7 @@ func setupAuraGem(context *sis.SISContext, chatContext *chat.ChatContext, aurare
 
 	chatContext.Attach(geminiServer)
 	aurarepoContext.Attach(geminiServer.Group("/~aurarepo/"))
+	bintreeContext.Attach(geminiServer.Group("/~bintree/"))
 
 	textgame.HandleTextGame(geminiServer)
 	textola.HandleTextola(geminiServer)
