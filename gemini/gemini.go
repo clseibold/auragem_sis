@@ -55,9 +55,18 @@ func RunServer(cmd *cobra.Command, args []string) {
 	aurarepoContext.AddRepo(aurarepo.AuraRepoType_Git, "git-mirror", "Git Mirror", "./git-mirror/", "Mirror of kernel.org's git.git")
 	aurarepoContext.AddRepo(aurarepo.AuraRepoType_Git, "aocl", "AOCL", "./aocl/", "AuraGem Opensource Copyleft License")
 
+	aurarepoContext.AddRepo(aurarepo.AuraRepoType_Git, "deconflicter", "Deconflicter", "./deconflicter/", "VCS conflicts terminal viewer, written in C")
+	aurarepoContext.AddRepo(aurarepo.AuraRepoType_Git, "derevel", "Derevel", "./derevel/", "A build system using scripts that are written in C")
+	aurarepoContext.AddRepo(aurarepo.AuraRepoType_Git, "edimcoder", "EdimCoder", "./edimcoder/", "A terminal line text-editor, in a similar vein to Ed, written in C.")
+	aurarepoContext.AddRepo(aurarepo.AuraRepoType_Git, "paled", "Paled", "./paled/", "Linux shell written in C.")
+	aurarepoContext.AddRepo(aurarepo.AuraRepoType_Git, "textadventure", "TextAdventure", "./textadventure/", "An unfinished sandbox text-based game written in C.")
+	aurarepoContext.AddRepo(aurarepo.AuraRepoType_Git, "multilect", "Multilect", "./multilect/", "A terminal markdown file reader written in C.")
+	aurarepoContext.AddRepo(aurarepo.AuraRepoType_Git, "ncure", "Ncure", "./ncure/", "A cross-platform terminal manipulation library written in C.")
+
 	// Setup BinTree server
 	bintreeContext := aurarepo.NewAuraRepoContext("BinTree", "/home/clseibold/bintree-repos")
-	bintreeContext.AddRepo(aurarepo.AuraRepoType_Git, "profectus", "Profectus", "./profectus/", "Smallnet GUI browser.")
+	bintreeContext.AddRepo(aurarepo.AuraRepoType_Git, "profectus.bin", "Profectus", "./profectus.bin/", "Smallnet GUI browser.")
+	bintreeContext.AddRepo(aurarepo.AuraRepoType_Git, "golang.bin", "Golang", "./golang.bin/", "The Go Programming Language")
 
 	setupWebServer(aurarepoContext, bintreeContext)
 	go startTorOnlyWebServer()
