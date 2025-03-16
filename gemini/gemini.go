@@ -45,7 +45,7 @@ func RunServer(cmd *cobra.Command, args []string) {
 	chatContext := chat.NewChatContext()
 
 	// Setup AuraRepo Server
-	aurarepoContext := aurarepo.NewAuraRepoContext("AuraRepo", "/home/clseibold/repos")
+	aurarepoContext := aurarepo.NewAuraRepoContext("AuraRepo", "/home/clseibold/repos", "https://auragem.ddns.net/~aurarepo/")
 	aurarepoContext.AddRepo(aurarepo.AuraRepoType_Git, "smallnetinformationservices", "Smallnet Information Services", "./smallnetinformationservices/", "Server software suite for smallnet internet ecosystem, managed with a Gemini admin dashboard.")
 	aurarepoContext.AddRepo(aurarepo.AuraRepoType_Git, "aurarepo", "AuraRepo", "./aurarepo/", "A Git repository hosting forge SCGI application server for the Gemini Protocol, built using Smallnet Information Services and go-git.")
 	aurarepoContext.AddRepo(aurarepo.AuraRepoType_Git, "auramuse-lite", "AuraMuse Lite", "./auramuse-lite/", "An SCGI application server that provides radio over Gemini.")
@@ -64,7 +64,7 @@ func RunServer(cmd *cobra.Command, args []string) {
 	aurarepoContext.AddRepo(aurarepo.AuraRepoType_Git, "ncure", "Ncure", "./ncure/", "A cross-platform terminal manipulation library written in C.")
 
 	// Setup BinTree server
-	bintreeContext := aurarepo.NewAuraRepoContext("BinTree", "/home/clseibold/bintree-repos")
+	bintreeContext := aurarepo.NewAuraRepoContext("BinTree", "/home/clseibold/bintree-repos", "")
 	bintreeContext.AddRepo(aurarepo.AuraRepoType_Git, "profectus.bin", "Profectus", "./profectus.bin/", "Smallnet GUI browser.")
 	bintreeContext.AddRepo(aurarepo.AuraRepoType_Git, "golang.bin", "Golang", "./golang.bin/", "The Go Programming Language")
 
