@@ -18,7 +18,7 @@ require (
 	github.com/rs/zerolog v1.32.0
 	github.com/spf13/cobra v1.9.1
 	github.com/trietmn/go-wiki v1.0.3
-	gitlab.com/sis-suite/smallnetinformationservices v0.0.0-20250220160549-5f3da2152bc2
+	gitlab.com/sis-suite/smallnetinformationservices v0.0.0-20250318141154-3a6e10f5f53f
 	golang.org/x/net v0.35.0
 	golang.org/x/oauth2 v0.25.0
 	golang.org/x/text v0.22.0
