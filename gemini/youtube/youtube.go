@@ -66,7 +66,6 @@ func indexRoute(request *sis.Request) {
 
 	request.Gemini("# AuraGem YouTube Proxy\n\nWelcome to the AuraGem YouTube Proxy!\n\n")
 	request.PromptLine("/youtube/search/", "Search")
-	fmt.Printf("Proxied Under: %s\n", request.ProxiedUnder)
 	request.Gemini("=> / AuraGem Home\n")
 	request.Gemini("=> gemini://kwiecien.us/gemcast/20210425.gmi See This Proxy Featured on Gemini Radio\n")
 }
