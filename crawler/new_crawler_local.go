@@ -94,11 +94,17 @@ func FeedCrawler(globalData *GlobalData, hourDuration int, wg *sync.WaitGroup, f
 	// Sleep to offset the start of the feed crawler until 2 days into the regular crawler
 	//time.Sleep(time.Duration(float32(time.Hour*13) * 3.64))
 
-	ticker := time.NewTicker(time.Hour * time.Duration(hourDuration)) // Every 13 hours
+	ticker, _ := cronticker.NewTicker("0 0,13 * * *") // Every day at 00:00 and 13:00.
+	//ticker := time.NewTicker(time.Hour * time.Duration(hourDuration)) // Every 13 hours
 	wg2 := &sync.WaitGroup{}
 
 	feedData := NewSubGlobalData(globalData, false, true, 1)
 	for {
+		_, ok := <-ticker.C
+		if !ok {
+			break
+		}
+
 		feedData.Reset()
 		fmt.Printf("[6] Starting Feed Crawler.\n")
 		seeds := GetFeedsAsSeeds(feedData)
@@ -115,16 +121,14 @@ func FeedCrawler(globalData *GlobalData, hourDuration int, wg *sync.WaitGroup, f
 		wg2.Add(2)
 		go Crawl(feedData, 6, wg2, 60)
 		go Crawl(feedData, 7, wg2, 60)
+		go Crawl(feedData, 8, wg2, 60)
+		go Crawl(feedData, 9, wg2, 60)
 
 		wg2.Wait()
 		fmt.Printf("[6-7] Feed Crawler Finished.\n")
 		feedData.Reset()
 		finished()
 		time.Sleep(time.Minute * 5)
-		_, ok := <-ticker.C
-		if !ok {
-			break
-		}
 	}
 }
 
