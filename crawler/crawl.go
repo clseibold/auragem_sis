@@ -10,6 +10,7 @@ import (
 	"mime"
 	"os"
 	"path"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
@@ -73,6 +74,22 @@ func Crawl(globalData *GlobalData, crawlThread int, wg *sync.WaitGroup, breakSec
 			wg.Done()
 		}
 	}()
+
+	defer func() {
+		if r := recover(); r != nil {
+			panicString := ""
+			switch r := r.(type) {
+			case string:
+				panicString = r
+			}
+			fmt.Printf("Cralwer panic: %s\n%s\n", panicString, string(debug.Stack()))
+
+			// Restart the crawler goroutine
+			wg.Add(1)
+			go Crawl(globalData, crawlThread, wg, breakSeconds)
+		}
+	}()
+
 	ctx := newCrawlContext(globalData)
 
 	breakCounter := 0

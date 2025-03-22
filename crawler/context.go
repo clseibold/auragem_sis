@@ -317,7 +317,7 @@ func (ctx *CrawlContext) getNextUrl() (string, UrlToCrawlData) {
 	// Randomize getting from the map a little bit
 	var skip int64 = 0
 	if ctx.globalData.urlsToCrawl.Count() > 1 {
-		skip = rand.Int63n(int64(ctx.globalData.urlsToCrawl.Count() - 1))
+		skip = rand.Int63n(int64(ctx.globalData.urlsToCrawl.Count() - 1)) // TODO
 	}
 	var i int64 = 0
 	for k := range ctx.globalData.urlsToCrawl.IterBuffered() {
@@ -328,7 +328,7 @@ func (ctx *CrawlContext) getNextUrl() (string, UrlToCrawlData) {
 		i++
 
 		//c.urlsToCrawl.Remove(k.Key)
-		removed := ctx.globalData.urlsToCrawl.RemoveCb(k.Key, func(key string, v interface{}, exists bool) bool {
+		removed := ctx.globalData.urlsToCrawl.RemoveCb(k.Key, func(key string, v any, exists bool) bool {
 			return exists
 			/*if !exists {
 				return false
