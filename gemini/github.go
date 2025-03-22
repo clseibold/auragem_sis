@@ -33,6 +33,17 @@ func handleGithub(g sis.VirtualServerHandle) {
 Welcome to the AuraGem Github proxy!
 
 => /github/search Search Repos
+
+## Useful Repos
+
+=> /github/repo/295608796 Lagrange (@skyjake)
+=> /github/repo/271628444 Gig Framework
+=> /github/repo/74583692 Odin Programming Language
+=> /github/repo/264547992 md2gemini
+=> /github/repo/252915700 Astrobotany
+=> /github/repo/268132275 Kristall
+=> /github/repo/433552357 Kennedy Search Engine (@Acidus)
+=> /github/repo/291549523 LukeEmmet/duckling-proxy
 `)
 	})
 
