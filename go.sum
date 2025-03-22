@@ -288,6 +288,8 @@ gitlab.com/sis-suite/smallnetinformationservices v0.0.0-20250318141154-3a6e10f5f
 gitlab.com/sis-suite/smallnetinformationservices v0.0.0-20250318141154-3a6e10f5f53f/go.mod h1:dJhYj9XLR/yDiSuiBu7vHSoUtAvnMDfM8SNQ69NgfDc=
 gitlab.com/sis-suite/smallnetinformationservices v0.0.0-20250318143141-eb5195de0eec h1:TnzUTieVh4cQlc9fuX+A7ecHAYK6QckyepUZiWB7e7I=
 gitlab.com/sis-suite/smallnetinformationservices v0.0.0-20250318143141-eb5195de0eec/go.mod h1:dJhYj9XLR/yDiSuiBu7vHSoUtAvnMDfM8SNQ69NgfDc=
+gitlab.com/sis-suite/smallnetinformationservices v0.0.0-20250322030349-c4a6395038dd h1:esZeeWRu8XeqWODy6QhmybnzxYf3mBxtfer+1FL5aq0=
+gitlab.com/sis-suite/smallnetinformationservices v0.0.0-20250322030349-c4a6395038dd/go.mod h1:dJhYj9XLR/yDiSuiBu7vHSoUtAvnMDfM8SNQ69NgfDc=
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.54.0 h1:TT4fX+nBOA/+LUkobKGW1ydGcn+G3vRw9+g5HwCphpk=
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.54.0/go.mod h1:L7UH0GbB0p47T4Rri3uHjbpCFYrVrwc1I25QhNPiGK8=
 go.opentelemetry.io/otel v1.31.0 h1:NsJcKPIW0D0H3NgzPDHmo0WW6SptzPdqg/L1zsIm2hY=
