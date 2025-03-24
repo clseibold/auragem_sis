@@ -85,7 +85,9 @@ func Crawl(globalData *GlobalData, crawlThread int, wg *sync.WaitGroup, breakSec
 			fmt.Printf("Cralwer panic: %s\n%s\n", panicString, string(debug.Stack()))
 
 			// Restart the crawler goroutine
-			wg.Add(1)
+			if wg != nil {
+				wg.Add(1)
+			}
 			go Crawl(globalData, crawlThread, wg, breakSeconds)
 		}
 	}()
