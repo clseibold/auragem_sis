@@ -135,11 +135,13 @@ func HandleSearchEngine(s sis.VirtualServerHandle) {
 	conn.SetConnMaxLifetime(0)
 
 	// Crawler - full crawl every month, feed crawl every 13 hours, and on-demand capsule crawling
+	lastFeedCrawl := time.Now()
 	globalData := crawler.NewGlobalData(conn, true, true, 0) // Follows all links
 	go crawler.RegularCrawler(globalData, nil)
 	go crawler.FeedCrawler(globalData, 13, nil, func() {
 		// After each feed crawl, run the aggregator
 		Aggregate("/home/clseibold/ServerData/auragem_sis/SIS/auragem_gemini/search/yearposts/", conn)
+		lastFeedCrawl = time.Now()
 	})
 
 	// On-Demand Capsule Crawler
@@ -590,7 +592,9 @@ Number of Domains that responded with an empty META field: %d
 
 => /search/mimetype/ Mimetypes with Counts
 
-`, lastCrawlCache.Format("2006-01-02"), pagesCountCache, domainsCount, feedCount, totalSize, totalSizeText, totalSizeText/totalSize*100.0, slowdowncount, emptyMetaCount))
+Last Feed Crawl Time: %s
+
+`, lastCrawlCache.Format("2006-01-02"), pagesCountCache, domainsCount, feedCount, totalSize, totalSizeText, totalSizeText/totalSize*100.0, slowdowncount, emptyMetaCount, lastFeedCrawl.Format(time.DateTime)))
 
 		if globalData.IsCrawling() {
 			currentCrawlCount := float64(globalData.CrawledCount())

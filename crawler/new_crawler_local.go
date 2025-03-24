@@ -128,6 +128,11 @@ func FeedCrawler(globalData *GlobalData, hourDuration int, wg *sync.WaitGroup, f
 		fmt.Printf("[6-7] Feed Crawler Finished.\n")
 		feedData.Reset()
 		finished()
+
+		// Execute procedures to update FTS database
+		globalData.dbConn.Exec("EXECUTE PROCEDURE FTS$MANAGEMENT.FTS$REBUILD_INDEX('FTS_DOMAIN_ID');")
+		globalData.dbConn.Exec("EXECUTE PROCEDURE FTS$MANAGEMENT.FTS$REBUILD_INDEX('FTS_PAGE_ID_EN');")
+
 		time.Sleep(time.Minute * 5)
 	}
 }
