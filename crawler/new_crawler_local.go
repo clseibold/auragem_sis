@@ -62,7 +62,7 @@ func RegularCrawler(globalData *GlobalData, wg *sync.WaitGroup) {
 			globalData.AddUrl(seed.Url, UrlToCrawlData{})
 		}
 
-		wg2.Add(5)
+		wg2.Add(4)
 		go Crawl(globalData, 0, wg2, 60)
 		go Crawl(globalData, 1, wg2, 60)
 		go Crawl(globalData, 2, wg2, 60)
@@ -118,7 +118,7 @@ func FeedCrawler(globalData *GlobalData, hourDuration int, wg *sync.WaitGroup, f
 			//}
 		}
 
-		wg2.Add(2)
+		wg2.Add(4)
 		go Crawl(feedData, 6, wg2, 60)
 		go Crawl(feedData, 7, wg2, 60)
 		go Crawl(feedData, 8, wg2, 60)
