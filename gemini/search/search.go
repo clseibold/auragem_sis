@@ -742,6 +742,8 @@ Last Feed Crawl Time: %s (%.2f hours taken)
 					request.Redirect("gemini://godocs.io/")
 				case "!antenna":
 					request.Redirect("gemini://warmedal.se/~antenna/")
+				case "!cdg", "!directory":
+					request.Redirect("gemini://cdg.thegonz.net/")
 				}
 				return
 			}
