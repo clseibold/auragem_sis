@@ -744,6 +744,24 @@ Last Feed Crawl Time: %s (%.2f hours taken)
 					request.Redirect("gemini://warmedal.se/~antenna/")
 				case "!cdg", "!directory":
 					request.Redirect("gemini://cdg.thegonz.net/")
+				case "!sggs", "!games":
+					request.Redirect("gemini://sggs.thegonz.net/")
+				case "!farkle":
+					request.Redirect("gemini://gemini.smallweb.space/farkle/")
+				case "!wordle":
+					request.Redirect("gemini://dev.spool-five.com/src/app/wordle")
+				case "!spellbinding":
+					request.Redirect("gemini://tilde.team/~stack/game/cgi")
+				case "!xkcd":
+					request.Redirect("gemini://gemi.dev/xkcd/archive/")
+				case "!archive", "!delorean":
+					request.Redirect("gemini://kennedy.gemi.dev/archive/")
+				case "!sourcehut":
+					request.Redirect("gemini://srht.site/")
+				case "!stargate":
+					request.Redirect("gemini://tilde.team/~smokey/cgi-bin/search-engine-inputs.gmi")
+				case "!tldr", "!man":
+					request.Redirect("gemini://freeshell.de/tldr/")
 				}
 				return
 			}
