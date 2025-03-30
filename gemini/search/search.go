@@ -706,6 +706,46 @@ Last Feed Crawl Time: %s (%.2f hours taken)
 				return
 			}
 
+			// AuraGem Search Keywords!
+			if strings.HasPrefix(strings.TrimSpace(query), "!") {
+				query = strings.TrimSpace(strings.ToLower(query))
+				switch query {
+				case "!kennedy":
+					request.Redirect("gemini://kennedy.gemi.dev/")
+				case "!auragem":
+					request.Redirect("gemini://auragem.ddns.net/")
+				case "!feed":
+					request.Redirect("gemini://auragem.ddns.net/search/yearposts/")
+				case "!auragem music", "!music":
+					request.Redirect("gemini://auragem.ddns.net/music/")
+				case "!aurarepo":
+					request.Redirect("gemini://auragem.ddns.net/~aurarepo/")
+				case "!youtube":
+					request.Redirect("gemini://auragem.ddns.net/youtube/")
+				case "!github":
+					request.Redirect("gemini://auragem.ddns.net/github/")
+				case "!wiki", "!wikipedia", "!gemipedia":
+					request.Redirect("gemini://gemi.dev/cgi-bin/wp.cgi/")
+				case "!bubble", "!bbs":
+					request.Redirect("gemini://bbs.geminispace.org/")
+				case "!station":
+					request.Redirect("gemini://station.martinrue.com/")
+				case "!gemini":
+					request.Redirect("gemini://geminiprotocol.net/")
+				case "!spec":
+					request.Redirect("gemini://geminiprotocol.net/docs/")
+				case "!haiku":
+					request.Redirect("gemini://lofi.haiku-os.org/")
+				case "!astrobotany", "!plant":
+					request.Redirect("gemini://astrobotany.mozz.us/")
+				case "!godocs":
+					request.Redirect("gemini://godocs.io/")
+				case "!antenna":
+					request.Redirect("gemini://warmedal.se/~antenna/")
+				}
+				return
+			}
+
 			// Page 1
 			handleSearch(request, conn, query, 1, false, false, false, false)
 			return
