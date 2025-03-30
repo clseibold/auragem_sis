@@ -713,17 +713,17 @@ Last Feed Crawl Time: %s (%.2f hours taken)
 				case "!kennedy":
 					request.Redirect("gemini://kennedy.gemi.dev/")
 				case "!auragem":
-					request.Redirect("gemini://auragem.ddns.net/")
+					request.Redirect("/")
 				case "!feed":
-					request.Redirect("gemini://auragem.ddns.net/search/yearposts/")
+					request.Redirect("/search/yearposts/")
 				case "!auragem music", "!music":
-					request.Redirect("gemini://auragem.ddns.net/music/")
+					request.Redirect("/music/")
 				case "!aurarepo":
-					request.Redirect("gemini://auragem.ddns.net/~aurarepo/")
+					request.Redirect("/~aurarepo/")
 				case "!youtube":
-					request.Redirect("gemini://auragem.ddns.net/youtube/")
+					request.Redirect("/youtube/")
 				case "!github":
-					request.Redirect("gemini://auragem.ddns.net/github/")
+					request.Redirect("/github/")
 				case "!wiki", "!wikipedia", "!gemipedia":
 					request.Redirect("gemini://gemi.dev/cgi-bin/wp.cgi/")
 				case "!bubble", "!bbs":
