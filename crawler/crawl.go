@@ -407,6 +407,10 @@ func handleSuccess(ctx CrawlContext, crawlThread int, crawlData UrlToCrawlData) 
 			}
 		}
 
+		if strings.ToLower(strings.TrimSpace(geminiTitle)) == "directory listing" {
+			geminiTitle = ctx.GetCurrentURL()
+		}
+
 		// Publication Date Handling: Get from internal link, overwrite from title or filename if available // TODO: Check for dates in the path directories just above the file
 		timeCutoff := time.Now().Add(time.Hour * 24).UTC()
 		publicationDate := ctx.resp.PublishDate
