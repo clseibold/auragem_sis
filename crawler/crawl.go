@@ -42,6 +42,8 @@ var skip = map[string]bool{
 	"gemini://singletona082.flounder.online/":    true, // Malformed strings
 	"gemini://godocs.io/":                        true,
 	"gemini://taz.de/":                           true,
+
+	"gemini://scrollprotocol.us.to/": true, // Scroll to Gemini proxy/mirror
 }
 
 var skipUrls = map[string]bool{
@@ -65,6 +67,8 @@ var skipUrls = map[string]bool{
 
 	"gemini://source.community/invite/":       true, // Some error with the db, possibly prompt is too long
 	"spartan://gmi.noulin.net/stackoverflow/": true, // Mirror
+
+	"nex://auragem.ddns.net/scrollprotocol/": true, // Scroll to nex proxy/mirror
 }
 
 // breakSeconds is the number of seconds to wait when there's no new URLs before breaking.
