@@ -94,7 +94,10 @@ func FeedCrawler(globalData *GlobalData, hourDuration int, wg *sync.WaitGroup, f
 	// Sleep to offset the start of the feed crawler until 2 days into the regular crawler
 	//time.Sleep(time.Duration(float32(time.Hour*13) * 3.64))
 
-	ticker, _ := cronticker.NewTicker("0 0,13 * * *") // Every day at 00:00 and 13:00.
+	ticker, err := cronticker.NewTicker("0 0,13 * * *") // Every day at 00:00 and 13:00.
+	if err != nil {
+		panic(err)
+	}
 	//ticker := time.NewTicker(time.Hour * time.Duration(hourDuration)) // Every 13 hours
 	wg2 := &sync.WaitGroup{}
 
@@ -125,7 +128,7 @@ func FeedCrawler(globalData *GlobalData, hourDuration int, wg *sync.WaitGroup, f
 		go Crawl(feedData, 9, wg2, 60)
 
 		wg2.Wait()
-		fmt.Printf("[6-7] Feed Crawler Finished.\n")
+		fmt.Printf("[6-9] Feed Crawler Finished.\n")
 		feedData.Reset()
 		finished()
 
