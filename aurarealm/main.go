@@ -48,7 +48,7 @@ func main() {
 		} else if request.GlobString == "" {
 			// Homepage - list all users
 			request.Heading(1, "AuraRealm")
-			request.PlainText("Welcome to AuraGem's pubnix, AuraRealm! You can find more information below.")
+			request.PlainText("Welcome to AuraGem's pubnix, AuraRealm! You can find more information below.\n")
 			request.Link("/about.gmi", "About AuraRealm")
 			request.Heading(2, "Users")
 			homeDirEntries, _ := os.ReadDir("/home/")
