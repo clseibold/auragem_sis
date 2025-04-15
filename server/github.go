@@ -1,4 +1,4 @@
-package gemini
+package server
 
 import (
 	"context"

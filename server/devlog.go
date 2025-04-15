@@ -1,9 +1,9 @@
-package gemini
+package server
 
 import (
 	"time"
 
-	"gitlab.com/clseibold/auragem_sis/gemini/utils"
+	"gitlab.com/clseibold/auragem_sis/server/utils"
 	sis "gitlab.com/sis-suite/smallnetinformationservices"
 )
 

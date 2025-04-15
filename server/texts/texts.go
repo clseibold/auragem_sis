@@ -10,9 +10,9 @@ import (
 
 	// "github.com/krixano/ponixserver/src/db"
 
-	"gitlab.com/clseibold/auragem_sis/gemini/texts/christianity"
-	"gitlab.com/clseibold/auragem_sis/gemini/texts/islam"
-	"gitlab.com/clseibold/auragem_sis/gemini/texts/judaism"
+	"gitlab.com/clseibold/auragem_sis/server/texts/christianity"
+	"gitlab.com/clseibold/auragem_sis/server/texts/islam"
+	"gitlab.com/clseibold/auragem_sis/server/texts/judaism"
 	sis "gitlab.com/sis-suite/smallnetinformationservices"
 )
 

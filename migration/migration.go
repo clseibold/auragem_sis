@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"gitlab.com/clseibold/auragem_sis/db"
-	"gitlab.com/clseibold/auragem_sis/gemini"
 	"gitlab.com/clseibold/auragem_sis/migration/migrations"
 	"gitlab.com/clseibold/auragem_sis/migration/types"
 
@@ -22,7 +21,7 @@ import (
 
 var listMigrations bool
 
-func init() {
+func InitMigrationCommands(Command *cobra.Command) {
 	migrateCommand := &cobra.Command{
 		Use:   "migrate [Database] [target migration id]",
 		Short: "Run database migrations",
@@ -68,8 +67,8 @@ func init() {
 		},
 	}
 
-	gemini.Command.AddCommand(migrateCommand)
-	gemini.Command.AddCommand(makeMigrationCommand)
+	Command.AddCommand(migrateCommand)
+	Command.AddCommand(makeMigrationCommand)
 }
 
 func getSortedMigrationVersions(All map[types.MigrationVersion]types.Migration) []types.MigrationVersion { // TODO

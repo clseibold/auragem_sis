@@ -5,7 +5,7 @@ import (
 	"database/sql"
 
 	"gitlab.com/clseibold/auragem_sis/db"
-	"gitlab.com/clseibold/auragem_sis/migration/types"
+	"gitlab.com/clseibold/auragem_sis/server/migration/types"
 )
 
 func init() {
