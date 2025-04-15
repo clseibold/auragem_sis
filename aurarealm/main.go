@@ -48,10 +48,15 @@ func main() {
 		} else if request.GlobString == "" {
 			// Homepage - list all users
 			request.Heading(1, "AuraRealm")
+			request.PlainText("Welcome to AuraGem's pubnix, AuraRealm! You can find more information below.")
+			request.Link("/about.gmi", "About AuraRealm")
 			request.Heading(2, "Users")
 			homeDirEntries, _ := os.ReadDir("/home/")
 			for _, entry := range homeDirEntries {
-				request.Link("/~"+entry.Name(), entry.Name())
+				// Make sure user's directory has a gemini directory
+				if info, err := os.Stat(path.Join("/home/", entry.Name(), "gemini")); err == nil && info.IsDir() {
+					request.Link("/~"+entry.Name(), entry.Name())
+				}
 			}
 			//request.ServeDirectory("/home/")
 		} else {
