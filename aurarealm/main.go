@@ -47,7 +47,13 @@ func main() {
 			}
 		} else if request.GlobString == "" {
 			// Homepage - list all users
-			request.ServeDirectory("/home/")
+			request.Heading(1, "AuraRealm")
+			request.Heading(2, "Users")
+			homeDirEntries, _ := os.ReadDir("/home/")
+			for _, entry := range homeDirEntries {
+				request.Link("/~"+entry.Name(), entry.Name())
+			}
+			//request.ServeDirectory("/home/")
 		} else {
 			request.NotFound("Path Not found.")
 			return
