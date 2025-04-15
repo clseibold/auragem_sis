@@ -34,11 +34,11 @@ func main() {
 			request.GlobString = strings.TrimPrefix(request.GlobString, "~") // TODO: Hack
 
 			parts := strings.Split(request.GlobString, "/")
-			if info, err := os.Stat(path.Join(parts[0], "gemini")); err == nil && info.IsDir() {
+			if info, err := os.Stat(path.Join("/home/", parts[0], "gemini")); err == nil && info.IsDir() {
 				request.ServeDirectory("/home/")
 				return
 			} else {
-				request.NotFound("Not found.")
+				request.NotFound("Gemini directory not found.")
 				return
 			}
 		} else if request.GlobString == "" {
