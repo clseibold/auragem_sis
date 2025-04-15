@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	sis "gitlab.com/sis-suite/smallnetinformationservices"
@@ -36,8 +37,9 @@ func main() {
 			request.GlobString = strings.TrimPrefix(strings.TrimPrefix(request.GlobString, "/"), "~") // TODO: Hack
 
 			parts := strings.Split(request.GlobString, "/")
+			request.GlobString = path.Join(parts[1:]...)
 			if info, err := os.Stat(path.Join("/home/", parts[0], "gemini")); err == nil && info.IsDir() {
-				request.ServeDirectory("/home/")
+				request.ServeDirectory(filepath.Join("/home/", parts[0], "/gemini"))
 				return
 			} else {
 				request.NotFound("Gemini directory not found.")
