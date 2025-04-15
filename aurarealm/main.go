@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -30,8 +31,9 @@ func main() {
 	}*/
 	geminiServer, _ := context.AddServer(sis.VirtualServer{Type: sis.ServerType_Gemini, Name: "aurarealm_gemini", DefaultLanguage: "en"}, hostsConfig...)
 	geminiServer.AddRoute("/*", func(request *sis.Request) {
-		if strings.HasPrefix(request.GlobString, "~") {
-			request.GlobString = strings.TrimPrefix(request.GlobString, "~") // TODO: Hack
+		fmt.Printf("Glob: %s\n", request.GlobString)
+		if strings.HasPrefix(request.GlobString, "~") || strings.HasPrefix(request.GlobString, "/~") {
+			request.GlobString = strings.TrimPrefix(strings.TrimPrefix(request.GlobString, "/"), "~") // TODO: Hack
 
 			parts := strings.Split(request.GlobString, "/")
 			if info, err := os.Stat(path.Join("/home/", parts[0], "gemini")); err == nil && info.IsDir() {
@@ -45,7 +47,7 @@ func main() {
 			// Homepage - list all users
 			request.ServeDirectory("/home/")
 		} else {
-			request.NotFound("Not found.")
+			request.NotFound("Path Not found.")
 			return
 		}
 	})
