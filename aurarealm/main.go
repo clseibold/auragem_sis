@@ -59,8 +59,9 @@ func main() {
 				}
 			}
 			//request.ServeDirectory("/home/")
+			return
 		} else {
-			request.NotFound("Path Not found.")
+			request.ServeDirectory("/srv/gemini/")
 			return
 		}
 	})
