@@ -29,10 +29,6 @@ func main() {
 	geminiServer, _ := context.CreateServer(sis.ServerType_Gemini, "aurarealm_gemini", "en", hostsConfig...)
 	geminiServer.AddRoute("/*", crossProtocolHandler)
 
-	gopherServer, _ := context.CreateServer(sis.ServerType_Gopher, "aurarealm_gopher", "en", hostsConfig...)
-	gopherServer.AddRoute("/*", crossProtocolHandler)
-	gopherServer.AddProxyRoute("/about.txt", "$aurarealm_gemini/about.gmi", '0')
-
 	// Spartan servers must be bound to a separate port.
 	spartanHostsConfig := []sis.HostConfig{
 		{BindAddress: "0.0.0.0", BindPort: "7001", Hostname: "auragem.ddns.net", Upload: false, SCGI: true},
@@ -43,6 +39,17 @@ func main() {
 	spartanServer, _ := context.CreateServer(sis.ServerType_Spartan, "aurarealm_spartan", "en", spartanHostsConfig...)
 	spartanServer.AddRoute("/*", crossProtocolHandler)
 	spartanServer.AddProxyRoute("/about.gmi", "$aurarealm_gemini/about.gmi", '0')
+
+	// Gopher servers must be bound to a separate port.
+	gopherHostsConfig := []sis.HostConfig{
+		{BindAddress: "0.0.0.0", BindPort: "7002", Hostname: "auragem.ddns.net", Upload: false, SCGI: true},
+		{BindAddress: "0.0.0.0", BindPort: "7002", Hostname: "auragem.ddns.net", Upload: true, SCGI: true},
+		// {BindAddress: "0.0.0.0", BindPort: "7002", Hostname: "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", Upload: false, SCGI: true},
+		// {BindAddress: "0.0.0.0", BindPort: "7002", Hostname: "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", Upload: true, SCGI: true},
+	}
+	gopherServer, _ := context.CreateServer(sis.ServerType_Gopher, "aurarealm_gopher", "en", gopherHostsConfig...)
+	gopherServer.AddRoute("/*", crossProtocolHandler)
+	gopherServer.AddProxyRoute("/about.txt", "$aurarealm_gemini/about.gmi", '0')
 
 	// Internal Gemini Server
 	internalHostsConfig := []sis.HostConfig{

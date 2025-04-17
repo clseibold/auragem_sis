@@ -281,7 +281,7 @@ func setupAuraGem(context *sis.SISContext, chatContext *chat.ChatContext, aurare
 	gopherServer.AddProxyRoute("/g/*", "$auragem_gemini/*", '1')
 	gopherServer.AddProxyRoute("/scholasticdiversity/*", "$scholasticdiversity_gemini/*", '1')
 	gopherServer.AddProxyRoute("/scrollprotocol/*", "$scrollprotocol_scroll/*", '1')
-	gopherServer.AddSCGIRoute("/realm/*", "scgi://10.42.0.2:7000")
+	gopherServer.AddSCGIRoute("/realm/*", "scgi://10.42.0.2:7002")
 }
 
 func setupScholasticDiversity(context *sis.SISContext) {
