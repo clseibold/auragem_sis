@@ -21,8 +21,8 @@ func main() {
 
 	// Gemini and Spartan SCGI Application Servers
 	hostsConfig := []sis.HostConfig{
-		{BindAddress: "0.0.0.0", BindPort: "7000", Hostname: "auragem.ddns.net", Upload: false, SCGI: true},
-		{BindAddress: "0.0.0.0", BindPort: "7000", Hostname: "auragem.ddns.net", Upload: true, SCGI: true},
+		{BindAddress: "0.0.0.0", BindPort: "7000", Hostname: "auragem.ddns.net", Port: "1965", Upload: false, SCGI: true},
+		{BindAddress: "0.0.0.0", BindPort: "7000", Hostname: "auragem.ddns.net", Port: "1965", Upload: true, SCGI: true},
 		{BindAddress: "0.0.0.0", BindPort: "7000", Hostname: "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", Upload: false, SCGI: true},
 		{BindAddress: "0.0.0.0", BindPort: "7000", Hostname: "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", Upload: true, SCGI: true},
 	}
@@ -31,8 +31,8 @@ func main() {
 
 	// Spartan servers must be bound to a separate port.
 	spartanHostsConfig := []sis.HostConfig{
-		{BindAddress: "0.0.0.0", BindPort: "7001", Hostname: "auragem.ddns.net", Upload: false, SCGI: true},
-		{BindAddress: "0.0.0.0", BindPort: "7001", Hostname: "auragem.ddns.net", Upload: true, SCGI: true},
+		{BindAddress: "0.0.0.0", BindPort: "7001", Hostname: "auragem.ddns.net", Port: "300", Upload: false, SCGI: true},
+		{BindAddress: "0.0.0.0", BindPort: "7001", Hostname: "auragem.ddns.net", Port: "300", Upload: true, SCGI: true},
 		{BindAddress: "0.0.0.0", BindPort: "7001", Hostname: "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", Upload: false, SCGI: true},
 		{BindAddress: "0.0.0.0", BindPort: "7001", Hostname: "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", Upload: true, SCGI: true},
 	}
@@ -42,8 +42,8 @@ func main() {
 
 	// Gopher servers must be bound to a separate port.
 	gopherHostsConfig := []sis.HostConfig{
-		{BindAddress: "0.0.0.0", BindPort: "7002", Hostname: "auragem.ddns.net", Upload: false, SCGI: true},
-		{BindAddress: "0.0.0.0", BindPort: "7002", Hostname: "auragem.ddns.net", Upload: true, SCGI: true},
+		{BindAddress: "0.0.0.0", BindPort: "7002", Hostname: "auragem.ddns.net", Port: "70", Upload: false, SCGI: true},
+		{BindAddress: "0.0.0.0", BindPort: "7002", Hostname: "auragem.ddns.net", Port: "70", Upload: true, SCGI: true},
 		// {BindAddress: "0.0.0.0", BindPort: "7002", Hostname: "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", Upload: false, SCGI: true},
 		// {BindAddress: "0.0.0.0", BindPort: "7002", Hostname: "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", Upload: true, SCGI: true},
 	}
