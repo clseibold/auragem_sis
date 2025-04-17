@@ -273,7 +273,7 @@ func setupAuraGem(context *sis.SISContext, chatContext *chat.ChatContext, aurare
 	// context.AddServerRoute("0.0.0.0", "300", sis.ProtocolType_Spartan, "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", spartanServer)
 	spartanServer.AddFile("/", "./index.gmi")
 	spartanServer.AddProxyRoute("/*", "$auragem_gemini/*", '1')
-	spartanServer.AddSCGIRoute("/realm/*", "scgi://10.42.0.2:7000")
+	spartanServer.AddSCGIRoute("/realm/*", "scgi://10.42.0.2:7001")
 
 	gopherServer, _ := context.AddServer(sis.VirtualServer{Type: sis.ServerType_Gopher, Name: "gopher", DefaultLanguage: "en"}, hostsConfig2...)
 	//context.AddServerRoute("0.0.0.0", "70", sis.ProtocolType_Gopher, "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", gopherServer)
