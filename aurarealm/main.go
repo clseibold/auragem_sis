@@ -103,7 +103,7 @@ func crossProtocolHandler(request *sis.Request) {
 		for _, entry := range homeDirEntries {
 			// Make sure user's directory has a directory for the given protocol
 			if info, err := os.Stat(path.Join("/home/", entry.Name(), subDirectoryName)); err == nil && info.IsDir() {
-				request.Link("/~"+entry.Name(), entry.Name())
+				request.Link("/~"+entry.Name()+"/", entry.Name())
 			}
 		}
 		return
