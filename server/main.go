@@ -267,11 +267,13 @@ func setupAuraGem(context *sis.SISContext, chatContext *chat.ChatContext, aurare
 	nexServer.AddProxyRoute("/gemini/*", "$auragem_gemini/*", '1')
 	nexServer.AddProxyRoute("/scholasticdiversity/*", "$scholasticdiversity_gemini/*", '1')
 	nexServer.AddProxyRoute("/scrollprotocol/*", "$scrollprotocol_gemini/*", '1')
+	nexServer.AddSCGIRoute("/realm/*", "scgi://10.42.0.2:7000")
 
 	spartanServer, _ := context.AddServer(sis.VirtualServer{Type: sis.ServerType_Spartan, Name: "spartan", DefaultLanguage: "en"}, hostsConfig...)
 	// context.AddServerRoute("0.0.0.0", "300", sis.ProtocolType_Spartan, "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", spartanServer)
 	spartanServer.AddFile("/", "./index.gmi")
 	spartanServer.AddProxyRoute("/*", "$auragem_gemini/*", '1')
+	spartanServer.AddSCGIRoute("/realm/*", "scgi://10.42.0.2:7000")
 
 	gopherServer, _ := context.AddServer(sis.VirtualServer{Type: sis.ServerType_Gopher, Name: "gopher", DefaultLanguage: "en"}, hostsConfig2...)
 	//context.AddServerRoute("0.0.0.0", "70", sis.ProtocolType_Gopher, "auragemhkzsr5rowsaxauti6yhinsaa43wjtcqxhh7fw5tijdoqbreyd.onion", gopherServer)
@@ -279,6 +281,7 @@ func setupAuraGem(context *sis.SISContext, chatContext *chat.ChatContext, aurare
 	gopherServer.AddProxyRoute("/g/*", "$auragem_gemini/*", '1')
 	gopherServer.AddProxyRoute("/scholasticdiversity/*", "$scholasticdiversity_gemini/*", '1')
 	gopherServer.AddProxyRoute("/scrollprotocol/*", "$scrollprotocol_scroll/*", '1')
+	gopherServer.AddSCGIRoute("/realm/*", "scgi://10.42.0.2:7000")
 }
 
 func setupScholasticDiversity(context *sis.SISContext) {
