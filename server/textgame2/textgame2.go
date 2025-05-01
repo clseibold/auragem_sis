@@ -51,6 +51,7 @@ func (c *Context) SimulationLoop() {
 
 func (c *Context) Attach(s sis.ServeMux) {
 	s.AddRoute("/", c.Homepage)
+	s.AddRoute("/about/", c.About)
 	group := s.Group("/test/")
 	group.AddRoute("/", c.firstColony.ColonyPage)
 	group.AddRoute("/resource_zone/:id/", c.firstColony.ResourceZonePage)
