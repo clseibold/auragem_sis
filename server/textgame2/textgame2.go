@@ -48,7 +48,7 @@ func (c *Context) Attach(s sis.ServeMux) {
 	s.AddRoute("/", c.Homepage)
 	group := s.Group("/test/")
 	group.AddRoute("/", c.firstColony.ColonyPage)
-	group.AddRoute("/resource_zone/:id/", c.firstColony.ResourceGroupPage)
+	group.AddRoute("/resource_zone/:id/", c.firstColony.ResourceZonePage)
 	group.AddRoute("/resource_zone/:id/add_worker", c.firstColony.AddWorkerPage)
 	group.AddRoute("/resource_zone/:id/remove_worker", c.firstColony.RemoveWorkerPage)
 }
@@ -75,7 +75,13 @@ func (colony *Colony) ColonyPage(request *sis.Request) {
 
 	// Statistics
 	request.Gemini("```Statistics\n")
-	request.Gemini(fmt.Sprintf("Date & Time: %s\n", colony.context.inGameTime.Format(time.TimeOnly)))
+	if colony.context.IsWorkTime() {
+		request.Gemini(fmt.Sprintf("Date & Time: %s (Work)\n", colony.context.inGameTime.Format(time.TimeOnly)))
+	} else if colony.context.IsSleepTime() {
+		request.Gemini(fmt.Sprintf("Date & Time: %s (Sleep)\n", colony.context.inGameTime.Format(time.TimeOnly)))
+	} else if colony.context.IsFreeTime() {
+		request.Gemini(fmt.Sprintf("Date & Time: %s (Free Time)\n", colony.context.inGameTime.Format(time.TimeOnly)))
+	}
 	request.Gemini(fmt.Sprintf("Population: %d (%d unemployed)\n", len(colony.agents), unemployedAgents))
 	//request.Gemini(fmt.Sprintf("Food: %d\n", colony.resourceCounts[Resource_Food]))
 	request.Gemini(fmt.Sprintf("Water: %d (+0/cycle)\n", colony.resourceCounts[Resource_Water]))
@@ -108,7 +114,7 @@ func (colony *Colony) ColonyPage(request *sis.Request) {
 	// Action Links
 }
 
-func (colony *Colony) ResourceGroupPage(request *sis.Request) {
+func (colony *Colony) ResourceZonePage(request *sis.Request) {
 	resourceId, _ := strconv.Atoi(request.GetParam("id"))
 	zone := &colony.landResources[resourceId]
 
