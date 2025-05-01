@@ -145,11 +145,11 @@ func (colony *Colony) CommitProductionAndConsumption() {
 		var productionFromZone float64 = colony.currentProduction[zone.landResource.ToResource()] + colony.productionFromZone(zone)
 		productionWhole := uint(productionFromZone)
 
-		if productionWhole >= zone.amount {
+		if productionFromZone >= float64(zone.amount) {
 			zone.amount = 0
 
 			// Readjust based on overflow amount from production of zone
-			diff := productionWhole - zone.amount
+			diff := productionFromZone - float64(zone.amount)
 			colony.currentProduction[zone.landResource.ToResource()] -= float64(diff)
 		} else {
 			zone.amount -= productionWhole
