@@ -10,7 +10,7 @@ import (
 )
 
 const TickRealTimeDuration = time.Second
-const InGameSecondsPerTick = 4
+const InGameSecondsPerTick = 4 // NOTE: I could get 7 in-game days per real-time day if I switched this to 7 igs per tick.
 
 func TicksToInGameDuration(ticks int) time.Duration {
 	return time.Duration(ticks*InGameSecondsPerTick) * time.Second
@@ -29,6 +29,7 @@ func NewContext() *Context {
 	context := new(Context)
 	context.ticker = time.NewTicker(TickRealTimeDuration)
 	context.firstColony = NewColony(context, "Test Colony", 6)
+	context.inGameTime = time.Date(0, 0, 0, 8, 0, 0, 0, time.UTC)
 	return context
 }
 
@@ -56,7 +57,21 @@ func (c *Context) Attach(s sis.ServeMux) {
 func (c *Context) Homepage(request *sis.Request) {
 	request.Heading(1, "Colony-Management Simulation Game")
 	request.Gemini("\n")
+	request.Link("/about/", "About")
 	request.Link("/test/", "Test Colony")
+}
+
+func (c *Context) About(request *sis.Request) {
+	request.Heading(1, "About Game")
+	request.Gemini(`
+This is an MMO colony-management survival game written primarily for Gemini.
+
+Four in-game days equals one real-time day.
+
+Each colony has a set of resource zones. These are zones of resources that are harvested from the land. The resources available from resource zones are dependent on the location, biome, and weather of the colony.
+
+=> / Homepage
+`) // TODO
 }
 
 func (colony *Colony) ColonyPage(request *sis.Request) {
