@@ -11,7 +11,9 @@ import (
 
 const TickRealTimeDuration = time.Second
 const InGameSecondsPerTick int = 4 // NOTE: I could get 7 in-game days per real-time day if I switched this to 7 igs per tick.
+const WorkHours = 10
 const TicksPerInGameDay float64 = 1 / float64(InGameSecondsPerTick) * 60 * 60 * 24
+const TicksPerInGameWorkDay float64 = 1 / float64(InGameSecondsPerTick) * 60 * 60 * WorkHours
 
 func TicksToInGameDuration(ticks int) time.Duration {
 	return time.Duration(ticks*InGameSecondsPerTick) * time.Second
@@ -99,12 +101,12 @@ func (colony *Colony) ColonyPage(request *sis.Request) {
 		request.Gemini(fmt.Sprintf("Date & Time: %s (Free Time)\n", colony.context.inGameTime.Format(time.TimeOnly)))
 	}
 	request.Gemini(fmt.Sprintf("Population:  %d (%d unemployed)\n", len(colony.agents), unemployedAgents))
-	request.Gemini(fmt.Sprintf("Food:        %d (%+.2f/igd)\n", colony.resourceCounts[Resource_Berries], (colony.currentProduction[Resource_Berries]-colony.currentConsumption[Resource_Berries])*TicksPerInGameDay)) // TODO: Count *all* food sources
-	request.Gemini(fmt.Sprintf("Water:       %d (+0/igd)\n", colony.resourceCounts[Resource_Water]))
-	request.Gemini(fmt.Sprintf("Oak Wood:    %d (%+.2f/igd)\n", colony.resourceCounts[Resource_Wood_Oak], (colony.currentProduction[Resource_Wood_Oak]-colony.currentConsumption[Resource_Wood_Oak])*TicksPerInGameDay))
-	request.Gemini(fmt.Sprintf("Granite:     %d (%+.2f/igd)\n", colony.resourceCounts[Resource_Granite], (colony.currentProduction[Resource_Granite]-colony.currentConsumption[Resource_Granite])*TicksPerInGameDay))
-	request.Gemini(fmt.Sprintf("Coal:        %d (+0/igd)\n", colony.resourceCounts[Resource_Coal]))
-	request.Gemini(fmt.Sprintf("Iron:        %d (+0/igd)\n", colony.resourceCounts[Resource_Iron]))
+	request.Gemini(fmt.Sprintf("Food:        %d (%+.2f/work-day)\n", colony.resourceCounts[Resource_Berries], (colony.currentProduction[Resource_Berries]-colony.currentConsumption[Resource_Berries])*TicksPerInGameWorkDay)) // TODO: Count *all* food sources
+	request.Gemini(fmt.Sprintf("Water:       %d (+0/work-day)\n", colony.resourceCounts[Resource_Water]))
+	request.Gemini(fmt.Sprintf("Oak Wood:    %d (%+.2f/work-day)\n", colony.resourceCounts[Resource_Wood_Oak], (colony.currentProduction[Resource_Wood_Oak]-colony.currentConsumption[Resource_Wood_Oak])*TicksPerInGameWorkDay))
+	request.Gemini(fmt.Sprintf("Granite:     %d (%+.2f/work-day)\n", colony.resourceCounts[Resource_Granite], (colony.currentProduction[Resource_Granite]-colony.currentConsumption[Resource_Granite])*TicksPerInGameWorkDay))
+	request.Gemini(fmt.Sprintf("Coal:        %d (+0/work-day)\n", colony.resourceCounts[Resource_Coal]))
+	request.Gemini(fmt.Sprintf("Iron:        %d (+0/work-day)\n", colony.resourceCounts[Resource_Iron]))
 	// request.Gemini(fmt.Sprintf("Production Factor: %d\n", colony.productionFactor)) // The efficiency of all production in colony
 	// request.Gemini(fmt.Sprintf("Next Update in")) // TODO: Get real-time duration till next building update.
 	request.Gemini("```\n")
@@ -176,11 +178,11 @@ func (colony *Colony) RemoveWorkerPage(request *sis.Request) {
 
 func (ctx *Context) IsWorkTime() bool {
 	workTime_start := time.Date(ctx.inGameTime.Year(), ctx.inGameTime.Month(), ctx.inGameTime.Day(), 8, 0, 0, 0, ctx.inGameTime.Location())
-	workTime_end := time.Date(ctx.inGameTime.Year(), ctx.inGameTime.Month(), ctx.inGameTime.Day(), 12+6, 0, 0, 0, ctx.inGameTime.Location())
+	workTime_end := time.Date(ctx.inGameTime.Year(), ctx.inGameTime.Month(), ctx.inGameTime.Day(), 8+WorkHours, 0, 0, 0, ctx.inGameTime.Location())
 	return ctx.inGameTime.Equal(workTime_start) || (ctx.inGameTime.After(workTime_start) && ctx.inGameTime.Before(workTime_end))
 }
 func (ctx *Context) IsFreeTime() bool {
-	freeTime_start := time.Date(ctx.inGameTime.Year(), ctx.inGameTime.Month(), ctx.inGameTime.Day(), 12+6, 0, 0, 0, ctx.inGameTime.Location())
+	freeTime_start := time.Date(ctx.inGameTime.Year(), ctx.inGameTime.Month(), ctx.inGameTime.Day(), 8+WorkHours, 0, 0, 0, ctx.inGameTime.Location())
 	midnight := time.Date(ctx.inGameTime.Year(), ctx.inGameTime.Month(), ctx.inGameTime.Day()+1, 0, 0, 0, 0, ctx.inGameTime.Location()) // Tomorrow
 	return ctx.inGameTime.Equal(freeTime_start) || (ctx.inGameTime.After(freeTime_start) && ctx.inGameTime.Before(midnight))
 }
