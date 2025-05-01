@@ -2,7 +2,6 @@ package textgame2
 
 import (
 	"fmt"
-	"math"
 )
 
 // TODO: Buildings and Agents should have a number of ticks that they've been working/turned on for when we switch to production
@@ -142,14 +141,13 @@ func (colony *Colony) CommitProductionAndConsumption() {
 
 		var productionFromZone float64 = colony.productionFromZone(zone)
 		productionWhole := uint(productionFromZone)
-		productionCeil := uint(math.Ceil(productionFromZone))
 
-		if productionCeil >= zone.amount {
+		if productionWhole >= zone.amount {
 			zone.amount = 0
 
 			// Readjust based on overflow amount from production of zone
-			diff := productionFromZone - float64(zone.amount)
-			colony.currentProduction[zone.landResource.ToResource()] -= diff
+			diff := productionWhole - zone.amount
+			colony.currentProduction[zone.landResource.ToResource()] -= float64(diff)
 		} else {
 			zone.amount -= productionWhole
 		}
