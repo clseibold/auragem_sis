@@ -18,6 +18,7 @@ import (
 	"gitlab.com/clseibold/auragem_sis/server/search"
 	"gitlab.com/clseibold/auragem_sis/server/starwars"
 	"gitlab.com/clseibold/auragem_sis/server/textgame"
+	"gitlab.com/clseibold/auragem_sis/server/textgame2"
 	"gitlab.com/clseibold/auragem_sis/server/textola"
 	"gitlab.com/clseibold/auragem_sis/server/texts"
 	"gitlab.com/clseibold/auragem_sis/server/youtube"
@@ -224,6 +225,9 @@ func setupAuraGem(context *sis.SISContext, chatContext *chat.ChatContext, aurare
 	geminiServer.AddUploadRoute("/guestbook.gmi", handleGuestbook)
 	geminiServer.AddCGIRoute("/debug/*", "/home/clseibold/ServerData/cgi_test")
 	geminiServer.AddSCGIRoute("/realm/*", "scgi://10.42.0.2:7000")
+
+	textGame2Context := textgame2.NewContext()
+	textGame2Context.Attach(geminiServer.Group("/textgame2/"))
 
 	// Proxies
 	youtube.HandleYoutube(geminiServer)
