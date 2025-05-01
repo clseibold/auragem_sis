@@ -82,12 +82,12 @@ func (colony *Colony) ColonyPage(request *sis.Request) {
 	} else if colony.context.IsFreeTime() {
 		request.Gemini(fmt.Sprintf("Date & Time: %s (Free Time)\n", colony.context.inGameTime.Format(time.TimeOnly)))
 	}
-	request.Gemini(fmt.Sprintf("Population: %d (%d unemployed)\n", len(colony.agents), unemployedAgents))
+	request.Gemini(fmt.Sprintf("Population:  %d (%d unemployed)\n", len(colony.agents), unemployedAgents))
 	//request.Gemini(fmt.Sprintf("Food: %d\n", colony.resourceCounts[Resource_Food]))
-	request.Gemini(fmt.Sprintf("Water: %d (+0/cycle)\n", colony.resourceCounts[Resource_Water]))
-	request.Gemini(fmt.Sprintf("Oak Wood: %d (+0/cycle)\n", colony.resourceCounts[Resource_Wood_Oak]))
-	request.Gemini(fmt.Sprintf("Coal: %d (+0/cycle)\n", colony.resourceCounts[Resource_Coal]))
-	request.Gemini(fmt.Sprintf("Iron: %d (+0/cycle)\n", colony.resourceCounts[Resource_Iron]))
+	request.Gemini(fmt.Sprintf("Water:       %d (+0/cycle)\n", colony.resourceCounts[Resource_Water]))
+	request.Gemini(fmt.Sprintf("Oak Wood:    %d (+0/cycle)\n", colony.resourceCounts[Resource_Wood_Oak]))
+	request.Gemini(fmt.Sprintf("Coal:        %d (+0/cycle)\n", colony.resourceCounts[Resource_Coal]))
+	request.Gemini(fmt.Sprintf("Iron:        %d (+0/cycle)\n", colony.resourceCounts[Resource_Iron]))
 	// request.Gemini(fmt.Sprintf("Production Factor: %d\n", colony.productionFactor)) // The efficiency of all production in colony
 	// request.Gemini(fmt.Sprintf("Next Update in")) // TODO: Get real-time duration till next building update.
 	request.Gemini("```\n")
