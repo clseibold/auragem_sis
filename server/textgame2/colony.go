@@ -139,7 +139,10 @@ func (colony *Colony) CommitProductionAndConsumption() {
 			continue
 		}
 
-		var productionFromZone float64 = colony.productionFromZone(zone)
+		// NOTE: colony.currentProduction is per tick, so it's a fractional. Add it to the current tick's fractional.
+		// The zone will not be subtracted from until the production reaches a whole integer, and only the
+		// whole integer will be subtracted from the zone.
+		var productionFromZone float64 = colony.currentProduction[zone.landResource.ToResource()] + colony.productionFromZone(zone)
 		productionWhole := uint(productionFromZone)
 
 		if productionWhole >= zone.amount {
