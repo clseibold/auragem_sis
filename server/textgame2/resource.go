@@ -64,7 +64,7 @@ func (resource LandResource) PerDayProductionPerAgent() float64 {
 	case LandResource_Lake_Horizontal:
 		return 20 * 20 // Liters - usually 20 at a time, 20 trips per 24 hours
 	case LandResource_Forest_Oak:
-		return 200 // Trees - 200 trees cut per 24 hours (50 per 6 hours), 10 to 50 trees sawmilled per day
+		return 100 // Trees - 100 trees cut per 24 hours, 10 to 50 trees sawmilled per day
 	case LandResource_Coal:
 		return 0
 	case LandResource_Clay:
