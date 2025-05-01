@@ -61,7 +61,9 @@ func NewColony(context *Context, name string, initialPopulationSize uint) *Colon
 		a.assignedZone = -1
 	}
 
-	colony.landResources[0] = NewResourceZone(0, LandResource_Forest_Oak, 20000)
+	colony.landResources[0] = NewResourceZone(0, LandResource_Forest_Oak, 30000)
+	colony.landResources[1] = NewResourceZone(1, LandResource_Granite, 20000)
+	colony.landResources[2] = NewResourceZone(2, LandResource_Berries, 40000)
 
 	return colony
 }
@@ -115,6 +117,8 @@ func (colony *Colony) Tick() {
 		case LandResource_Coal:
 		case LandResource_Clay:
 		case LandResource_Granite:
+			colony.currentProduction[Resource_Granite] = productionFromZone
+			colony.currentConsumption[Resource_Granite] = 0
 		case LandResource_Limestone:
 		case LandResource_Sandstone:
 		case LandResource_Marble:
@@ -130,6 +134,8 @@ func (colony *Colony) Tick() {
 		case LandResource_Haygrass:
 		case LandResource_RawRice:
 		case LandResource_Berries:
+			colony.currentProduction[Resource_Berries] = productionFromZone
+			colony.currentConsumption[Resource_Berries] = 0
 		case LandResource_Potatoes:
 		case LandResource_Corn:
 		case LandResource_Agave:
@@ -180,6 +186,15 @@ func (colony *Colony) CommitProductionAndConsumption() {
 		case LandResource_Coal:
 		case LandResource_Clay:
 		case LandResource_Granite:
+			if productionFromZone >= zone.amount {
+				zone.amount = 0
+
+				// Readjust based on overflow amount from production of zone
+				diff := productionFromZone - zone.amount
+				colony.currentProduction[Resource_Granite] -= diff
+			} else {
+				zone.amount -= productionFromZone
+			}
 		case LandResource_Limestone:
 		case LandResource_Sandstone:
 		case LandResource_Marble:
@@ -195,6 +210,15 @@ func (colony *Colony) CommitProductionAndConsumption() {
 		case LandResource_Haygrass:
 		case LandResource_RawRice:
 		case LandResource_Berries:
+			if productionFromZone >= zone.amount {
+				zone.amount = 0
+
+				// Readjust based on overflow amount from production of zone
+				diff := productionFromZone - zone.amount
+				colony.currentProduction[Resource_Berries] -= diff
+			} else {
+				zone.amount -= productionFromZone
+			}
 		case LandResource_Potatoes:
 		case LandResource_Corn:
 		case LandResource_Agave:
