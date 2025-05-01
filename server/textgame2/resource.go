@@ -100,7 +100,7 @@ func (resource LandResource) PerDayProductionPerAgent() float64 {
 	case LandResource_RawRice:
 		return 0
 	case LandResource_Berries:
-		return 0
+		return 100000 // 100000 individual blueberries (about 50 pounds) per 24 hours
 	case LandResource_Potatoes:
 		return 0
 	case LandResource_Corn:
@@ -110,7 +110,7 @@ func (resource LandResource) PerDayProductionPerAgent() float64 {
 	case LandResource_Mushrooms:
 		return 0
 	case LandResource_Strawberries:
-		return 0
+		return 15000 // 15000 individual strawberries (about 100 pounds) per 24 hours
 	default:
 		return 0
 	}
