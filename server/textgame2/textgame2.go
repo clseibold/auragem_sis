@@ -33,6 +33,10 @@ func NewContext() *Context {
 	return context
 }
 
+func (c *Context) Start() {
+	go c.SimulationLoop()
+}
+
 func (c *Context) SimulationLoop() {
 	for {
 		<-c.ticker.C

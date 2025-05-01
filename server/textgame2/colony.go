@@ -6,7 +6,7 @@ import "fmt"
 // going over multiple ticks (a cycle).
 
 var beginnerResourceCounts = [Resource_Max]uint{
-	Resource_Wood_Oak: 100,
+	Resource_Wood_Oak: 0,
 }
 
 type Colony struct {
@@ -52,6 +52,7 @@ func NewColony(context *Context, initialPopulationSize uint) *Colony {
 		a.state = AgentState_Idle
 		a.stress = 20 // 20% stress from starting a new colony off with nothing
 		a.familyID = i
+		a.assignedZone = -1
 	}
 
 	colony.landResources[0] = NewResourceZone(0, LandResource_Forest_Oak, 20000)
