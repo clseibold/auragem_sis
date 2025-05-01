@@ -28,7 +28,7 @@ func NewContext() *Context {
 
 	context := new(Context)
 	context.ticker = time.NewTicker(TickRealTimeDuration)
-	context.firstColony = NewColony(context, 6)
+	context.firstColony = NewColony(context, "Test Colony", 6)
 	return context
 }
 
@@ -60,7 +60,7 @@ func (c *Context) Homepage(request *sis.Request) {
 }
 
 func (colony *Colony) ColonyPage(request *sis.Request) {
-	request.Heading(1, "Colony Name Here")
+	request.Heading(1, colony.name)
 	request.Gemini("\n")
 
 	// Water and Food consumption per person

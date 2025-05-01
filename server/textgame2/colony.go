@@ -12,6 +12,7 @@ var beginnerResourceCounts = [Resource_Max]uint{
 type Colony struct {
 	// TODO: agents are array-of-structs atm. Potentially turn into struct of arrays later. Each agent is a state machine?
 	context        *Context
+	name           string
 	agents         []Agent
 	resourceCounts [Resource_Max]uint // Current resources in storage
 	landResources  [10]ResourceZone   // Available resource zones from land
@@ -27,9 +28,10 @@ type Colony struct {
 	// resourceProducers [Resource_Max]*Node
 }
 
-func NewColony(context *Context, initialPopulationSize uint) *Colony {
+func NewColony(context *Context, name string, initialPopulationSize uint) *Colony {
 	colony := new(Colony)
 	colony.context = context
+	colony.name = name
 	colony.agents = make([]Agent, initialPopulationSize)
 	colony.resourceCounts = beginnerResourceCounts
 	colony.buildings = make([]Building, 0)
