@@ -111,6 +111,9 @@ func (colony *Colony) Tick() {
 		colony.currentConsumption[zone.landResource.ToResource()] = colony.currentConsumption[zone.landResource.ToResource()] - float64(uint(colony.currentConsumption[zone.landResource.ToResource()]))
 
 		// Add to the fractional parts this tick's production and consumption values.
+		// This might make the production go over 1, which is a good thing, because the commit on next tick
+		// will have a chance to see the whole integer and commit it to storage and resource zones before
+		// the whole integer part is removed.
 		var productionFromZone float64 = colony.productionFromZone(zone)
 
 		colony.currentProduction[zone.landResource.ToResource()] += productionFromZone
@@ -139,20 +142,23 @@ func (colony *Colony) CommitProductionAndConsumption() {
 			continue
 		}
 
-		// NOTE: colony.currentProduction is per tick, so it's a fractional. Add it to the current tick's fractional.
+		// TODO: Make sure that multiple zones that produce the same resource aren't all subtracted from, only one of them.
+		productionWhole := uint(colony.currentProduction[zone.landResource.ToResource()])
+		consumptionWhole := uint(colony.currentConsumption[zone.landResource.ToResource()])
+
+		// OUTDATED NOTE: colony.currentProduction is per tick, so it's a fractional. Add it to the current tick's fractional.
 		// The zone will not be subtracted from until the production reaches a whole integer, and only the
 		// whole integer will be subtracted from the zone.
-		var productionFromZone float64 = colony.currentProduction[zone.landResource.ToResource()] + colony.productionFromZone(zone)
-		productionWhole := uint(productionFromZone)
+		// var productionFromZone float64 = colony.currentProduction[zone.landResource.ToResource()] + colony.productionFromZone(zone)
 
-		if productionFromZone >= float64(zone.amount) {
+		if productionWhole >= zone.amount {
 			zone.amount = 0
 
 			// Readjust based on overflow amount from production of zone
-			diff := productionFromZone - float64(zone.amount)
+			diff := productionWhole - zone.amount
 			colony.currentProduction[zone.landResource.ToResource()] -= float64(diff)
 		} else {
-			zone.amount -= productionWhole
+			zone.amount = zone.amount - (productionWhole - consumptionWhole)
 		}
 	}
 
