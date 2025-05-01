@@ -117,7 +117,7 @@ func (colony *Colony) ResourceGroupPage(request *sis.Request) {
 
 	request.Gemini("```Statistics\n")
 	request.Gemini(fmt.Sprintf("Workers: %d / 20", len(zone.workers)))
-	request.Gemini(fmt.Sprintf("Amount Left to Harvest: %d / 20", zone.amount))
+	request.Gemini(fmt.Sprintf("Amount Left to Harvest: %d", zone.amount))
 	request.Gemini("```\n")
 
 	request.Gemini("\n")
