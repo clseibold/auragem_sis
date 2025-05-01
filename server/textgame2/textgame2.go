@@ -1,6 +1,7 @@
 package textgame2
 
 import (
+	_ "embed"
 	"fmt"
 	"math"
 	"path"
@@ -9,6 +10,9 @@ import (
 
 	sis "gitlab.com/sis-suite/smallnetinformationservices"
 )
+
+//go:embed design.md
+var designDocument string
 
 const TickRealTimeDuration = time.Second
 const InGameSecondsPerTick int = 4 // NOTE: I could get 7 in-game days per real-time day if I switched this to 7 igs per tick.
@@ -52,6 +56,7 @@ func (c *Context) SimulationLoop() {
 func (c *Context) Attach(s sis.ServeMux) {
 	s.AddRoute("/", c.Homepage)
 	s.AddRoute("/about/", c.About)
+	s.AddRoute("/design/", c.DesignDocument)
 	group := s.Group("/test/")
 	group.AddRoute("/", c.firstColony.ColonyPage)
 	group.AddRoute("/resource_zone/:id/", c.firstColony.ResourceZonePage)
@@ -76,7 +81,12 @@ Four in-game days equals one real-time day.
 Each colony has a set of resource zones. These are zones of resources that are harvested from the land. The resources available from resource zones are dependent on the location, biome, and weather of the colony.
 
 => / Homepage
+=> /design/ Design Document
 `) // TODO
+}
+
+func (c *Context) DesignDocument(request *sis.Request) {
+	request.Gemini(designDocument)
 }
 
 func (colony *Colony) ColonyPage(request *sis.Request) {
