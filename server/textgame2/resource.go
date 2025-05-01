@@ -212,6 +212,9 @@ func (zone *ResourceZone) AddWorker(id AgentId, a *Agent) {
 }
 
 func (zone *ResourceZone) RemoveWorker(id AgentId, a *Agent) {
+	if len(zone.workers) == 0 {
+		return
+	}
 	if a.assignedZone == -1 {
 		return
 	}

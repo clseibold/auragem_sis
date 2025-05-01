@@ -154,6 +154,8 @@ func (colony *Colony) Tick() {
 	// OR RATHER we should probably have some dependency graph here so that we can traverse over it starting from the leaves.
 
 	// TODO: Agents also consume things (like food, water, and clothes, at the bare minimum). These need to be factored in to the consumption numbers.
+	foodConsumption := uint(float64(len(colony.agents)) * float64(.000555))
+	colony.currentConsumption[Resource_Berries] = min(foodConsumption, colony.resourceCounts[Resource_Berries])
 }
 
 // Commits the previous tick's production and consumption to storage at the start of each tick.

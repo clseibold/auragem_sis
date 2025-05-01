@@ -98,9 +98,9 @@ func (colony *Colony) ColonyPage(request *sis.Request) {
 		request.Gemini(fmt.Sprintf("Date & Time: %s (Free Time)\n", colony.context.inGameTime.Format(time.TimeOnly)))
 	}
 	request.Gemini(fmt.Sprintf("Population:  %d (%d unemployed)\n", len(colony.agents), unemployedAgents))
-	request.Gemini(fmt.Sprintf("Food:        %d (%+d/tick)\n", colony.resourceCounts[Resource_Berries], int(colony.currentProduction[Resource_Granite])-int(colony.currentConsumption[Resource_Granite]))) // TODO: Count *all* food sources
+	request.Gemini(fmt.Sprintf("Food:        %d (%+d/tick)\n", colony.resourceCounts[Resource_Berries], int(colony.currentProduction[Resource_Berries])-int(colony.currentConsumption[Resource_Berries]))) // TODO: Count *all* food sources
 	request.Gemini(fmt.Sprintf("Water:       %d (+0/tick)\n", colony.resourceCounts[Resource_Water]))
-	request.Gemini(fmt.Sprintf("Oak Wood:    %d (%+d/tick)\n", colony.resourceCounts[Resource_Wood_Oak], int(colony.currentProduction[Resource_Granite])-int(colony.currentConsumption[Resource_Granite])))
+	request.Gemini(fmt.Sprintf("Oak Wood:    %d (%+d/tick)\n", colony.resourceCounts[Resource_Wood_Oak], int(colony.currentProduction[Resource_Wood_Oak])-int(colony.currentConsumption[Resource_Wood_Oak])))
 	request.Gemini(fmt.Sprintf("Granite:     %d (%+d/tick)\n", colony.resourceCounts[Resource_Granite], int(colony.currentProduction[Resource_Granite])-int(colony.currentConsumption[Resource_Granite])))
 	request.Gemini(fmt.Sprintf("Coal:        %d (+0/tick)\n", colony.resourceCounts[Resource_Coal]))
 	request.Gemini(fmt.Sprintf("Iron:        %d (+0/tick)\n", colony.resourceCounts[Resource_Iron]))
