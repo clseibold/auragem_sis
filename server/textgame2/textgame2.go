@@ -39,8 +39,7 @@ func (c *Context) Start() {
 func (c *Context) SimulationLoop() {
 	for {
 		<-c.ticker.C
-		fmt.Printf("TextGame Tick\n")
-		c.inGameTime.Add(TicksToInGameDuration(1))
+		c.inGameTime = c.inGameTime.Add(TicksToInGameDuration(1))
 		c.firstColony.Tick()
 	}
 }
