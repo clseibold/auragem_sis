@@ -197,6 +197,10 @@ type ResourceZone struct {
 	workers  []AgentId
 }
 
+func NewResourceZone(id ResourceZoneId, resource LandResource, amount uint) ResourceZone {
+	return ResourceZone{resource: resource, amount: amount, workers: make([]AgentId, 0, 20)}
+}
+
 func (zone *ResourceZone) AddWorker(id AgentId, a *Agent) {
 	// If already assigned a zone, return
 	if a.assignedZone != -1 {
@@ -229,8 +233,4 @@ func (zone *ResourceZone) RemoveLastWorker(colony *Colony) {
 	lastWorkerId := zone.workers[len(zone.workers)-1]
 	colony.agents[lastWorkerId].assignedZone = -1
 	zone.workers = zone.workers[:len(zone.workers)-1]
-}
-
-func NewResourceZone(id ResourceZoneId, resource LandResource, amount uint) ResourceZone {
-	return ResourceZone{resource: resource, amount: amount, workers: make([]AgentId, 0, 20)}
 }

@@ -28,7 +28,11 @@ type Colony struct {
 }
 
 func NewColony(context *Context, initialPopulationSize uint) *Colony {
-	colony := &Colony{context: context, agents: make([]Agent, initialPopulationSize), resourceCounts: beginnerResourceCounts, buildings: make([]Building, 0)}
+	colony := new(Colony)
+	colony.context = context
+	colony.agents = make([]Agent, initialPopulationSize)
+	colony.resourceCounts = beginnerResourceCounts
+	colony.buildings = make([]Building, 0)
 	for i := range colony.agents {
 		a := &colony.agents[i]
 

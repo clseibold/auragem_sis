@@ -24,11 +24,10 @@ type Context struct {
 }
 
 func NewContext() *Context {
-	ticker := time.NewTicker(TickRealTimeDuration)
-
 	// TODO: Load in saved game states from save directory (including ticker and time information)
 
-	context := &Context{ticker: ticker}
+	context := new(Context)
+	context.ticker = time.NewTicker(TickRealTimeDuration)
 	context.firstColony = NewColony(context, 6)
 	return context
 }
