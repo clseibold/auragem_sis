@@ -129,7 +129,7 @@ func (resource LandResource) ToResource() Resource {
 	case LandResource_Lake_Horizontal:
 		return Resource_Water
 	case LandResource_Forest_Oak:
-		return Resource_Wood_Oak
+		return Resource_Oak_Logs
 	case LandResource_Coal:
 		return Resource_Coal
 	case LandResource_Clay:
@@ -256,7 +256,7 @@ const (
 	Resource_ResearchPoints
 
 	// Wood and Fuel
-	Resource_Wood_Oak
+	Resource_Oak_Logs
 	Resource_Coal
 
 	// Stone
@@ -314,6 +314,81 @@ const (
 
 	Resource_Max
 )
+
+func (resource *Resource) ToString() string {
+	switch *resource {
+	case Resource_Unknown:
+		return "Unknown"
+	case Resource_Water:
+		return "Water"
+	case Resource_ResearchPoints:
+		return "Research Points"
+	case Resource_Oak_Logs:
+		return "Oak Logs"
+	case Resource_Coal:
+		return "Coal"
+	case Resource_Clay:
+		return "Clay"
+	case Resource_Granite:
+		return "Granite"
+	case Resource_Limestone:
+		return "Limestone"
+	case Resource_Sandstone:
+		return "Sandstone"
+	case Resource_Marble:
+		return "Marble"
+	case Resource_Slate:
+		return "Slate"
+	case Resource_Iron:
+		return "Iron"
+	case Resource_Aluminum:
+		return "Aluminum"
+	case Resource_Zinc:
+		return "Zinc"
+	case Resource_Copper:
+		return "Copper"
+	case Resource_Nickel:
+		return "Nickel"
+	case Resource_Tin:
+		return "Tin"
+	case Resource_Silver:
+		return "Silver"
+	case Resource_Gold:
+		return "Gold"
+	case Resource_Cloth:
+		return "Cloth"
+	case Resource_SheepWool:
+		return "Sheep Wool"
+	case Resource_Hay:
+		return "Hay"
+	case Resource_RawRice:
+		return "Raw Rice"
+	case Resource_Berries:
+		return "Berries"
+	case Resource_Potatoes:
+		return "Potatoes"
+	case Resource_Corn:
+		return "Corn"
+	case Resource_Agave:
+		return "Agave"
+	case Resource_Mushrooms:
+		return "Mushrooms"
+	case Resource_Strawberries:
+		return "Strawberries"
+	case Resource_Milk:
+		return "Milk"
+	case Resource_Meat:
+		return "Meat"
+	case Resource_InsectMeat:
+		return "Insect Meat"
+	case Resource_Steel:
+		return "Steel"
+	case Resource_Bronze:
+		return "Bronze"
+	default:
+		return "Unknown Resource"
+	}
+}
 
 // Note: Some foods when eaten raw can give food poisoning
 

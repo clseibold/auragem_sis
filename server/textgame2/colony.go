@@ -8,7 +8,7 @@ import (
 // going over multiple ticks (a cycle).
 
 var beginnerResourceCounts = [Resource_Max]uint{
-	Resource_Wood_Oak: 0,
+	Resource_Oak_Logs: 0,
 }
 
 type Colony struct {
@@ -63,7 +63,13 @@ func NewColony(context *Context, name string, initialPopulationSize uint) *Colon
 		a.assignedZone = -1
 	}
 
-	colony.landResources[0] = NewResourceZone(0, LandResource_Forest_Oak, 30000)
+	// Basic forest calculations
+	denseForestTreeSpace := 6                    // square meters, in a dense forest
+	trunkArea := 3                               // square meters
+	treeArea := trunkArea + denseForestTreeSpace // square meters
+	smallForestArea := 50000                     // square meters
+	numberOfTrees := smallForestArea / treeArea
+	colony.landResources[0] = NewResourceZone(0, LandResource_Forest_Oak, uint(numberOfTrees))
 	colony.landResources[1] = NewResourceZone(1, LandResource_Granite, 20000)
 	colony.landResources[2] = NewResourceZone(2, LandResource_Berries, 40000)
 
