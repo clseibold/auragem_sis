@@ -2,6 +2,7 @@ package textgame2
 
 import (
 	"fmt"
+	"math"
 	"path"
 	"strconv"
 	"time"
@@ -101,10 +102,10 @@ func (colony *Colony) ColonyPage(request *sis.Request) {
 		request.Gemini(fmt.Sprintf("Date & Time: %s (Free Time)\n", colony.context.inGameTime.Format(time.TimeOnly)))
 	}
 	request.Gemini(fmt.Sprintf("Population:  %d (%d unemployed)\n", len(colony.agents), unemployedAgents))
-	request.Gemini(fmt.Sprintf("Food:        %d (%+.2f/work-day)\n", colony.resourceCounts[Resource_Berries], (colony.currentProduction[Resource_Berries]-colony.currentConsumption[Resource_Berries])*TicksPerInGameWorkDay)) // TODO: Count *all* food sources
+	request.Gemini(fmt.Sprintf("Food:        %d (%+.2f/work-day)\n", colony.resourceCounts[Resource_Berries], math.Ceil(colony.currentProduction[Resource_Berries]-colony.currentConsumption[Resource_Berries])*TicksPerInGameWorkDay)) // TODO: Count *all* food sources
 	request.Gemini(fmt.Sprintf("Water:       %d (+0/work-day)\n", colony.resourceCounts[Resource_Water]))
-	request.Gemini(fmt.Sprintf("Oak Wood:    %d (%+.2f/work-day)\n", colony.resourceCounts[Resource_Wood_Oak], (colony.currentProduction[Resource_Wood_Oak]-colony.currentConsumption[Resource_Wood_Oak])*TicksPerInGameWorkDay))
-	request.Gemini(fmt.Sprintf("Granite:     %d (%+.2f/work-day)\n", colony.resourceCounts[Resource_Granite], (colony.currentProduction[Resource_Granite]-colony.currentConsumption[Resource_Granite])*TicksPerInGameWorkDay))
+	request.Gemini(fmt.Sprintf("Oak Wood:    %d (%+.2f/work-day | %+.2f)\n", colony.resourceCounts[Resource_Wood_Oak], math.Ceil(colony.currentProduction[Resource_Wood_Oak]-colony.currentConsumption[Resource_Wood_Oak])*TicksPerInGameWorkDay, LandResource_Forest_Oak.PerDayProductionPerAgent()/24*10))
+	request.Gemini(fmt.Sprintf("Granite:     %d (%+.2f/work-day)\n", colony.resourceCounts[Resource_Granite], math.Ceil(colony.currentProduction[Resource_Granite]-colony.currentConsumption[Resource_Granite])*TicksPerInGameWorkDay))
 	request.Gemini(fmt.Sprintf("Coal:        %d (+0/work-day)\n", colony.resourceCounts[Resource_Coal]))
 	request.Gemini(fmt.Sprintf("Iron:        %d (+0/work-day)\n", colony.resourceCounts[Resource_Iron]))
 	// request.Gemini(fmt.Sprintf("Production Factor: %d\n", colony.productionFactor)) // The efficiency of all production in colony
