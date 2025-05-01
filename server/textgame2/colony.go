@@ -1,6 +1,9 @@
 package textgame2
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
 // TODO: Buildings and Agents should have a number of ticks that they've been working/turned on for when we switch to production
 // going over multiple ticks (a cycle).
@@ -19,9 +22,9 @@ type Colony struct {
 	//landResources  [LandResource_Max]uint // Available resources from land
 	buildings []Building
 
-	// Production and consumption for current tick, committed to storage at the start of the next tick.
-	currentProduction  [Resource_Max]uint
-	currentConsumption [Resource_Max]uint
+	// Production and consumption for current tick, the whole integer committed to storage at the start of the next tick.
+	currentProduction  [Resource_Max]float64
+	currentConsumption [Resource_Max]float64
 
 	// resourceConsumers [Resource_Max]*Node
 	// landResourceProducers [LandResource_Max]*Node
@@ -100,50 +103,19 @@ func (colony *Colony) Tick() {
 	// Go through all resource zones (and their buildings/technologies) to set next tick's initial resource production and consumption numbers
 	for i, _ := range colony.landResources {
 		zone := &colony.landResources[i]
-		if zone.resource == LandResource_Unknown {
+		if zone.landResource == LandResource_Unknown {
 			continue
 		}
 
-		var productionFromZone uint = colony.productionFromZone(zone)
+		// Remove the whole integer but keep the fractional parts in the consumption and production.
+		colony.currentProduction[zone.landResource.ToResource()] = colony.currentProduction[zone.landResource.ToResource()] - float64(uint(colony.currentProduction[zone.landResource.ToResource()]))
+		colony.currentConsumption[zone.landResource.ToResource()] = colony.currentConsumption[zone.landResource.ToResource()] - float64(uint(colony.currentConsumption[zone.landResource.ToResource()]))
 
-		switch zone.resource {
-		case LandResource_Dirt:
-		case LandResource_Pond:
-		case LandResource_Lake_Vertical:
-		case LandResource_Lake_Horizontal:
-		case LandResource_Forest_Oak:
-			colony.currentProduction[Resource_Wood_Oak] = productionFromZone
-			colony.currentConsumption[Resource_Wood_Oak] = 0
-		case LandResource_Coal:
-		case LandResource_Clay:
-		case LandResource_Granite:
-			colony.currentProduction[Resource_Granite] = productionFromZone
-			colony.currentConsumption[Resource_Granite] = 0
-		case LandResource_Limestone:
-		case LandResource_Sandstone:
-		case LandResource_Marble:
-		case LandResource_Slate:
-		case LandResource_Iron:
-		case LandResource_Aluminum:
-		case LandResource_Zinc:
-		case LandResource_Copper:
-		case LandResource_Nickel:
-		case LandResource_Tin:
-		case LandResource_Silver:
-		case LandResource_Gold:
-		case LandResource_Haygrass:
-		case LandResource_RawRice:
-		case LandResource_Berries:
-			colony.currentProduction[Resource_Berries] = productionFromZone
-			colony.currentConsumption[Resource_Berries] = 0
-		case LandResource_Potatoes:
-		case LandResource_Corn:
-		case LandResource_Agave:
-		case LandResource_Mushrooms:
-		case LandResource_Strawberries:
-		default:
+		// Add to the fractional parts this tick's production and consumption values.
+		var productionFromZone float64 = colony.productionFromZone(zone)
 
-		}
+		colony.currentProduction[zone.landResource.ToResource()] += productionFromZone
+		colony.currentConsumption[zone.landResource.ToResource()] = 0
 	}
 
 	// Design Note TODO:
@@ -154,8 +126,8 @@ func (colony *Colony) Tick() {
 	// OR RATHER we should probably have some dependency graph here so that we can traverse over it starting from the leaves.
 
 	// TODO: Agents also consume things (like food, water, and clothes, at the bare minimum). These need to be factored in to the consumption numbers.
-	foodConsumption := uint(float64(len(colony.agents)) * float64(.000555))
-	colony.currentConsumption[Resource_Berries] = min(foodConsumption, colony.resourceCounts[Resource_Berries])
+	foodConsumption := float64(len(colony.agents)) * float64(.000555)
+	colony.currentConsumption[Resource_Berries] = min(foodConsumption, float64(colony.resourceCounts[Resource_Berries]))
 }
 
 // Commits the previous tick's production and consumption to storage at the start of each tick.
@@ -164,88 +136,42 @@ func (colony *Colony) CommitProductionAndConsumption() {
 	// Readjust the production numbers based on the amount (if necessary, but this should already be done in the Tick() function!)
 	for i := range colony.landResources {
 		zone := &colony.landResources[i]
-		if zone.resource == LandResource_Unknown {
+		if zone.landResource == LandResource_Unknown {
 			continue
 		}
 
-		var productionFromZone uint = colony.productionFromZone(zone)
+		var productionFromZone float64 = colony.productionFromZone(zone)
+		productionWhole := uint(productionFromZone)
+		productionCeil := uint(math.Ceil(productionFromZone))
 
-		switch zone.resource {
-		case LandResource_Dirt:
-		case LandResource_Pond:
-		case LandResource_Lake_Vertical:
-		case LandResource_Lake_Horizontal:
-		case LandResource_Forest_Oak:
-			if productionFromZone >= zone.amount {
-				zone.amount = 0
+		if productionCeil >= zone.amount {
+			zone.amount = 0
 
-				// Readjust based on overflow amount from production of zone
-				diff := productionFromZone - zone.amount
-				colony.currentProduction[Resource_Wood_Oak] -= diff
-			} else {
-				zone.amount -= productionFromZone
-			}
-		case LandResource_Coal:
-		case LandResource_Clay:
-		case LandResource_Granite:
-			if productionFromZone >= zone.amount {
-				zone.amount = 0
-
-				// Readjust based on overflow amount from production of zone
-				diff := productionFromZone - zone.amount
-				colony.currentProduction[Resource_Granite] -= diff
-			} else {
-				zone.amount -= productionFromZone
-			}
-		case LandResource_Limestone:
-		case LandResource_Sandstone:
-		case LandResource_Marble:
-		case LandResource_Slate:
-		case LandResource_Iron:
-		case LandResource_Aluminum:
-		case LandResource_Zinc:
-		case LandResource_Copper:
-		case LandResource_Nickel:
-		case LandResource_Tin:
-		case LandResource_Silver:
-		case LandResource_Gold:
-		case LandResource_Haygrass:
-		case LandResource_RawRice:
-		case LandResource_Berries:
-			if productionFromZone >= zone.amount {
-				zone.amount = 0
-
-				// Readjust based on overflow amount from production of zone
-				diff := productionFromZone - zone.amount
-				colony.currentProduction[Resource_Berries] -= diff
-			} else {
-				zone.amount -= productionFromZone
-			}
-		case LandResource_Potatoes:
-		case LandResource_Corn:
-		case LandResource_Agave:
-		case LandResource_Mushrooms:
-		case LandResource_Strawberries:
-		default:
-
+			// Readjust based on overflow amount from production of zone
+			diff := productionFromZone - float64(zone.amount)
+			colony.currentProduction[zone.landResource.ToResource()] -= diff
+		} else {
+			zone.amount -= productionWhole
 		}
 	}
 
 	// Now commit the production and consumption to storage
 	for resource := range Resource_Max {
-		if colony.currentConsumption[resource] >= colony.resourceCounts[resource]+colony.currentProduction[resource] {
+		productionWhole := uint(colony.currentProduction[resource])
+		consumptionWhole := uint(colony.currentConsumption[resource])
+		if consumptionWhole >= colony.resourceCounts[resource]+productionWhole {
 			colony.resourceCounts[resource] = 0
 		} else {
-			colony.resourceCounts[resource] = uint(int(colony.resourceCounts[resource]) + int(colony.currentProduction[resource]) - int(colony.currentConsumption[resource]))
+			colony.resourceCounts[resource] = uint(int(colony.resourceCounts[resource]) + int(productionWhole) - int(consumptionWhole))
 		}
 	}
 }
 
 // Calculates the current tick's production from a zone, taking into account the zone's amount, the number of workers, *and* the state and stats of each worker.
-func (colony *Colony) productionFromZone(zone *ResourceZone) uint {
-	cap := zone.amount
+func (colony *Colony) productionFromZone(zone *ResourceZone) float64 {
+	cap := float64(zone.amount)
 
-	var numberOfActiveWorkers uint = 0
+	var numberOfActiveWorkers float64 = 0
 	for _, workerId := range zone.workers {
 		worker := &colony.agents[workerId]
 		if worker.state == AgentState_Work {
@@ -253,5 +179,9 @@ func (colony *Colony) productionFromZone(zone *ResourceZone) uint {
 		}
 	}
 
-	return min(1*numberOfActiveWorkers, cap)
+	return min(productionPerDayToPerTicks(zone.landResource.PerDayProductionPerAgent())*numberOfActiveWorkers, cap)
+}
+
+func productionPerDayToPerTicks(perDay float64) float64 {
+	return perDay / 24 / 60 / 60 * float64(InGameSecondsPerTick)
 }

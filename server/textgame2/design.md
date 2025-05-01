@@ -48,6 +48,8 @@ Resource Zones are zones of a particular resource within your region that can be
 
 NOTE: Each resource has a strength that will be used to calculate the strength of the products they are used for.
 
+Wells can be created for water in regions that do not have lakes or ponds.
+
 ### Renewable Resource Growth Rates
 
 Plants (including trees) and animals within the land naturally grow and reproduce on their own, and thus have growth rates.
@@ -82,6 +84,13 @@ Each colony can specialize in a particular line of research, but they will not b
 * Each colonist has a productivity that determins the efficiency of the production at their workplace. The colonist productivity is based on the physical and mental health, stress, illness, and sleep statistics.
 
 ## Energy
+
+## Trade Routes and Constructing Them
+
+Before you can trade with others, you must have the following:
+* Trade routes that pass by your colony and theirs
+* Designated merchant workers
+* A merchant outpost building?
 
 ## Guided Tutorial and Wiki
 

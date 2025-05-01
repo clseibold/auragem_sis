@@ -51,6 +51,136 @@ const (
 	LandResource_Max
 )
 
+func (resource LandResource) PerDayProductionPerAgent() float64 {
+	switch resource {
+	case LandResource_Unknown:
+		return 0
+	case LandResource_Dirt:
+		return 0
+	case LandResource_Pond:
+		return 20 * 20 // Liters - usually 20 at a time, 20 trips per 24 hours
+	case LandResource_Lake_Vertical:
+		return 20 * 20 // Liters - usually 20 at a time, 20 trips per 24 hours
+	case LandResource_Lake_Horizontal:
+		return 20 * 20 // Liters - usually 20 at a time, 20 trips per 24 hours
+	case LandResource_Forest_Oak:
+		return 200 // Trees - 200 trees cut per 24 hours (50 per 6 hours), 10 to 50 trees sawmilled per day
+	case LandResource_Coal:
+		return 0
+	case LandResource_Clay:
+		return 0
+	case LandResource_Granite:
+		return 0
+	case LandResource_Limestone:
+		return 0
+	case LandResource_Sandstone:
+		return 0
+	case LandResource_Marble:
+		return 0
+	case LandResource_Slate:
+		return 0
+	case LandResource_Iron:
+		return 0
+	case LandResource_Aluminum:
+		return 0
+	case LandResource_Zinc:
+		return 0
+	case LandResource_Copper:
+		return 0
+	case LandResource_Nickel:
+		return 0
+	case LandResource_Tin:
+		return 0
+	case LandResource_Silver:
+		return 0
+	case LandResource_Gold:
+		return 0
+	case LandResource_Haygrass:
+		return 0
+	case LandResource_RawRice:
+		return 0
+	case LandResource_Berries:
+		return 0
+	case LandResource_Potatoes:
+		return 0
+	case LandResource_Corn:
+		return 0
+	case LandResource_Agave:
+		return 0
+	case LandResource_Mushrooms:
+		return 0
+	case LandResource_Strawberries:
+		return 0
+	default:
+		return 0
+	}
+}
+
+func (resource LandResource) ToResource() Resource {
+	switch resource {
+	case LandResource_Unknown:
+		return Resource_Unknown
+	case LandResource_Dirt:
+		return Resource_Unknown
+	case LandResource_Pond:
+		return Resource_Water
+	case LandResource_Lake_Vertical:
+		return Resource_Water
+	case LandResource_Lake_Horizontal:
+		return Resource_Water
+	case LandResource_Forest_Oak:
+		return Resource_Wood_Oak
+	case LandResource_Coal:
+		return Resource_Coal
+	case LandResource_Clay:
+		return Resource_Clay
+	case LandResource_Granite:
+		return Resource_Granite
+	case LandResource_Limestone:
+		return Resource_Limestone
+	case LandResource_Sandstone:
+		return Resource_Sandstone
+	case LandResource_Marble:
+		return Resource_Marble
+	case LandResource_Slate:
+		return Resource_Slate
+	case LandResource_Iron:
+		return Resource_Iron
+	case LandResource_Aluminum:
+		return Resource_Aluminum
+	case LandResource_Zinc:
+		return Resource_Zinc
+	case LandResource_Copper:
+		return Resource_Copper
+	case LandResource_Nickel:
+		return Resource_Nickel
+	case LandResource_Tin:
+		return Resource_Tin
+	case LandResource_Silver:
+		return Resource_Silver
+	case LandResource_Gold:
+		return Resource_Gold
+	case LandResource_Haygrass:
+		return Resource_Hay
+	case LandResource_RawRice:
+		return Resource_RawRice
+	case LandResource_Berries:
+		return Resource_Berries
+	case LandResource_Potatoes:
+		return Resource_Potatoes
+	case LandResource_Corn:
+		return Resource_Corn
+	case LandResource_Agave:
+		return Resource_Agave
+	case LandResource_Mushrooms:
+		return Resource_Mushrooms
+	case LandResource_Strawberries:
+		return Resource_Strawberries
+	default:
+		return Resource_Unknown
+	}
+}
+
 func (resource LandResource) ToString() string {
 	switch resource {
 	case LandResource_Unknown:
@@ -121,7 +251,8 @@ type Resource uint8 // uint8 max is 255, uint16 max is 65535
 
 const (
 	// Basics
-	Resource_Water Resource = iota
+	Resource_Unknown Resource = iota
+	Resource_Water
 	Resource_ResearchPoints
 
 	// Wood and Fuel
@@ -191,14 +322,14 @@ type ResourceZoneId int
 // A resource zone is a zone on the land of a particular resource that can be harvested
 // either manually or with buildings. Each colony region can have up to 10 different resource zones.
 type ResourceZone struct {
-	id       ResourceZoneId
-	resource LandResource
-	amount   uint
-	workers  []AgentId
+	id           ResourceZoneId
+	landResource LandResource
+	amount       uint
+	workers      []AgentId
 }
 
 func NewResourceZone(id ResourceZoneId, resource LandResource, amount uint) ResourceZone {
-	return ResourceZone{resource: resource, amount: amount, workers: make([]AgentId, 0, 20)}
+	return ResourceZone{landResource: resource, amount: amount, workers: make([]AgentId, 0, 20)}
 }
 
 func (zone *ResourceZone) AddWorker(id AgentId, a *Agent) {
