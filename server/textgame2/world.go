@@ -131,8 +131,8 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 	perlin := perlin.NewPerlin(2.0, 2.5, 3, seed)
 
 	// Generate base terrain with gentle hills
-	baseHeight := perlin.Noise2D(float64(x)/(MapWidth*0.4), float64(y)/(MapHeight*0.4)) * 0.6
-	baseHeight += perlin.Noise2D(float64(x)/(MapWidth*0.1), float64(y)/(MapHeight*0.1)) * 0.15
+	baseHeight := perlin.Noise2D(float64(x)/(MapWidth*0.6), float64(y)/(MapHeight*0.6)) * 0.5
+	baseHeight += perlin.Noise2D(float64(x)/(MapWidth*0.15), float64(y)/(MapHeight*0.15)) * 0.1
 	baseHeight += 0.2 // Baseline offset
 
 	finalHeight := baseHeight

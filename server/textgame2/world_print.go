@@ -192,6 +192,7 @@ func debugLandTypes(request *sis.Request) {
 
 	// Print land type statistics
 	request.Gemini("## Land Type Distribution\n\n")
+	request.Gemini("```\n")
 	request.Gemini("| Land Type | Count | Percentage |\n")
 	request.Gemini("|-----------|-------|------------|\n")
 
@@ -224,13 +225,14 @@ func debugLandTypes(request *sis.Request) {
 		percentage := float64(count) / float64(totalTiles) * 100.0
 		request.Gemini(fmt.Sprintf("| %s | %d | %.2f%% |\n", landTypeNames[lt], count, percentage))
 	}
+	request.Gemini("```\n")
 
 	request.Gemini("\n## Land Types Map\n\n")
 	request.Gemini("```\n")
 
 	// Print map header
 	request.PlainText("|  |")
-	for x := 0; x < MapWidth; x += 2 {
+	for x := 0; x < MapWidth; x++ {
 		request.PlainText("%2d|", x)
 	}
 	request.PlainText("\n")
