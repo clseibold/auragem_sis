@@ -118,9 +118,9 @@ func PrintWorldMap(request *sis.Request) {
 				if altitude <= 0 {
 					request.PlainText(" o |") // Water
 				} else if altitude >= 1 {
-					request.PlainText(" M |") // Mountain
+					request.PlainText(" 5 |") // Mountain
 				} else {
-					request.PlainText(" I |") // Plains and hills
+					request.PlainText(" 1 |") // Plains and hills
 				}
 			}
 		}
@@ -159,9 +159,9 @@ func PrintWorldMap(request *sis.Request) {
 				if altitude <= 0 {
 					request.PlainText(" o |") // Water
 				} else if altitude >= 1 {
-					request.PlainText(" M |") // Mountain
+					request.PlainText(" 5 |") // Mountain
 				} else {
-					request.PlainText(" I |") // Plains and hills
+					request.PlainText(" 1 |") // Plains and hills
 				}
 			}
 		}
@@ -188,7 +188,7 @@ func getMapLowestAndHighestPoints() (Tile, Tile) {
 }
 
 func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
-	perlin := perlin.NewPerlin(2, 2, 3, seed)
+	perlin := perlin.NewPerlin(2, 4, 3, seed)
 
 	baseHeight := perlin.Noise2D(float64(x)/MapWidth, float64(y)/MapHeight) + 0.04
 	heightFactor := float64(2.0)
