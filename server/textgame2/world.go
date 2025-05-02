@@ -483,10 +483,11 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 
 			// More gradual cutoff for adding height
 			// Lower threshold to extend mountain influence
-			if heightFactor > 0.02 {
+			heightContributionThreshold := 0.04 // Higher for sharper cutoff and steeper transition
+			if heightFactor > heightContributionThreshold {
 				// Apply a smoothstep-like function for gradual addition near edges
 				// The denominator of the blendFactor determines where mountains "end". Higher values = more distinct mountain boundaries.
-				blendFactor := math.Min(1.0, (heightFactor-0.02)/0.10)
+				blendFactor := math.Min(1.0, (heightFactor-heightContributionThreshold)/0.10)
 				finalHeight += mountainHeight * blendFactor
 			}
 		}
