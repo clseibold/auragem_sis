@@ -32,16 +32,17 @@ func generateWorldMap() {
 	var seed int64 = 1239462936493264926
 	rand := rand.New(rand.NewSource(seed))
 
-	MapPeaks = make([]Peak, 0)
-	for range MapNumberOfMountainPeaks {
+	MapPeaks = make([]Peak, 0, 4)
+	MapPeaks = append(MapPeaks, Peak{peakX: 10, peakY: 0})
+	for range MapNumberOfMountainPeaks - 1 {
 		peakX := rand.Intn(MapWidth)
 		peakY := rand.Intn(MapHeight)
 
 		MapPeaks = append(MapPeaks, Peak{peakX, peakY})
 	}
 
-	for y := 0; y < MapHeight; y++ {
-		for x := 0; x < MapWidth; x++ {
+	for y := range MapHeight {
+		for x := range MapWidth {
 			perlinAltitude, altitude := generateHeight(MapPeaks, x, y, seed)
 			Map[y][x] = Tile{altitude: altitude}
 			MapPerlin[y][x] = Tile{altitude: perlinAltitude}
@@ -56,17 +57,27 @@ func PrintWorldMap(request *sis.Request) {
 		request.PlainText("(%d, %d) ", peak.peakX, peak.peakY)
 	}
 	request.PlainText("\n\nJust Perlin Noise:\n")
-	for y := 0; y < MapHeight; y++ {
-		request.PlainText("|")
-		for x := 0; x < MapWidth; x++ {
+	for y := range MapHeight {
+		// Heading
+		if y == 0 {
+			request.PlainText("|")
+			for x := range MapWidth {
+				request.PlainText(fmt.Sprintf("%3d|", x))
+			}
+			request.PlainText("\n")
+		}
+
+		// Values
+		request.PlainText("|%3d|", y)
+		for x := range MapWidth {
 			request.PlainText(fmt.Sprintf("%.2f|", MapPerlin[y][x].altitude))
 		}
 		request.PlainText("\n\n")
 	}
 	request.PlainText("\nWith Mountain Peaks:\n")
-	for y := 0; y < MapHeight; y++ {
+	for y := range MapHeight {
 		request.PlainText("|")
-		for x := 0; x < MapWidth; x++ {
+		for x := range MapWidth {
 			request.PlainText(fmt.Sprintf("%.2f|", Map[y][x].altitude))
 		}
 		request.PlainText("\n\n")
@@ -77,13 +88,13 @@ func PrintWorldMap(request *sis.Request) {
 func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 	perlin := perlin.NewPerlin(2, 2, 3, seed)
 
-	baseHeight := (perlin.Noise2D(float64(x)/MapWidth, float64(y)/MapHeight) + 1) * 0.5 // Scale to [0, 1]
-	heightFactor := float64(1)
+	baseHeight := perlin.Noise2D(float64(x)/MapWidth, float64(y)/MapHeight)
+	heightFactor := float64(2.0)
 	height := baseHeight * heightFactor
 
 	// Create a mountain peak effect
 	finalHeight := height
-	var sigma float64 = 0.5 // Width of peak
+	var sigma float64 = 1 // Width of peak, larger means mountains affect more points farther away from the peak
 	for _, peak := range peaks {
 		peakX := peak.peakX
 		peakY := peak.peakY
