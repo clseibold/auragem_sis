@@ -132,6 +132,57 @@ func PrintWorldMap(request *sis.Request) {
 	request.PlainText("Lowest Tile Altitude: %+.2f\n", lowest.altitude)
 	request.PlainText("Highest Tile Altitude: %+.2f\n", highest.altitude)
 
+	request.PlainText("\nWith Full Terrain Generation:\n")
+	for y := range MapHeight {
+		// Heading
+		if y == 0 {
+			if showValues {
+				request.PlainText("|     |")
+			} else {
+				request.PlainText("|  |")
+			}
+			for x := range MapWidth {
+				if showValues {
+					request.PlainText("%5d|", x)
+				} else {
+					request.PlainText("%2d|", x)
+				}
+			}
+			request.PlainText("\n")
+			if showValues {
+				request.PlainText("\n")
+			}
+		}
+
+		if showValues {
+			request.PlainText("|%5d|", y)
+		} else {
+			request.PlainText("|%2d|", y)
+		}
+		for x := range MapWidth {
+			if showValues {
+				request.PlainText(fmt.Sprintf("%+.2f|", Map[y][x].altitude))
+			} else {
+				altitude := Map[y][x].altitude
+				if altitude <= 0 {
+					request.PlainText(" ~|") // Water
+				} else if altitude >= 1 {
+					request.PlainText(" A|") // Mountain
+				} else if altitude >= 0.7 { // Hills?
+					request.PlainText(" n|")
+				} else if altitude >= 0.4 {
+					request.PlainText(" +|")
+				} else {
+					request.PlainText("  |") // Plains
+				}
+			}
+		}
+		request.PlainText("\n")
+		if showValues {
+			request.PlainText("\n")
+		}
+	}
+
 	request.PlainText("\nJust Perlin Noise:\n")
 	for y := range MapHeight {
 		// Heading
@@ -165,57 +216,6 @@ func PrintWorldMap(request *sis.Request) {
 				request.PlainText(fmt.Sprintf("%+.2f|", MapPerlin[y][x].altitude))
 			} else {
 				altitude := MapPerlin[y][x].altitude
-				if altitude <= 0 {
-					request.PlainText(" ~|") // Water
-				} else if altitude >= 1 {
-					request.PlainText(" A|") // Mountain
-				} else if altitude >= 0.7 { // Hills?
-					request.PlainText(" n|")
-				} else if altitude >= 0.4 {
-					request.PlainText(" +|")
-				} else {
-					request.PlainText("  |") // Plains
-				}
-			}
-		}
-		request.PlainText("\n")
-		if showValues {
-			request.PlainText("\n")
-		}
-	}
-
-	request.PlainText("\nWith Mountain Peaks:\n")
-	for y := range MapHeight {
-		// Heading
-		if y == 0 {
-			if showValues {
-				request.PlainText("|     |")
-			} else {
-				request.PlainText("|  |")
-			}
-			for x := range MapWidth {
-				if showValues {
-					request.PlainText("%5d|", x)
-				} else {
-					request.PlainText("%2d|", x)
-				}
-			}
-			request.PlainText("\n")
-			if showValues {
-				request.PlainText("\n")
-			}
-		}
-
-		if showValues {
-			request.PlainText("|%5d|", y)
-		} else {
-			request.PlainText("|%2d|", y)
-		}
-		for x := range MapWidth {
-			if showValues {
-				request.PlainText(fmt.Sprintf("%+.2f|", Map[y][x].altitude))
-			} else {
-				altitude := Map[y][x].altitude
 				if altitude <= 0 {
 					request.PlainText(" ~|") // Water
 				} else if altitude >= 1 {
@@ -418,7 +418,7 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 
 		// Calculate stretch factor with extreme bias for elongation
 		// Using a gentler power function (squared instead of cubed)
-		stretchFactor := stretchMinimum + (stretchMaximum-stretchMinimum)*math.Pow(angleAlignment, 2)
+		stretchFactor := stretchMinimum + (stretchMaximum-stretchMinimum)*math.Pow(angleAlignment, 2.5)
 
 		// Apply the stretch factor to create a modified distance
 		modifiedDistance := distance / stretchFactor
@@ -434,29 +434,32 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 		// Extended maximum dimensions for smoother falloff
 		// Inner bounds = hard constraints, outer bounds = falloff zone
 		innerLengthwise := 8.5  // Core range length
-		outerLengthwise := 11.5 // Extended falloff zone
+		outerLengthwise := 13.5 // Extended falloff zone
 		innerCrosswise := 1.5   // Core range half-width
 		outerCrosswise := 3.5   // Extended falloff zone
 
 		// Only process points within the extended range boundaries
 		if lengthwiseDistance <= outerLengthwise && crosswiseDistance <= outerCrosswise {
-			// Distance-based falloff with much gentler decay
+			// Distance-based falloff with moderate steepness
 			// Increase the exponent for steeper falloff
 			// Decrease the denominator for steeper falloff
-			distanceFactor := math.Exp(-math.Pow(modifiedDistance, 2.2) / 12.0)
+			distanceFactor := math.Exp(-math.Pow(modifiedDistance, 2.0) / 8.0)
 
 			// Dimension-based falloff - calculate based on position relative to inner/outer bounds
 			var widthFactor, lengthFactor float64
 
 			// Width falloff calculation
 			if crosswiseDistance <= innerCrosswise {
-				// Inside the core width - minimal falloff
+				// Inside the core width - moderate internal falloff
 				widthFactor = 1.0 - 0.2*(crosswiseDistance/innerCrosswise)
 			} else {
 				// In the extended width falloff zone
 				widthPosition := (crosswiseDistance - innerCrosswise) / (outerCrosswise - innerCrosswise)
 				// Use a gentler falloff function (square root for less steep decline)
-				widthFactor = 0.8 * (1.0 - math.Sqrt(widthPosition))
+				//widthFactor = 0.8 * (1.0 - math.Sqrt(widthPosition))
+
+				// Linear falloff in extension zone
+				widthFactor = 0.8 * (1.0 - widthPosition)
 			}
 
 			// Length falloff calculation
@@ -467,29 +470,39 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 				// In the extended length falloff zone
 				lengthPosition := (lengthwiseDistance - innerLengthwise) / (outerLengthwise - innerLengthwise)
 				// Use a gentler falloff function
-				lengthFactor = 0.7 * (1.0 - math.Pow(lengthPosition, 0.7))
+				// lengthFactor = 0.7 * (1.0 - math.Pow(lengthPosition, 0.7))
+
+				// Linear falloff in extension zone
+				lengthFactor = 0.7 * (1.0 - lengthPosition)
 			}
 
 			// Combine all factors with emphasis on maintaining height
 			// Use a weighted average that prioritizes the highest values
-			heightFactor := math.Max(distanceFactor, 0.7*widthFactor*lengthFactor)
+			// heightFactor := math.Max(distanceFactor, 0.7*widthFactor*lengthFactor)
+
+			// Combine all factors
+			heightFactor := distanceFactor * widthFactor * lengthFactor
 
 			// Apply some noise along the range for varied peaks
-			heightVariation := perlin.Noise2D(float64(x+peakX)/12, float64(y+peakY)/12) * 0.25
+			heightVariation := perlin.Noise2D(float64(x+peakX)/10, float64(y+peakY)/10) * 0.2
 
 			// Ensure mountain height is substantial with gentler threshold
-			baseHeight := 1.8
+			baseHeight := 0.9 // NOTE: Base Mountain Height! Lower this if peaks are too high!
 			mountainHeight := baseHeight * heightFactor * (1.0 + heightVariation)
 
 			// More gradual cutoff for adding height
 			// Lower threshold to extend mountain influence
-			heightContributionThreshold := 0.04 // Higher for sharper cutoff and steeper transition
+			/*heightContributionThreshold := 0.04 // Higher for sharper cutoff and steeper transition
 			if heightFactor > heightContributionThreshold {
 				// Apply a smoothstep-like function for gradual addition near edges
 				// The denominator of the blendFactor determines where mountains "end". Higher values = more distinct mountain boundaries.
 				blendFactor := math.Min(1.0, (heightFactor-heightContributionThreshold)/0.10)
 				finalHeight += mountainHeight * blendFactor
-			}
+				}*/
+
+			// Allow much smaller contribution to be visible
+			// No need for threshold cutoff - let the falloff be naturally visible
+			finalHeight += mountainHeight
 		}
 	}
 
