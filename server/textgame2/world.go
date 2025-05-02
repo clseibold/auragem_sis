@@ -244,11 +244,6 @@ func debugMountainDimensions(request *sis.Request) {
 		}
 	}
 
-	// Mark mountain peaks
-	for _, peak := range MapPeaks {
-		debugMap[peak.peakY][peak.peakX] = "P"
-	}
-
 	// Mark mountain range areas
 	for y := 0; y < MapHeight; y++ {
 		for x := 0; x < MapWidth; x++ {
@@ -256,6 +251,11 @@ func debugMountainDimensions(request *sis.Request) {
 				debugMap[y][x] = "M"
 			}
 		}
+	}
+
+	// Mark mountain peaks
+	for _, peak := range MapPeaks {
+		debugMap[peak.peakY][peak.peakX] = "P"
 	}
 
 	// Show theoretical stretch zones for one peak
