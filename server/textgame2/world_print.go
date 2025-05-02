@@ -163,7 +163,7 @@ func PrintWorldMap(request *sis.Request) {
 						}
 					} else {
 						if tile.isDesert {
-							request.PlainText("⌒")
+							request.PlainText("x")
 						} else {
 							request.PlainText("+") // Regular hills
 						}
@@ -176,7 +176,7 @@ func PrintWorldMap(request *sis.Request) {
 					}
 				case LandType_Coastal:
 					if tile.isDesert {
-						request.PlainText("⌇")
+						request.PlainText("s")
 					} else {
 						request.PlainText("c") // Coastal
 					}
@@ -187,7 +187,7 @@ func PrintWorldMap(request *sis.Request) {
 						request.PlainText(" ") // Plains
 					}
 				case LandType_SandDunes:
-					request.PlainText("s") // Sand Dunes
+					request.PlainText("d") // Sand Dunes
 				default:
 					if tile.isDesert {
 						request.PlainText(":")
