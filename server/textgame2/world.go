@@ -3,6 +3,7 @@ package textgame2
 import (
 	"math"
 	"math/rand"
+	"sort"
 
 	"github.com/aquilax/go-perlin"
 )
@@ -491,8 +492,8 @@ func identifyValleys() {
 
 func identifyCoastalAreas() {
 	// Mark tiles near water as coastal
-	for y := 1; y < MapHeight-1; y++ {
-		for x := 1; x < MapWidth-1; x++ {
+	for y := range MapHeight {
+		for x := range MapWidth {
 			// Skip water tiles
 			if Map[y][x].altitude <= 0 {
 				continue
@@ -632,80 +633,101 @@ func createWaterBodies(seed int64) {
 		}
 	}
 }
-
 func generateRivers(seed int64) {
 	// Initialize random source for river generation
 	rng := rand.New(rand.NewSource(seed + 12345))
 
 	// Parameters for river generation
-	numberOfRivers := 5 + rng.Intn(3) // 5-7 rivers
+	numberOfRivers := 4 + rng.Intn(3) // 4-6 rivers
 	minRiverLength := 5               // Minimum tiles a river should span
-	maxRiverLength := 25              // Maximum river length (to prevent infinite loops)
+	maxRiverLength := 25              // Maximum river length
 	minElevationStart := 0.6          // Rivers start in higher elevations
 
-	// Store river paths to visualize them in debug mode if needed
+	// Store river paths for debug visualization if needed
 	riverPaths := make([][]struct{ x, y int }, 0, numberOfRivers)
 
 	// Track tiles that already have rivers to avoid overlaps
 	var riverTiles [MapHeight][MapWidth]bool
 
-	// Generate each river
-	for range numberOfRivers {
-		// Find a good starting point - preferably in hills or mountains
-		var startX, startY int
-		var foundStart bool
+	// Find all potential river source points
+	type potentialSource struct {
+		x, y  int
+		score float64 // Score for how good this source point is
+	}
 
-		// Try multiple times to find a good starting point
-		for range 200 { // TODO: This is not very efficient.
-			// Choose a random high point
-			candidateX := rng.Intn(MapWidth)
-			candidateY := rng.Intn(MapHeight)
+	potentialSources := make([]potentialSource, 0, 100)
 
-			// Check if this point is suitable for a river source
-			if Map[candidateY][candidateX].altitude >= minElevationStart &&
-				Map[candidateY][candidateX].altitude < 0.95 &&
-				!riverTiles[candidateY][candidateX] {
+	// Scan the entire map for potential river sources
+	for y := 1; y < MapHeight-1; y++ {
+		for x := 1; x < MapWidth-1; x++ {
+			// Check if this point meets our criteria for a river source
+			if Map[y][x].altitude >= minElevationStart &&
+				Map[y][x].altitude < 0.95 &&
+				!riverTiles[y][x] {
 
-				// Check if we have room to flow downhill
+				// Check for downhill flow potential
 				hasLowerNeighbor := false
+				steepestDrop := 0.0
+
 				for dy := -1; dy <= 1; dy++ {
 					for dx := -1; dx <= 1; dx++ {
 						if dx == 0 && dy == 0 {
 							continue
 						}
 
-						nx, ny := candidateX+dx, candidateY+dy
+						nx, ny := x+dx, y+dy
 						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
-							Map[ny][nx].altitude < Map[candidateY][candidateX].altitude {
+							Map[ny][nx].altitude < Map[y][x].altitude {
 							hasLowerNeighbor = true
-							break
+							drop := Map[y][x].altitude - Map[ny][nx].altitude
+							if drop > steepestDrop {
+								steepestDrop = drop
+							}
 						}
-					}
-					if hasLowerNeighbor {
-						break
 					}
 				}
 
-				// If we can flow downhill, use this starting point
+				// If we can flow downhill, add to potential sources
 				if hasLowerNeighbor {
-					startX, startY = candidateX, candidateY
-					foundStart = true
-					break
+					// Score based on elevation and steepness of descent
+					// Higher elevations and steeper initial descents make better sources
+					sourceScore := Map[y][x].altitude*0.7 + steepestDrop*0.3
+
+					potentialSources = append(potentialSources, potentialSource{
+						x:     x,
+						y:     y,
+						score: sourceScore,
+					})
 				}
 			}
 		}
+	}
 
-		// If we couldn't find a good starting point, skip this river
-		if !foundStart {
+	// Sort potential sources by score (best sources first)
+	sort.Slice(potentialSources, func(i, j int) bool {
+		return potentialSources[i].score > potentialSources[j].score
+	})
+
+	// Keep track of how many rivers we've successfully created
+	riversCreated := 0
+
+	// Try to create rivers starting from the best source points
+	// Process them in order of score (best first)
+	for i := 0; i < len(potentialSources) && riversCreated < numberOfRivers; i++ {
+		source := potentialSources[i]
+
+		// Ensure this point hasn't been used by another river already
+		if riverTiles[source.y][source.x] {
 			continue
 		}
 
-		// Generate a new river from this starting point
-		river := traceRiverPath(startX, startY, rng, riverTiles, minRiverLength, maxRiverLength)
+		// Trace river path from this source
+		river := traceRiverPath(source.x, source.y, rng, riverTiles, minRiverLength, maxRiverLength)
 
 		// Only apply rivers that meet the minimum length requirement
 		if len(river) >= minRiverLength {
 			riverPaths = append(riverPaths, river)
+			riversCreated++
 
 			// Apply the river to the map
 			for _, point := range river {
@@ -718,7 +740,7 @@ func generateRivers(seed int64) {
 				Map[y][x].altitude = -0.05
 				Map[y][x].landType = LandType_Water
 
-				// Slightly lower adjacent terrain to create river valleys
+				// Create river valleys by slightly lowering adjacent terrain
 				for dy := -1; dy <= 1; dy++ {
 					for dx := -1; dx <= 1; dx++ {
 						if dx == 0 && dy == 0 {
