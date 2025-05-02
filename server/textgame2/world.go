@@ -20,7 +20,6 @@ import (
 
 // TODO: Canyons, Gorges, Cliffs, Waterfalls, Escarpments, Islands, Caves and Caverns?
 // TODO: Aquifers should be generated *before* rainfall&temp. Rainfall/temp + aquifers should determine the locations of springs.
-// TODO: have different rainfall and temp values for the different seasons (seasons being reversed in the southern hemisphere?)
 // TODO: Assign biomes to each tile given its land type, adjacent biomes, and bodies of water
 // TODO: For streams, every tile of the stream should store the uphill tile location (or -1 if it is the source/start) and downhill tile location (or -1 if it's the end)
 
@@ -62,35 +61,6 @@ type Tile struct {
 	hasFloodArea bool // Contains area that seasonally floods
 	hasSaltFlat  bool // Contains a small salt flat or mineral deposit
 }
-
-// Climate tracks seasonal variations in temperature and rainfall
-type Climate struct {
-	// Temperature for each season (0.0 = very cold, 1.0 = very hot)
-	winterTemp float64
-	springTemp float64
-	summerTemp float64
-	fallTemp   float64
-
-	// Rainfall for each season (0.0 = extremely dry, 1.0 = extremely wet)
-	winterRain float64
-	springRain float64
-	summerRain float64
-	fallRain   float64
-
-	// Annual averages (for convenience)
-	avgTemp float64
-	avgRain float64
-}
-
-// Season enum for accessing specific seasonal values
-type Season int
-
-const (
-	Winter Season = iota
-	Spring
-	Summer
-	Fall
-)
 
 // Helper methods to get temperature for a specific season
 func (t *Tile) GetTemperature(season Season) float64 {
@@ -174,6 +144,8 @@ func generateWorldMap() {
 
 	// Identify coastal areas
 	identifyCoastalAreas()
+
+	assignBiomes()
 
 	generateGameTrails(seed)
 }
@@ -3624,4 +3596,63 @@ func smoothClimate() {
 				Map[y][x].climate.fallRain) / 4.0
 		}
 	}
+}
+
+// LatLongResult holds the latitude and longitude values
+type LatLongResult struct {
+	Latitude  float64 // Degrees North/South of equator (-90 to 90)
+	Longitude float64 // Degrees East/West (-180 to 180)
+}
+
+// GetLatitudeLongitude converts map coordinates to Earth-like latitude and longitude
+func GetLatitudeLongitude(x, y int) LatLongResult {
+	// The equator is at MapHeight / 2
+	equator := MapHeight / 2
+
+	// Calculate latitude: ranges from -90° (South Pole) to 90° (North Pole)
+	// with 0° at the equator
+	normalizedY := float64(equator-y) / float64(MapHeight/2)
+
+	// Apply the same transformation used in climate generation
+	// In generateClimate(), we use distanceFromEquator with a power function:
+	// distanceFromEquator := math.Abs(float64(y - equator)) / float64(MapHeight/2)
+	// latitudeTemp := 1.0 - math.Pow(distanceFromEquator, 0.8)
+
+	// latitude = 90° * normalizedY gives us a direct linear mapping
+	// We'll keep the sign to differentiate between N and S hemispheres
+	latitude := 90.0 * normalizedY
+
+	// For longitude, we'll map the x coordinate from 0-MapWidth to -180° to 180°
+	normalizedX := (float64(x)/float64(MapWidth))*2.0 - 1.0
+	longitude := 180.0 * normalizedX
+
+	return LatLongResult{
+		Latitude:  math.Round(latitude*100) / 100,  // Round to 2 decimal places
+		Longitude: math.Round(longitude*100) / 100, // Round to 2 decimal places
+	}
+}
+
+// GetLatLongDescription returns a formatted latitude/longitude string
+func GetLatLongDescription(x, y int) string {
+	result := GetLatitudeLongitude(x, y)
+
+	// Format direction indicators
+	var latDir, longDir string
+
+	if result.Latitude >= 0 {
+		latDir = "N"
+	} else {
+		latDir = "S"
+	}
+
+	if result.Longitude >= 0 {
+		longDir = "E"
+	} else {
+		longDir = "W"
+	}
+
+	// Format with absolute values and direction indicators
+	return fmt.Sprintf("%.2f°%s, %.2f°%s",
+		math.Abs(result.Latitude), latDir,
+		math.Abs(result.Longitude), longDir)
 }
