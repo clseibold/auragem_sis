@@ -27,10 +27,53 @@ func PrintWorldMap(request *sis.Request) {
 
 	// Count land types for land type distribution chart
 	landTypeCounts := make(map[LandType]int)
+	landFeatureCounts := make([]int, 12)
 
 	for y := range MapHeight {
 		for x := range MapWidth {
-			landTypeCounts[Map[y][x].landType]++
+			tile := &Map[y][x]
+			landTypeCounts[tile.landType]++
+
+			if tile.isDesert {
+				landFeatureCounts[0]++
+			}
+
+			// Water features
+			if tile.hasStream {
+				landFeatureCounts[1]++
+			}
+			if tile.hasPond {
+				landFeatureCounts[2]++
+			}
+			if tile.hasSpring {
+				landFeatureCounts[3]++
+			}
+			if tile.hasMarsh {
+				landFeatureCounts[4]++
+			}
+
+			// Plains features
+			if tile.hasGrove {
+				landFeatureCounts[5]++
+			}
+			if tile.hasMeadow {
+				landFeatureCounts[6]++
+			}
+			if tile.hasScrub {
+				landFeatureCounts[7]++
+			}
+			if tile.hasRocks {
+				landFeatureCounts[8]++
+			}
+			if tile.hasGameTrail {
+				landFeatureCounts[9]++
+			}
+			if tile.hasFloodArea {
+				landFeatureCounts[10]++
+			}
+			if tile.hasSaltFlat {
+				landFeatureCounts[11]++
+			}
 		}
 	}
 
@@ -279,5 +322,30 @@ func PrintWorldMap(request *sis.Request) {
 		percentage := float64(count) / float64(totalTiles) * 100.0
 		request.Gemini(fmt.Sprintf("| %-10s | %-5d | %-9.2f%% |\n", landTypeNames[lt], count, percentage))
 	}
+
+	request.PlainText("\nLand Feature Distribution:\n")
+	request.Gemini("| Land Type  | Count | Percentage |\n")
+	request.Gemini("|------------|-------|------------|\n")
+
+	landFeatureNames := [12]string{
+		"Deserts",
+		"Streams",
+		"Ponds",
+		"Springs",
+		"Marshes",
+		"Groves",
+		"Meadows",
+		"Scrubs",
+		"Rocks",
+		"Game Trails",
+		"Seasonal Flood Areas",
+		"Salt Flats",
+	}
+
+	for i, fcount := range landFeatureCounts {
+		percentage := float64(fcount) / float64(totalTiles) * 100.0
+		request.Gemini(fmt.Sprintf("| %-20s | %-5d | %-9.2f%% |\n", landFeatureNames[i], fcount, percentage))
+	}
+
 	request.PlainText("```\n")
 }

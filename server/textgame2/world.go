@@ -174,6 +174,8 @@ func generateWorldMap() {
 
 	// Identify coastal areas
 	identifyCoastalAreas()
+
+	generateGameTrails(seed)
 }
 
 func generateMapMountainPeaks(rand *rand.Rand) []Peak {
@@ -2118,9 +2120,6 @@ func generatePlainsFeatures(seed int64) {
 			}
 		}
 	}
-
-	// 7. Generate game trails
-	generateGameTrails(seed)
 }
 
 func generateFloodAreas(seed int64) {
