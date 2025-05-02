@@ -429,16 +429,17 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 
 		// Extended maximum dimensions for smoother falloff
 		// Inner bounds = hard constraints, outer bounds = falloff zone
-		innerLengthwise := 7.5  // Core range length
-		outerLengthwise := 10.5 // Extended falloff zone
+		innerLengthwise := 8.5  // Core range length
+		outerLengthwise := 11.5 // Extended falloff zone
 		innerCrosswise := 1.5   // Core range half-width
-		outerCrosswise := 4.5   // Extended falloff zone
+		outerCrosswise := 3.5   // Extended falloff zone
 
 		// Only process points within the extended range boundaries
 		if lengthwiseDistance <= outerLengthwise && crosswiseDistance <= outerCrosswise {
 			// Distance-based falloff with much gentler decay
-			// Increase the denominator to make the falloff more gradual
-			distanceFactor := math.Exp(-math.Pow(modifiedDistance, 1.7) / 12.0)
+			// Increase the exponent for steeper falloff
+			// Decrease the denominator for steeper falloff
+			distanceFactor := math.Exp(-math.Pow(modifiedDistance, 2.2) / 12.0)
 
 			// Dimension-based falloff - calculate based on position relative to inner/outer bounds
 			var widthFactor, lengthFactor float64
