@@ -303,8 +303,8 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 
 		// Calculate distance components along and perpendicular to range direction
 		// This allows us to precisely control length and width
-		alongRangeComponent := math.Abs(distance * math.Cos(pointAngle-rangeDirection))
-		perpRangeComponent := math.Abs(distance * math.Sin(pointAngle-rangeDirection))
+		alongRangeComponent := math.Abs(modifiedDistance * math.Cos(pointAngle-rangeDirection))
+		perpRangeComponent := math.Abs(modifiedDistance * math.Sin(pointAngle-rangeDirection))
 
 		// Only contribute to height if within our desired length and width bounds
 		if alongRangeComponent <= maxLengthwise && perpRangeComponent <= maxCrosswise {
