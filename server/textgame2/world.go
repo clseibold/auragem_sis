@@ -11,7 +11,8 @@ import (
 
 const MapWidth = 50
 const MapHeight = 50
-const MapNumberOfMountainPeaks = 3
+
+// const MapNumberOfMountainPeaks = 3
 
 var MapPeaks []Peak
 var Map [MapHeight][MapWidth]Tile
@@ -34,12 +35,13 @@ func generateWorldMap() {
 
 	MapPeaks = make([]Peak, 0, 4)
 	MapPeaks = append(MapPeaks, Peak{peakX: 10, peakY: 0})
-	for range MapNumberOfMountainPeaks - 1 {
-		peakX := rand.Intn(MapWidth)
-		peakY := rand.Intn(MapHeight)
 
-		MapPeaks = append(MapPeaks, Peak{peakX, peakY})
-	}
+	// Generate random peaks in four quadrants of map
+
+	MapPeaks = append(MapPeaks, Peak{rand.Intn(MapWidth / 2), rand.Intn(MapHeight / 2)})
+	MapPeaks = append(MapPeaks, Peak{rand.Intn(MapWidth/2) - 1 + MapWidth/2, rand.Intn(MapHeight / 2)})
+	MapPeaks = append(MapPeaks, Peak{rand.Intn(MapWidth / 2), rand.Intn(MapHeight/2) - 1 + MapHeight/2})
+	MapPeaks = append(MapPeaks, Peak{rand.Intn(MapWidth/2) - 1 + MapWidth/2, rand.Intn(MapHeight/2) - 1 + MapHeight/2})
 
 	for y := range MapHeight {
 		for x := range MapWidth {
@@ -61,11 +63,11 @@ func PrintWorldMap(request *sis.Request) {
 	for y := range MapHeight {
 		// Heading
 		if y == 0 {
-			request.PlainText("|")
+			request.PlainText("|     |")
 			for x := range MapWidth {
 				request.PlainText(fmt.Sprintf("%5d|", x))
 			}
-			request.PlainText("\n")
+			request.PlainText("\n\n")
 		}
 
 		// Values
@@ -80,11 +82,11 @@ func PrintWorldMap(request *sis.Request) {
 	for y := range MapHeight {
 		// Heading
 		if y == 0 {
-			request.PlainText("|")
+			request.PlainText("|     |")
 			for x := range MapWidth {
 				request.PlainText(fmt.Sprintf("%5d|", x))
 			}
-			request.PlainText("\n")
+			request.PlainText("\n\n")
 		}
 
 		request.PlainText("|%5d|", y)
@@ -105,7 +107,7 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 
 	// Create a mountain peak effect
 	finalHeight := height
-	var sigma float64 = 1 // Width of peak, larger means mountains affect more points farther away from the peak
+	var sigma float64 = 0.5 // Width of peak, larger means mountains affect more points farther away from the peak
 	for _, peak := range peaks {
 		peakX := peak.peakX
 		peakY := peak.peakY
