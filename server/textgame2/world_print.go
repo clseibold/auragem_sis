@@ -109,6 +109,8 @@ func PrintWorldMap(request *sis.Request) {
 				// Prefix
 				if tile.hasSpring && tile.hasPond {
 					request.PlainText("⊙")
+				} else if tile.hasSpring && tile.hasStream {
+					request.PlainText("⊗")
 				} else if tile.hasSpring {
 					request.PlainText("⊕")
 				} else if tile.hasMarsh && tile.hasPond {
@@ -122,7 +124,6 @@ func PrintWorldMap(request *sis.Request) {
 				} else {
 					request.PlainText(" ")
 				}
-				// TODO: Spring with Stream?
 
 				switch Map[y][x].landType {
 				case LandType_Water:
@@ -172,6 +173,7 @@ func PrintWorldMap(request *sis.Request) {
 	request.PlainText("o : Small pond (contained within a tile)\n")
 	request.PlainText(". : Small stream (width contained within a tile)\n")
 	request.PlainText("⊕ : Spring\n")
+	request.PlainText("⊗ : Spring with stream\n")
 	request.PlainText("⊙ : Spring with pond\n")
 	request.PlainText("≈ : Marsh (soggy ground)\n")
 	request.PlainText("⊛ : Marsh with pond\n")

@@ -1179,7 +1179,7 @@ func generateSmallWaterFeatures(seed int64) {
 
 		// Try to create ponds at some springs
 		maxSpringPonds := min(len(springLocations), smallPondCount/2)
-		for i := 0; i < maxSpringPonds; i++ {
+		for i := range maxSpringPonds {
 			springX, springY := springLocations[i].x, springLocations[i].y
 
 			// Find a suitable nearby location for the pond
@@ -1279,13 +1279,21 @@ func generateSmallWaterFeatures(seed int64) {
 
 		// Only some springs form streams
 		if rng.Float64() < 0.7 {
+			// First, mark the spring tile as having a stream too
+			Map[spring.y][spring.x].hasStream = true
+
 			// Trace a path downhill from the spring
 			streamPath := traceSmallStreamPath(spring.x, spring.y, rng, waterFeaturePlaced)
 
 			// If we found a valid path of appropriate length
 			if len(streamPath) >= 2 && len(streamPath) <= 5 {
 				// Apply the stream to the map
-				for _, point := range streamPath {
+				for i, point := range streamPath {
+					// Skip the first point since we already marked it
+					if i == 0 {
+						continue
+					}
+
 					sx, sy := point.x, point.y
 
 					// Set the stream flag
@@ -1364,8 +1372,14 @@ func traceSmallStreamPath(startX, startY int, rng *rand.Rand, occupied [MapHeigh
 					continue
 				}
 
-				// Skip if already occupied or too high
-				if occupied[ny][nx] || Map[ny][nx].altitude >= currentAltitude {
+				// For streams, we should allow flowing through spring tiles
+				// but not through tiles already occupied by other features
+				if occupied[ny][nx] && !Map[ny][nx].hasSpring {
+					continue
+				}
+
+				// Skip if too high
+				if Map[ny][nx].altitude >= currentAltitude {
 					continue
 				}
 
