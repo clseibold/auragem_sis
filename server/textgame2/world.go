@@ -56,29 +56,40 @@ func PrintWorldMap(request *sis.Request) {
 	for _, peak := range MapPeaks {
 		request.PlainText("(%d, %d) ", peak.peakX, peak.peakY)
 	}
+
 	request.PlainText("\n\nJust Perlin Noise:\n")
 	for y := range MapHeight {
 		// Heading
 		if y == 0 {
 			request.PlainText("|")
 			for x := range MapWidth {
-				request.PlainText(fmt.Sprintf("%3d|", x))
+				request.PlainText(fmt.Sprintf("%5d|", x))
 			}
 			request.PlainText("\n")
 		}
 
 		// Values
-		request.PlainText("|%3d|", y)
+		request.PlainText("|%5d|", y)
 		for x := range MapWidth {
-			request.PlainText(fmt.Sprintf("%.2f|", MapPerlin[y][x].altitude))
+			request.PlainText(fmt.Sprintf("%+.2f|", MapPerlin[y][x].altitude))
 		}
 		request.PlainText("\n\n")
 	}
+
 	request.PlainText("\nWith Mountain Peaks:\n")
 	for y := range MapHeight {
-		request.PlainText("|")
+		// Heading
+		if y == 0 {
+			request.PlainText("|")
+			for x := range MapWidth {
+				request.PlainText(fmt.Sprintf("%5d|", x))
+			}
+			request.PlainText("\n")
+		}
+
+		request.PlainText("|%5d|", y)
 		for x := range MapWidth {
-			request.PlainText(fmt.Sprintf("%.2f|", Map[y][x].altitude))
+			request.PlainText(fmt.Sprintf("%+.2f|", Map[y][x].altitude))
 		}
 		request.PlainText("\n\n")
 	}
