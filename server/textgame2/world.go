@@ -13,6 +13,7 @@ const MapWidth = 50
 const MapHeight = 50
 const MapNumberOfMountainPeaks = 3
 
+var MapPeaks []Peak
 var Map [MapHeight][MapWidth]Tile
 
 type Tile struct {
@@ -29,7 +30,7 @@ type Peak struct {
 func generateWorldMap() {
 	rand := rand.New(rand.NewSource(1))
 
-	peaks := make([]Peak, 0)
+	MapPeaks = make([]Peak, 0)
 	for range MapNumberOfMountainPeaks {
 		peakX := rand.Intn(MapWidth)
 		peakY := rand.Intn(MapHeight)
@@ -47,6 +48,11 @@ func generateWorldMap() {
 
 func PrintWorldMap(request *sis.Request) {
 	request.Gemini("```\n")
+	// Print the peaks
+	for _, peak := range MapPeaks {
+		request.PlainText("(%d, %d) ", peak.peakX, peak.peakY)
+	}
+	request.PlainText("\n\n")
 	for y := 0; y < MapHeight; y++ {
 		request.Gemini("|")
 		for x := 0; x < MapWidth; x++ {
