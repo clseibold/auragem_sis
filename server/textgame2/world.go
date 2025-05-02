@@ -1447,12 +1447,11 @@ func generatePlainsFeatures(seed int64) {
 	rng := rand.New(rand.NewSource(seed + 7890))
 
 	// Feature quantity parameters
-	groveCount := 20 + rng.Intn(10)   // 20-29 tree groves
-	meadowCount := 15 + rng.Intn(10)  // 15-24 flower meadows
-	scrubCount := 25 + rng.Intn(15)   // 25-39 scrubland patches
-	rockCount := 10 + rng.Intn(8)     // 10-17 rock outcroppings
-	floodAreaCount := 6 + rng.Intn(5) // 6-10 seasonal flood areas
-	saltFlatCount := 3 + rng.Intn(3)  // 3-5 salt flats
+	groveCount := 20 + rng.Intn(10)  // 20-29 tree groves
+	meadowCount := 15 + rng.Intn(10) // 15-24 flower meadows
+	scrubCount := 25 + rng.Intn(15)  // 25-39 scrubland patches
+	rockCount := 10 + rng.Intn(8)    // 10-17 rock outcroppings
+	saltFlatCount := 3 + rng.Intn(3) // 3-5 salt flats
 
 	// Track places where we've already placed features
 	var featurePlaced [MapHeight][MapWidth]bool
@@ -1661,83 +1660,7 @@ func generatePlainsFeatures(seed int64) {
 		}
 	}
 
-	// 5. Generate game trails
-	generateGameTrails(seed)
-
-	// 6. Generate seasonal flood areas
-	floodAreasGenerated := 0
-
-	for attempts := 0; attempts < 100 && floodAreasGenerated < floodAreaCount; attempts++ {
-		x := rng.Intn(MapWidth)
-		y := rng.Intn(MapHeight)
-
-		// Check if this is a suitable spot for a flood area
-		if !featurePlaced[y][x] &&
-			Map[y][x].landType == LandType_Plains &&
-			Map[y][x].altitude > 0.05 && Map[y][x].altitude < 0.3 {
-
-			// Flood areas are typically near water and in low spots
-			placeFloodArea := false
-
-			// Check if near water
-			nearWater := false
-			for dy := -4; dy <= 4; dy++ {
-				for dx := -4; dx <= 4; dx++ {
-					nx, ny := x+dx, y+dy
-					if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
-						if Map[ny][nx].altitude <= 0 || Map[ny][nx].hasStream ||
-							Map[ny][nx].hasPond {
-							nearWater = true
-							break
-						}
-					}
-				}
-				if nearWater {
-					break
-				}
-			}
-
-			// Flood areas typically form in valleys or low areas near water
-			if Map[y][x].altitude < 0.2 && nearWater {
-				placeFloodArea = rng.Float64() < 0.7
-			} else if Map[y][x].landType == LandType_Valleys {
-				placeFloodArea = rng.Float64() < 0.5
-			} else if nearWater {
-				placeFloodArea = rng.Float64() < 0.3
-			} else {
-				placeFloodArea = rng.Float64() < 0.1
-			}
-
-			if placeFloodArea {
-				Map[y][x].hasFloodArea = true
-				featurePlaced[y][x] = true
-
-				// Flood areas often extend
-				if rng.Float64() < 0.6 {
-					// Try to add 1-3 adjacent flood area tiles
-					extraFlood := 1 + rng.Intn(3)
-					for range extraFlood {
-						// Pick a random direction
-						dx := rng.Intn(3) - 1
-						dy := rng.Intn(3) - 1
-
-						nx, ny := x+dx, y+dy
-						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
-							!featurePlaced[ny][nx] &&
-							Map[ny][nx].landType == LandType_Plains &&
-							Map[ny][nx].altitude < 0.3 {
-							Map[ny][nx].hasFloodArea = true
-							featurePlaced[ny][nx] = true
-						}
-					}
-				}
-
-				floodAreasGenerated++
-			}
-		}
-	}
-
-	// 7. Generate salt flats
+	// 5. Generate salt flats
 	saltFlatsGenerated := 0
 
 	for attempts := 0; attempts < 50 && saltFlatsGenerated < saltFlatCount; attempts++ {
@@ -1760,7 +1683,7 @@ func generatePlainsFeatures(seed int64) {
 				if rng.Float64() < 0.5 {
 					// Try to add 1-2 adjacent salt flat tiles
 					extraSalt := 1 + rng.Intn(2)
-					for e := 0; e < extraSalt; e++ {
+					for range extraSalt {
 						// Pick a random direction
 						dx := rng.Intn(3) - 1
 						dy := rng.Intn(3) - 1
@@ -1780,6 +1703,12 @@ func generatePlainsFeatures(seed int64) {
 			}
 		}
 	}
+
+	// 6. Generate seasonal flood areas
+	generateFloodAreas(seed)
+
+	// 7. Generate game trails
+	generateGameTrails(seed)
 }
 
 func generateGameTrails(seed int64) {
@@ -2129,4 +2058,211 @@ func abs(x int) int {
 		return -x
 	}
 	return x
+}
+
+func generateFloodAreas(seed int64) {
+	rng := rand.New(rand.NewSource(seed + 3333))
+
+	// Parameters for flood areas
+	floodAreaCount := 4 + rng.Intn(3) // 4-6 flood regions
+
+	// Track all water sources (rivers, lakes, streams)
+	var waterSources []struct{ x, y int }
+
+	for y := 0; y < MapHeight; y++ {
+		for x := 0; x < MapWidth; x++ {
+			if Map[y][x].altitude <= 0 || // Major water bodies
+				Map[y][x].hasStream { // Streams
+				waterSources = append(waterSources, struct{ x, y int }{x, y})
+			}
+		}
+	}
+
+	// If we don't have any water sources, we can't have floods
+	if len(waterSources) == 0 {
+		return
+	}
+
+	// Shuffle water sources so we don't always start floods from the same places
+	for i := len(waterSources) - 1; i > 0; i-- {
+		j := rng.Intn(i + 1)
+		waterSources[i], waterSources[j] = waterSources[j], waterSources[i]
+	}
+
+	// Areas we've already checked for flooding potential
+	var checkedTiles [MapHeight][MapWidth]bool
+
+	// Generate each flood region starting from a suitable water source
+	floodAreasGenerated := 0
+	for i := 0; i < len(waterSources) && floodAreasGenerated < floodAreaCount; i++ {
+		source := waterSources[i]
+		x, y := source.x, source.y
+
+		// Ensure this water source hasn't been checked before
+		if checkedTiles[y][x] {
+			continue
+		}
+
+		checkedTiles[y][x] = true
+
+		// Flood regions can only form from water sources near low-lying land
+		hasLowLand := false
+
+		// Check if this water source has adjacent low-lying land
+		for dy := -1; dy <= 1; dy++ {
+			for dx := -1; dx <= 1; dx++ {
+				nx, ny := x+dx, y+dy
+
+				if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
+					Map[ny][nx].altitude > 0 && Map[ny][nx].altitude < 0.3 &&
+					Map[ny][nx].landType != LandType_Mountains &&
+					Map[ny][nx].landType != LandType_Plateaus {
+					hasLowLand = true
+					break
+				}
+			}
+			if hasLowLand {
+				break
+			}
+		}
+
+		if !hasLowLand {
+			continue // This water source isn't suitable for flooding
+		}
+
+		// This water source is good for flooding. Generate a connected flood region
+		floodTiles := generateConnectedFloodRegion(x, y, rng)
+
+		// If we found enough flood tiles, mark it as a flood region
+		if len(floodTiles) >= 3 {
+			// Apply flood area to the map
+			for _, tile := range floodTiles {
+				Map[tile.y][tile.x].hasFloodArea = true
+
+				// Mark adjacent tiles as checked to avoid too-close flood regions
+				for dy := -2; dy <= 2; dy++ {
+					for dx := -2; dx <= 2; dx++ {
+						nx, ny := tile.x+dx, tile.y+dy
+						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
+							checkedTiles[ny][nx] = true
+						}
+					}
+				}
+			}
+
+			floodAreasGenerated++
+		}
+	}
+}
+
+// Helper function to generate a connected flood region from a water source
+func generateConnectedFloodRegion(waterX, waterY int, rng *rand.Rand) []struct{ x, y int } {
+	// Define a flood fill algorithm that prioritizes lower elevation
+	var floodTiles []struct{ x, y int }
+	var processed [MapHeight][MapWidth]bool
+
+	// Queue for flood fill algorithm
+	queue := []struct {
+		x, y     int
+		distance int // Distance from water source
+	}{
+		{x: waterX, y: waterY, distance: 0},
+	}
+
+	processed[waterY][waterX] = true
+
+	maxDistance := 8 + rng.Intn(5) // 8-12 tiles maximum flood distance
+
+	// Process queue
+	for len(queue) > 0 {
+		// Get next tile
+		current := queue[0]
+		queue = queue[1:]
+
+		// Skip water tiles (we're looking for land to flood)
+		if Map[current.y][current.x].altitude <= 0 {
+			// But water is part of the flood system, so check its neighbors
+			for dy := -1; dy <= 1; dy++ {
+				for dx := -1; dx <= 1; dx++ {
+					nx, ny := current.x+dx, current.y+dy
+
+					// Check bounds
+					if nx < 0 || nx >= MapWidth || ny < 0 || ny >= MapHeight {
+						continue
+					}
+
+					// Skip processed tiles
+					if processed[ny][nx] {
+						continue
+					}
+
+					// Add to queue
+					queue = append(queue, struct{ x, y, distance int }{
+						x:        nx,
+						y:        ny,
+						distance: current.distance + 1,
+					})
+
+					processed[ny][nx] = true
+				}
+			}
+			continue
+		}
+
+		// We've found a land tile
+		// Check if it's suitable for flooding and not too far from water
+		if current.distance <= maxDistance &&
+			Map[current.y][current.x].altitude < 0.3 &&
+			Map[current.y][current.x].landType != LandType_Mountains &&
+			Map[current.y][current.x].landType != LandType_Plateaus &&
+			!Map[current.y][current.x].hasGrove && // Trees typically don't grow in flood zones
+			!Map[current.y][current.x].hasSaltFlat { // Salt flats form in areas that DON'T flood
+
+			// The likelihood of flooding decreases with elevation and distance
+			floodChance := 1.0 - (Map[current.y][current.x].altitude/0.3)*0.7 -
+				(float64(current.distance)/float64(maxDistance))*0.3
+
+			// Additional factor: valleys are more likely to flood
+			if Map[current.y][current.x].landType == LandType_Valleys {
+				floodChance += 0.2
+			}
+
+			// Apply randomness
+			if rng.Float64() < floodChance {
+				// This tile gets flooded
+				floodTiles = append(floodTiles, struct{ x, y int }{
+					x: current.x,
+					y: current.y,
+				})
+
+				// Add neighbors to queue to continue the flood
+				for dy := -1; dy <= 1; dy++ {
+					for dx := -1; dx <= 1; dx++ {
+						nx, ny := current.x+dx, current.y+dy
+
+						// Check bounds
+						if nx < 0 || nx >= MapWidth || ny < 0 || ny >= MapHeight {
+							continue
+						}
+
+						// Skip processed tiles
+						if processed[ny][nx] {
+							continue
+						}
+
+						// Add to queue with increased distance
+						queue = append(queue, struct{ x, y, distance int }{
+							x:        nx,
+							y:        ny,
+							distance: current.distance + 1,
+						})
+
+						processed[ny][nx] = true
+					}
+				}
+			}
+		}
+	}
+
+	return floodTiles
 }
