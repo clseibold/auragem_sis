@@ -9,6 +9,9 @@ import (
 const divider = ":"
 
 func PrintWorldMap(request *sis.Request) {
+	divider := " "
+	noBorders := true
+
 	showValues := false
 	query, _ := request.Query()
 	if query == "values" {
@@ -19,15 +22,27 @@ func PrintWorldMap(request *sis.Request) {
 	} else if query == "landtypes" {
 		debugLandTypes(request)
 		return
+	} else if query == "withborders" {
+		divider = ":"
+		noBorders = false
 	}
 
 	request.Heading(1, "World Map")
 	request.Gemini("\n")
 	if !showValues {
+		if noBorders {
+			request.Link("/world-map?withborders", "Show With Map Numbers")
+		} else {
+			request.Link("/world-map", "Show Without Map Numbers")
+		}
 		request.Link("/world-map?values", "Show Values")
-		request.Link("/world-map?mountains", "Show Mountain Ranges")
 		request.Link("/world-map?landtypes", "Show Land Types")
 	} else {
+		if noBorders {
+			request.Link("/world-map?withborders", "Show With Map Numbers")
+		} else {
+			request.Link("/world-map", "Show Without Map Numbers")
+		}
 		request.Link("/world-map", "Show Terrain")
 		request.Link("/world-map?landtypes", "Show Land Types")
 	}
@@ -50,7 +65,7 @@ func PrintWorldMap(request *sis.Request) {
 	request.PlainText("\nWith Full Terrain Generation:\n")
 	for y := range MapHeight {
 		// Heading
-		if y == 0 {
+		if y == 0 && !noBorders {
 			if showValues {
 				request.PlainText(divider + "     " + divider)
 			} else {
@@ -69,10 +84,12 @@ func PrintWorldMap(request *sis.Request) {
 			}
 		}
 
-		if showValues {
-			request.PlainText(divider+"%5d"+divider, y)
-		} else {
-			request.PlainText(divider+"%2d"+divider, y)
+		if !noBorders {
+			if showValues {
+				request.PlainText(divider+"%5d"+divider, y)
+			} else {
+				request.PlainText(divider+"%2d"+divider, y)
+			}
 		}
 		for x := range MapWidth {
 			if showValues {
@@ -123,7 +140,7 @@ func PrintWorldMap(request *sis.Request) {
 	request.PlainText("\nBase Perlin Noise:\n")
 	for y := range MapHeight {
 		// Heading
-		if y == 0 {
+		if y == 0 && !noBorders {
 			if showValues {
 				request.PlainText(divider + "     " + divider)
 			} else {
@@ -142,11 +159,12 @@ func PrintWorldMap(request *sis.Request) {
 			}
 		}
 
-		// Values
-		if showValues {
-			request.PlainText(divider+"%5d"+divider, y)
-		} else {
-			request.PlainText(divider+"%2d"+divider, y)
+		if !noBorders {
+			if showValues {
+				request.PlainText(divider+"%5d"+divider, y)
+			} else {
+				request.PlainText(divider+"%2d"+divider, y)
+			}
 		}
 		for x := range MapWidth {
 			if showValues {
