@@ -208,7 +208,7 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 	// Base terrain with multiple octaves to create natural variability
 	// Using larger divisors to create broader terrain features
 	baseHeight := perlin.Noise2D(float64(x)/(MapWidth*0.4), float64(y)/(MapHeight*0.4)) * 0.6
-	baseHeight += perlin.Noise2D(float64(x)/(MapWidth*0.1), float64(y)/(MapHeight*0.1)) * 0.2
+	baseHeight += perlin.Noise2D(float64(x)/(MapWidth*0.1), float64(y)/(MapHeight*0.1)) * 0.15
 	baseHeight += 0.2 // Offset for water level
 
 	// Mountain ranges - at regional scale we want elongated ranges, not isolated peaks, but keep is more controlled
@@ -221,8 +221,8 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 		distance := math.Sqrt(math.Pow(float64(x-peakX), 2) + math.Pow(float64(y-peakY), 2))
 
 		// Only apply mountain effects within a reasonable radius.
-		// This ensures mountains don't cover too much of the map.
-		maxMountainInfluence := 12.0 // Tilse from peak
+		// This ensures mountains don't cover too much of the map, only about 10-12%
+		maxMountainInfluence := 7.0 // Tilse from peak
 
 		if distance < maxMountainInfluence {
 			// Create directional bias for elongated ranges
@@ -239,21 +239,30 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 			angleAlignment := math.Abs(math.Cos(angle - rangeDirection))
 
 			// Apply directional stretching - points along the range direction get reduced distance
-			stretchFactor := 0.6 + 1.2*angleAlignment
+			// Higher stretch values = narrower mountains perpendicular to range direction
+			stretchFactor := 0.45 + 2.5*angleAlignment
 			modifiedDistance := distance / stretchFactor
 
-			// Create more compact mountain ranges
-			sigma := 5.0 // Controls mountain width
+			// Create more compact mountain ranges, a steeper falloff, with sharper and narrower peaks
+			sigma := 2.8 // Controls mountain width
 
 			// Height falloff based on distance from peak
-			heightFactor := math.Exp(-math.Pow(modifiedDistance, 2) / (2 * math.Pow(sigma, 2)))
+			// Switch exponent of modifiedDistance from 2.0 to 1.8 for more aggressive falloff for narrower mountains
+			heightFactor := math.Exp(-math.Pow(modifiedDistance, 1.8) / (2 * math.Pow(sigma, 2)))
 
-			// Scale height by distance from peak with some noise
-			heightVariation := perlin.Noise2D(float64(x+peakX)/15, float64(y+peakY)/15) * 0.3
-			mountainHeight := 1.5 * heightFactor * (1.0 + heightVariation)
+			// Scale height by distance from peak with some noise, but make it droppoff more quickly
+			heightVariation := perlin.Noise2D(float64(x+peakX)/12, float64(y+peakY)/12) * 0.2
 
-			// Add mountain height to final height
-			finalHeight += mountainHeight
+			// Height factor with sharp cutoff for more compact mountains
+			// Only add significant height when heightFactor is substantial
+			if heightFactor > 0.2 {
+				mountainHeight := 1.7 * heightFactor * (1.0 + heightVariation)
+				finalHeight += mountainHeight
+			} else {
+				// Add minimal height for foothills
+				mountainHeight := 0.15 * heightFactor * (1.0 + heightVariation)
+				finalHeight += mountainHeight
+			}
 		}
 	}
 
