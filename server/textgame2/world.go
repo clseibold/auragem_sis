@@ -166,15 +166,15 @@ func PrintWorldMap(request *sis.Request) {
 			} else {
 				altitude := MapPerlin[y][x].altitude
 				if altitude <= 0 {
-					request.PlainText(" o|") // Water
+					request.PlainText(" ~|") // Water
 				} else if altitude >= 1 {
-					request.PlainText(" 5|") // Mountain
+					request.PlainText(" A|") // Mountain
 				} else if altitude >= 0.7 { // Hills?
-					request.PlainText(" 7|")
+					request.PlainText(" n|")
 				} else if altitude >= 0.4 {
-					request.PlainText(" 6|")
+					request.PlainText(" +|")
 				} else {
-					request.PlainText(" 1|") // Plains and hills
+					request.PlainText(" =|") // Plains and hills
 				}
 			}
 		}
@@ -217,15 +217,15 @@ func PrintWorldMap(request *sis.Request) {
 			} else {
 				altitude := Map[y][x].altitude
 				if altitude <= 0 {
-					request.PlainText(" o|") // Water
+					request.PlainText(" ~|") // Water
 				} else if altitude >= 1 {
-					request.PlainText(" 5|") // Mountain
+					request.PlainText(" A|") // Mountain
 				} else if altitude >= 0.7 { // Hills?
-					request.PlainText(" 7|")
+					request.PlainText(" n|")
 				} else if altitude >= 0.4 {
-					request.PlainText(" 6|")
+					request.PlainText(" +|")
 				} else {
-					request.PlainText(" 1|") // Plains and hills
+					request.PlainText(" =|") // Plains and hills
 				}
 			}
 		}
