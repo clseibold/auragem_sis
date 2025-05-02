@@ -206,13 +206,12 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 
 	// perlin.Noise2D generates 2-dimensional perlin noise value given an x and y.
 	// Base terrain with multiple octaves to create natural variability
-	// Using larger divisors to represent continental-scale features
-	baseHeight := perlin.Noise2D(float64(x)/(MapWidth*0.7), float64(y)/(MapHeight*0.7)) * 0.5
-	baseHeight += perlin.Noise2D(float64(x)/(MapWidth*0.3), float64(y)/(MapHeight*0.3)) * 0.3
+	// Using larger divisors to create broader terrain features
+	baseHeight := perlin.Noise2D(float64(x)/(MapWidth*0.4), float64(y)/(MapHeight*0.4)) * 0.6
 	baseHeight += perlin.Noise2D(float64(x)/(MapWidth*0.1), float64(y)/(MapHeight*0.1)) * 0.2
-	baseHeight += 0.2 // Baseline elevation adjustment
+	baseHeight += 0.2 // Offset for water level
 
-	// Mountain ranges - at regional scale we want elongated ranges, not isolated peaks
+	// Mountain ranges - at regional scale we want elongated ranges, not isolated peaks, but keep is more controlled
 	finalHeight := baseHeight
 	for _, peak := range peaks {
 		peakX := peak.peakX
@@ -221,33 +220,41 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 		// Calculate distance to the peak (mountain range center)
 		distance := math.Sqrt(math.Pow(float64(x-peakX), 2) + math.Pow(float64(y-peakY), 2))
 
-		// Create directional bias for the mountain range
-		// This makes ranges extend in a specific direction rather than being circular
-		dirX := float64(x - peakX)
-		dirY := float64(y - peakY)
-		angle := math.Atan2(dirY, dirX)
+		// Only apply mountain effects within a reasonable radius.
+		// This ensures mountains don't cover too much of the map.
+		maxMountainInfluence := 12.0 // Tilse from peak
 
-		// Generate a random dominant direction for this mountain range
-		// Each range will extend in a different main direction
-		rangeDirection := math.Pi * float64(int(seed+int64(peakX*peakY))%4) / 4.0
+		if distance < maxMountainInfluence {
+			// Create directional bias for elongated ranges
+			// Each peak gets a random direction for its range
+			rangeDirection := (float64(peakX*peakY+int(seed)) % 360) * math.Pi / 180
 
-		// Adjust distance based on alignment with the range's main axis
-		// Points along the mountain chain's axis will have effectively "shorter" distances
-		directionAlignment := math.Abs(math.Cos(angle - rangeDirection))
-		stretchFactor := 0.4 + 1.2*directionAlignment // Range from 0.4 to 1.6
+			// Vector from peak to current point
+			dirX := float64(x - peakX)
+			dirY := float64(y - peakY)
+			angle := math.Atan2(dirY, dirX)
 
-		// Stretch the distance in the perpendicular direction to create elongated ranges
-		modifiedDistance := distance * (1.0 / stretchFactor)
+			// Calculate how aligned this point is with the mountain range direction
+			// Use cosine of angle difference: 1 = perfectly aligned, 0 = perpendicular
+			angleAlignment := math.Abs(math.Cos(angle - rangeDirection))
 
-		// Regional mountains have gentler slopes
-		sigma := 7.0 // Much wider influence for regional scale
-		mountainHeight := 2.0 * math.Exp(-math.Pow(modifiedDistance, 1.8)/(2*math.Pow(sigma, 2)))
+			// Apply directional stretching - points along the range direction get reduced distance
+			stretchFactor := 0.6 + 1.2*angleAlignment
+			modifiedDistance := distance / stretchFactor
 
-		// Apply elevation variability along the range
-		rangeVariability := perlin.Noise2D(float64(x+peakX)/20, float64(y+peakY)/20) * 0.3
-		mountainHeight *= (1.0 + rangeVariability)
+			// Create more compact mountain ranges
+			sigma := 5.0 // Controls mountain width
 
-		finalHeight += mountainHeight
+			// Height falloff based on distance from peak
+			heightFactor := math.Exp(-math.Pow(modifiedDistance, 2) / (2 * math.Pow(sigma, 2)))
+
+			// Scale height by distance from peak with some noise
+			heightVariation := perlin.Noise2D(float64(x+peakX)/15, float64(y+peakY)/15) * 0.3
+			mountainHeight := 1.5 * heightFactor * (1.0 + heightVariation)
+
+			// Add mountain height to final height
+			finalHeight += mountainHeight
+		}
 	}
 
 	return baseHeight, finalHeight
