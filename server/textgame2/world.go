@@ -183,7 +183,7 @@ func PrintWorldMap(request *sis.Request) {
 		}
 	}
 
-	request.PlainText("\nJust Perlin Noise:\n")
+	request.PlainText("\nBase Perlin Noise:\n")
 	for y := range MapHeight {
 		// Heading
 		if y == 0 {
@@ -435,8 +435,8 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 		// Inner bounds = hard constraints, outer bounds = falloff zone
 		innerLengthwise := 8.5  // Core range length
 		outerLengthwise := 13.5 // Extended falloff zone
-		innerCrosswise := 1.5   // Core range half-width
-		outerCrosswise := 3.5   // Extended falloff zone
+		innerCrosswise := 2.0   // Core range half-width
+		outerCrosswise := 4.0   // Extended falloff zone
 
 		// Only process points within the extended range boundaries
 		if lengthwiseDistance <= outerLengthwise && crosswiseDistance <= outerCrosswise {
@@ -487,7 +487,7 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 			heightVariation := perlin.Noise2D(float64(x+peakX)/10, float64(y+peakY)/10) * 0.2
 
 			// Ensure mountain height is substantial with gentler threshold
-			baseHeight := 1.0 // NOTE: Base Mountain Height! Lower this if peaks are too high!
+			baseHeight := 1.5 // NOTE: Base Mountain Height! Lower this if peaks are too high!
 			mountainHeight := baseHeight * heightFactor * (1.0 + heightVariation)
 
 			// More gradual cutoff for adding height
