@@ -121,6 +121,20 @@ func PrintWorldMap(request *sis.Request) {
 					request.PlainText("≈")
 				} else if tile.hasStream {
 					request.PlainText(".")
+				} else if tile.hasGrove {
+					request.PlainText("Υ")
+				} else if tile.hasMeadow {
+					request.PlainText("⁎")
+				} else if tile.hasScrub {
+					request.PlainText("⌿")
+				} else if tile.hasRocks {
+					request.PlainText("◊")
+				} else if tile.hasSaltFlat {
+					request.PlainText("□")
+				} else if tile.hasFloodArea {
+					request.PlainText("∴")
+				} else if tile.hasGameTrail {
+					request.PlainText("-")
 				} else {
 					request.PlainText(" ")
 				}
@@ -177,6 +191,14 @@ func PrintWorldMap(request *sis.Request) {
 	request.PlainText("⊙ : Spring with pond\n")
 	request.PlainText("≈ : Marsh (soggy ground)\n")
 	request.PlainText("⊛ : Marsh with pond\n")
+
+	request.Gemini("Υ : Grove of trees\n")
+	request.Gemini("⁎ : Flower meadow\n")
+	request.Gemini("⌿ : Scrubland\n")
+	request.Gemini("◊ : Rock outcroppings\n")
+	request.Gemini("□ : Salt flat\n")
+	request.Gemini("∴ : Seasonal flood area\n")
+	request.Gemini("- : Game trail\n")
 
 	request.PlainText(" ~: Water (lake/river)\n")
 	request.PlainText(" (space): Plains\n")

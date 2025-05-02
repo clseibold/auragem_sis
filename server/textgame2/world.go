@@ -8,8 +8,18 @@ import (
 	"github.com/aquilax/go-perlin"
 )
 
-// TODO: Generate Valleys, Plateaus, and Rivers
-// TODO: Assign land types to each tile. Then assign biomes to each tile given its land type, adjacent biomes, and bodies of water
+// | Terrain Type | Altitude Range | Display |
+// |--------------|----------------|---------|
+// | Water        | ≤ 0.0          | ~ |
+// | Plains       | 0.0 - 0.3      | (space) |
+// | Hills        | 0.3 - 0.5      | + |
+// | Plateaus     | 0.5 - 0.8      | = |
+// | Rough High   | 0.8 - 1.0      | n |
+// | Mountains    | ≥ 1.0          | A |
+
+// TODO: Canyons, Gorges, Cliffs, Waterfalls, Escarpments, Islands, Caves and Caverns?, Rock formations
+
+// TODO: Assign biomes to each tile given its land type, adjacent biomes, and bodies of water
 
 const MapWidth = 50
 const MapHeight = 50
@@ -22,13 +32,24 @@ var MapPerlin [MapHeight][MapWidth]Tile
 
 // Each tile of the world map represents a 10 square kilometer region.
 type Tile struct {
-	altitude  float64
-	biome     Biome
-	landType  LandType
+	altitude float64
+	biome    Biome
+	landType LandType
+
+	// Water features
 	hasStream bool // Contains a small stream/creek within the tile
 	hasPond   bool // Contains a small pond within the tile
 	hasSpring bool // Contains a natural spring (water source)
 	hasMarsh  bool // Contains a marshy area (soggy ground)
+
+	// Plains features
+	hasGrove     bool // Contains a small grove of trees
+	hasMeadow    bool // Contains a flower-rich meadow
+	hasScrub     bool // Contains scrubland with brush
+	hasRocks     bool // Contains small rock outcroppings
+	hasGameTrail bool // Contains animal paths/trails
+	hasFloodArea bool // Contains area that seasonally floods
+	hasSaltFlat  bool // Contains a small salt flat or mineral deposit
 }
 
 type Peak struct {
@@ -66,6 +87,9 @@ func generateWorldMap() {
 
 	// Generate small-scale water features (ponds, streams, springs, and marshes)
 	generateSmallWaterFeatures(seed)
+
+	// Generate plains-specific features to add variety
+	generatePlainsFeatures(seed)
 
 	// Identify valleys
 	identifyValleys()
@@ -1418,11 +1442,436 @@ func traceSmallStreamPath(startX, startY int, rng *rand.Rand, occupied [MapHeigh
 	return path
 }
 
-// | Terrain Type | Altitude Range | Display |
-// |--------------|----------------|---------|
-// | Water        | ≤ 0.0          | ~ |
-// | Plains       | 0.0 - 0.3      | (space) |
-// | Hills        | 0.3 - 0.5      | + |
-// | Plateaus     | 0.5 - 0.8      | = |
-// | Rough High   | 0.8 - 1.0      | n |
-// | Mountains    | ≥ 1.0          | A |
+func generatePlainsFeatures(seed int64) {
+	rng := rand.New(rand.NewSource(seed + 7890))
+
+	// Feature quantity parameters
+	groveCount := 20 + rng.Intn(10)   // 20-29 tree groves
+	meadowCount := 15 + rng.Intn(10)  // 15-24 flower meadows
+	scrubCount := 25 + rng.Intn(15)   // 25-39 scrubland patches
+	rockCount := 10 + rng.Intn(8)     // 10-17 rock outcroppings
+	gameTrailCount := 8 + rng.Intn(5) // 8-12 game trails
+	floodAreaCount := 6 + rng.Intn(5) // 6-10 seasonal flood areas
+	saltFlatCount := 3 + rng.Intn(3)  // 3-5 salt flats
+
+	// Track places where we've already placed features
+	var featurePlaced [MapHeight][MapWidth]bool
+
+	// Mark existing water and special features as unavailable
+	for y := 0; y < MapHeight; y++ {
+		for x := 0; x < MapWidth; x++ {
+			// Skip tiles that already have features
+			if Map[y][x].altitude <= 0 || // Water
+				Map[y][x].hasStream ||
+				Map[y][x].hasPond ||
+				Map[y][x].hasSpring ||
+				Map[y][x].hasMarsh {
+				featurePlaced[y][x] = true
+			}
+		}
+	}
+
+	// 1. Generate groves (small clusters of trees)
+	grovesGenerated := 0
+
+	for attempts := 0; attempts < 100 && grovesGenerated < groveCount; attempts++ {
+		x := rng.Intn(MapWidth)
+		y := rng.Intn(MapHeight)
+
+		// Check if this is a suitable spot for a grove
+		if !featurePlaced[y][x] &&
+			Map[y][x].landType == LandType_Plains &&
+			Map[y][x].altitude > 0.1 && Map[y][x].altitude < 0.7 {
+
+			// More likely near water sources
+			placeGrove := false
+
+			// Check if near water
+			nearWater := false
+			for dy := -3; dy <= 3; dy++ {
+				for dx := -3; dx <= 3; dx++ {
+					nx, ny := x+dx, y+dy
+					if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
+						if Map[ny][nx].altitude <= 0 || Map[ny][nx].hasStream ||
+							Map[ny][nx].hasPond || Map[ny][nx].hasSpring {
+							nearWater = true
+							break
+						}
+					}
+				}
+				if nearWater {
+					break
+				}
+			}
+
+			if nearWater {
+				placeGrove = rng.Float64() < 0.7 // Higher chance near water
+			} else {
+				placeGrove = rng.Float64() < 0.3 // Lower chance away from water
+			}
+
+			if placeGrove {
+				Map[y][x].hasGrove = true
+				featurePlaced[y][x] = true
+
+				// Some groves form small clusters
+				if rng.Float64() < 0.4 {
+					// Try to add 1-3 adjacent grove tiles
+					extraGroves := 1 + rng.Intn(3)
+					for e := 0; e < extraGroves; e++ {
+						// Pick a random direction
+						dx := rng.Intn(3) - 1
+						dy := rng.Intn(3) - 1
+
+						nx, ny := x+dx, y+dy
+						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
+							!featurePlaced[ny][nx] &&
+							Map[ny][nx].landType == LandType_Plains {
+							Map[ny][nx].hasGrove = true
+							featurePlaced[ny][nx] = true
+						}
+					}
+				}
+
+				grovesGenerated++
+			}
+		}
+	}
+
+	// 2. Generate meadows (flower-rich areas)
+	meadowsGenerated := 0
+
+	for attempts := 0; attempts < 100 && meadowsGenerated < meadowCount; attempts++ {
+		x := rng.Intn(MapWidth)
+		y := rng.Intn(MapHeight)
+
+		// Check if this is a suitable spot for a meadow
+		if !featurePlaced[y][x] &&
+			Map[y][x].landType == LandType_Plains &&
+			Map[y][x].altitude > 0.1 && Map[y][x].altitude < 0.6 {
+
+			// Meadows are more likely in wetter areas, but not too wet
+			placeMeadow := false
+
+			// Meadows often form in valleys or near water
+			if Map[y][x].landType == LandType_Valleys {
+				placeMeadow = rng.Float64() < 0.6
+			} else {
+				// Check if near water
+				nearWater := false
+				for dy := -3; dy <= 3; dy++ {
+					for dx := -3; dx <= 3; dx++ {
+						nx, ny := x+dx, y+dy
+						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
+							if Map[ny][nx].altitude <= 0 || Map[ny][nx].hasStream ||
+								Map[ny][nx].hasPond || Map[ny][nx].hasSpring {
+								nearWater = true
+								break
+							}
+						}
+					}
+					if nearWater {
+						break
+					}
+				}
+
+				if nearWater {
+					placeMeadow = rng.Float64() < 0.5
+				} else {
+					placeMeadow = rng.Float64() < 0.2
+				}
+			}
+
+			if placeMeadow {
+				Map[y][x].hasMeadow = true
+				featurePlaced[y][x] = true
+				meadowsGenerated++
+			}
+		}
+	}
+
+	// 3. Generate scrubland (areas with brush and small woody plants)
+	scrubGenerated := 0
+
+	for attempts := 0; attempts < 150 && scrubGenerated < scrubCount; attempts++ {
+		x := rng.Intn(MapWidth)
+		y := rng.Intn(MapHeight)
+
+		// Check if this is a suitable spot for scrubland
+		if !featurePlaced[y][x] &&
+			Map[y][x].landType == LandType_Plains &&
+			Map[y][x].altitude > 0.2 && Map[y][x].altitude < 0.7 {
+
+			// Scrubland is common in slightly drier areas, but not desert-dry
+			placeScrub := rng.Float64() < 0.5 // Base chance is high, plains often have scrub
+
+			if placeScrub {
+				Map[y][x].hasScrub = true
+				featurePlaced[y][x] = true
+
+				// Scrubland often forms larger patches
+				if rng.Float64() < 0.7 {
+					// Try to add 2-5 adjacent scrub tiles
+					extraScrub := 2 + rng.Intn(4)
+					for e := 0; e < extraScrub; e++ {
+						// Pick a random direction
+						dx := rng.Intn(3) - 1
+						dy := rng.Intn(3) - 1
+
+						nx, ny := x+dx, y+dy
+						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
+							!featurePlaced[ny][nx] &&
+							Map[ny][nx].landType == LandType_Plains {
+							Map[ny][nx].hasScrub = true
+							featurePlaced[ny][nx] = true
+						}
+					}
+				}
+
+				scrubGenerated++
+			}
+		}
+	}
+
+	// 4. Generate rock outcroppings
+	rocksGenerated := 0
+
+	for attempts := 0; attempts < 100 && rocksGenerated < rockCount; attempts++ {
+		x := rng.Intn(MapWidth)
+		y := rng.Intn(MapHeight)
+
+		// Check if this is a suitable spot for exposed rocks
+		if !featurePlaced[y][x] &&
+			Map[y][x].landType == LandType_Plains &&
+			Map[y][x].altitude > 0.3 && Map[y][x].altitude < 0.8 {
+
+			// Rocks are more common at higher elevations
+			placeRocks := false
+			if Map[y][x].altitude > 0.6 {
+				placeRocks = rng.Float64() < 0.6
+			} else {
+				placeRocks = rng.Float64() < 0.3
+			}
+
+			if placeRocks {
+				Map[y][x].hasRocks = true
+				featurePlaced[y][x] = true
+				rocksGenerated++
+			}
+		}
+	}
+
+	// 5. Generate game trails
+	trailsGenerated := 0
+
+	for attempts := 0; attempts < 50 && trailsGenerated < gameTrailCount; attempts++ {
+		// Game trails typically start at water sources and go to other features
+
+		// Find a water source to start from
+		waterSources := make([]struct{ x, y int }, 0)
+
+		for y := 0; y < MapHeight; y++ {
+			for x := 0; x < MapWidth; x++ {
+				if Map[y][x].altitude <= 0 || Map[y][x].hasPond || Map[y][x].hasStream {
+					waterSources = append(waterSources, struct{ x, y int }{x, y})
+				}
+			}
+		}
+
+		if len(waterSources) == 0 {
+			break // No water sources to start from
+		}
+
+		// Pick a random water source
+		source := waterSources[rng.Intn(len(waterSources))]
+
+		// Create a trail from this source
+		x, y := source.x, source.y
+		trailLength := 3 + rng.Intn(5) // Trails are 3-7 tiles long
+
+		// Pick a random direction that isn't into water
+		var dx, dy int
+		for {
+			dx = rng.Intn(3) - 1
+			dy = rng.Intn(3) - 1
+			if dx != 0 || dy != 0 {
+				nx, ny := x+dx, y+dy
+				if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
+					Map[ny][nx].altitude > 0 {
+					break
+				}
+			}
+		}
+
+		// Form the trail
+		validTrail := true
+		for i := 0; i < trailLength; i++ {
+			x += dx
+			y += dy
+
+			// Stay on map
+			if x < 0 || x >= MapWidth || y < 0 || y >= MapHeight {
+				validTrail = false
+				break
+			}
+
+			// Don't put trails in water
+			if Map[y][x].altitude <= 0 {
+				validTrail = false
+				break
+			}
+
+			// Mark as game trail (ok to overlap with other features)
+			Map[y][x].hasGameTrail = true
+
+			// Occasionally change direction slightly
+			if rng.Float64() < 0.3 {
+				// Small direction change
+				dx += rng.Intn(3) - 1
+				dy += rng.Intn(3) - 1
+
+				// Ensure we're still moving
+				if dx == 0 && dy == 0 {
+					if rng.Float64() < 0.5 {
+						dx = 1
+					} else {
+						dy = 1
+					}
+				}
+
+				// Limit max speed
+				if dx > 1 {
+					dx = 1
+				} else if dx < -1 {
+					dx = -1
+				}
+				if dy > 1 {
+					dy = 1
+				} else if dy < -1 {
+					dy = -1
+				}
+			}
+		}
+
+		if validTrail {
+			trailsGenerated++
+		}
+	}
+
+	// 6. Generate seasonal flood areas
+	floodAreasGenerated := 0
+
+	for attempts := 0; attempts < 100 && floodAreasGenerated < floodAreaCount; attempts++ {
+		x := rng.Intn(MapWidth)
+		y := rng.Intn(MapHeight)
+
+		// Check if this is a suitable spot for a flood area
+		if !featurePlaced[y][x] &&
+			Map[y][x].landType == LandType_Plains &&
+			Map[y][x].altitude > 0.05 && Map[y][x].altitude < 0.3 {
+
+			// Flood areas are typically near water and in low spots
+			placeFloodArea := false
+
+			// Check if near water
+			nearWater := false
+			for dy := -4; dy <= 4; dy++ {
+				for dx := -4; dx <= 4; dx++ {
+					nx, ny := x+dx, y+dy
+					if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
+						if Map[ny][nx].altitude <= 0 || Map[ny][nx].hasStream ||
+							Map[ny][nx].hasPond {
+							nearWater = true
+							break
+						}
+					}
+				}
+				if nearWater {
+					break
+				}
+			}
+
+			// Flood areas typically form in valleys or low areas near water
+			if Map[y][x].altitude < 0.2 && nearWater {
+				placeFloodArea = rng.Float64() < 0.7
+			} else if Map[y][x].landType == LandType_Valleys {
+				placeFloodArea = rng.Float64() < 0.5
+			} else if nearWater {
+				placeFloodArea = rng.Float64() < 0.3
+			} else {
+				placeFloodArea = rng.Float64() < 0.1
+			}
+
+			if placeFloodArea {
+				Map[y][x].hasFloodArea = true
+				featurePlaced[y][x] = true
+
+				// Flood areas often extend
+				if rng.Float64() < 0.6 {
+					// Try to add 1-3 adjacent flood area tiles
+					extraFlood := 1 + rng.Intn(3)
+					for e := 0; e < extraFlood; e++ {
+						// Pick a random direction
+						dx := rng.Intn(3) - 1
+						dy := rng.Intn(3) - 1
+
+						nx, ny := x+dx, y+dy
+						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
+							!featurePlaced[ny][nx] &&
+							Map[ny][nx].landType == LandType_Plains &&
+							Map[ny][nx].altitude < 0.3 {
+							Map[ny][nx].hasFloodArea = true
+							featurePlaced[ny][nx] = true
+						}
+					}
+				}
+
+				floodAreasGenerated++
+			}
+		}
+	}
+
+	// 7. Generate salt flats
+	saltFlatsGenerated := 0
+
+	for attempts := 0; attempts < 50 && saltFlatsGenerated < saltFlatCount; attempts++ {
+		x := rng.Intn(MapWidth)
+		y := rng.Intn(MapHeight)
+
+		// Check if this is a suitable spot for a salt flat
+		if !featurePlaced[y][x] &&
+			Map[y][x].landType == LandType_Plains &&
+			Map[y][x].altitude > 0.15 && Map[y][x].altitude < 0.4 {
+
+			// Salt flats typically form in dry basins
+			placeSaltFlat := rng.Float64() < 0.3
+
+			if placeSaltFlat {
+				Map[y][x].hasSaltFlat = true
+				featurePlaced[y][x] = true
+
+				// Salt flats can form small patches
+				if rng.Float64() < 0.5 {
+					// Try to add 1-2 adjacent salt flat tiles
+					extraSalt := 1 + rng.Intn(2)
+					for e := 0; e < extraSalt; e++ {
+						// Pick a random direction
+						dx := rng.Intn(3) - 1
+						dy := rng.Intn(3) - 1
+
+						nx, ny := x+dx, y+dy
+						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
+							!featurePlaced[ny][nx] &&
+							Map[ny][nx].landType == LandType_Plains &&
+							Map[ny][nx].altitude < 0.4 {
+							Map[ny][nx].hasSaltFlat = true
+							featurePlaced[ny][nx] = true
+						}
+					}
+				}
+
+				saltFlatsGenerated++
+			}
+		}
+	}
+}
