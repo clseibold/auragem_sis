@@ -29,7 +29,8 @@ type Peak struct {
 }
 
 func generateWorldMap() {
-	rand := rand.New(rand.NewSource(1))
+	var seed int64 = 1239462936493264926
+	rand := rand.New(rand.NewSource(seed))
 
 	MapPeaks = make([]Peak, 0)
 	for range MapNumberOfMountainPeaks {
@@ -41,7 +42,7 @@ func generateWorldMap() {
 
 	for y := 0; y < MapHeight; y++ {
 		for x := 0; x < MapWidth; x++ {
-			perlinAltitude, altitude := generateHeight(MapPeaks, x, y, 1)
+			perlinAltitude, altitude := generateHeight(MapPeaks, x, y, seed)
 			Map[y][x] = Tile{altitude: altitude}
 			MapPerlin[y][x] = Tile{altitude: perlinAltitude}
 		}
