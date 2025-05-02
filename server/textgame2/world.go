@@ -102,14 +102,19 @@ func PrintWorldMap(request *sis.Request) {
 	query, _ := request.Query()
 	if query == "values" {
 		showValues = true
+	} else if query == "mountains" {
+		debugMountainDimensions(request)
+		return
 	}
 
 	request.Heading(1, "World Map")
 	request.Gemini("\n")
 	if !showValues {
 		request.Link("/world-map?values", "Show Values")
+		request.Link("/world-map?mountains", "Show Mountain Ranges")
 	} else {
 		request.Link("/world-map", "Show Terrain")
+		request.Link("/world-map?mountains", "Show Mountain Ranges")
 	}
 	request.Gemini("\n")
 
@@ -224,6 +229,132 @@ func PrintWorldMap(request *sis.Request) {
 	request.Gemini("```\n")
 }
 
+func debugMountainDimensions(request *sis.Request) {
+	request.Heading(1, "Mountain Range Dimensions")
+	request.Gemini("\n")
+	request.Link("/world-map/", "Back to World Map")
+	request.Gemini("\n")
+
+	// Create a debug grid
+	debugMap := make([][]string, MapHeight)
+	for y := range debugMap {
+		debugMap[y] = make([]string, MapWidth)
+		for x := range debugMap[y] {
+			debugMap[y][x] = " "
+		}
+	}
+
+	// Mark mountain peaks
+	for _, peak := range MapPeaks {
+		debugMap[peak.peakY][peak.peakX] = "P"
+	}
+
+	// Mark mountain range areas
+	for y := 0; y < MapHeight; y++ {
+		for x := 0; x < MapWidth; x++ {
+			if Map[y][x].altitude >= 1.0 {
+				debugMap[y][x] = "M"
+			}
+		}
+	}
+
+	// Show theoretical stretch zones for one peak
+	if len(MapPeaks) > 0 {
+		peak := MapPeaks[0]
+		rangeDirection := (math.Mod(float64(peak.peakX*peak.peakY+1239462936493264926), 360)) * math.Pi / 180
+
+		// Draw direction line
+		lineLength := 20
+		for i := 0; i < lineLength; i++ {
+			dx := int(math.Round(float64(i) * math.Cos(rangeDirection)))
+			dy := int(math.Round(float64(i) * math.Sin(rangeDirection)))
+
+			nx, ny := peak.peakX+dx, peak.peakY+dy
+			if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
+				if debugMap[ny][nx] == " " {
+					debugMap[ny][nx] = "."
+				}
+			}
+		}
+
+		// Show stretch factor zones
+		for y := 0; y < MapHeight; y++ {
+			for x := 0; x < MapWidth; x++ {
+				// Skip if already marked
+				if debugMap[y][x] != " " {
+					continue
+				}
+
+				// Vector from peak
+				dirX := float64(x - peak.peakX)
+				dirY := float64(y - peak.peakY)
+
+				// Skip if too far
+				dist := math.Sqrt(math.Pow(dirX, 2) + math.Pow(dirY, 2))
+				if dist > 20 {
+					continue
+				}
+
+				// Calculate angle alignment
+				pointAngle := math.Atan2(dirY, dirX)
+				angleAlignment := math.Abs(math.Cos(pointAngle - rangeDirection))
+
+				// Show different stretch zones
+				if angleAlignment > 0.9 {
+					debugMap[y][x] = "S" // Strong stretch
+				} else if angleAlignment > 0.7 {
+					debugMap[y][x] = "s" // Medium stretch
+				} else if angleAlignment > 0.3 {
+					debugMap[y][x] = "w" // Weak stretch
+				}
+			}
+		}
+
+		// Show dimensional constraints
+		maxLengthwise := 15.0
+		maxCrosswise := 2.0
+
+		for y := 0; y < MapHeight; y++ {
+			for x := 0; x < MapWidth; x++ {
+				// Vector from peak
+				dirX := float64(x - peak.peakX)
+				dirY := float64(y - peak.peakY)
+
+				// Calculate rotated coordinates
+				alignedX := dirX*math.Cos(-rangeDirection) + dirY*math.Sin(-rangeDirection)
+				alignedY := -dirX*math.Sin(-rangeDirection) + dirY*math.Cos(-rangeDirection)
+
+				// Use absolute values
+				lengthwiseDistance := math.Abs(alignedX)
+				crosswiseDistance := math.Abs(alignedY)
+
+				// Mark boundary points
+				if (math.Abs(lengthwiseDistance-maxLengthwise) < 0.5 && crosswiseDistance <= maxCrosswise) ||
+					(math.Abs(crosswiseDistance-maxCrosswise) < 0.5 && lengthwiseDistance <= maxLengthwise) {
+					debugMap[y][x] = "+"
+				}
+			}
+		}
+	}
+
+	// Print the debug grid
+	request.Gemini("```\n")
+	for y := 0; y < MapHeight; y++ {
+		for x := 0; x < MapWidth; x++ {
+			request.PlainText(debugMap[y][x])
+		}
+		request.PlainText("\n")
+	}
+	request.Gemini("```\n")
+
+	request.Gemini("Legend:\n")
+	request.Gemini("- P: Mountain peak\n")
+	request.Gemini("- M: Mountain terrain\n")
+	request.Gemini("- .: Direction line\n")
+	request.Gemini("- +: Range boundary\n")
+	request.Gemini("- S/s/w: Strong/medium/weak stretch zones\n")
+}
+
 func getMapLowestAndHighestPoints() (Tile, Tile) {
 	var lowest Tile
 	var highest Tile
@@ -260,72 +391,79 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 		peakX := peak.peakX
 		peakY := peak.peakY
 
-		// Create directional bias for elongated ranges
-		// Each peak gets a random direction for its range
-		rangeDirection := (math.Mod(float64(peakX*peakY+int(seed)), 360)) * math.Pi / 180
-
 		// Vector from peak to current point
 		dirX := float64(x - peakX)
 		dirY := float64(y - peakY)
+
+		// Basic distance
+		distance := math.Sqrt(math.Pow(dirX, 2) + math.Pow(dirY, 2))
+
+		// Determine range direction (0 to 2π)
+		rangeDirection := (math.Mod(float64(peakX*peakY+int(seed)), 360)) * math.Pi / 180
+
+		// Calculate the angle of the current point relative to the peak
 		pointAngle := math.Atan2(dirY, dirX)
 
 		// Calculate how aligned this point is with the mountain range direction
-		// Use cosine of angle difference: 1 = perfectly aligned, 0 = perpendicular
+		// 1 = perfectly aligned, 0 = perpendicular
 		angleAlignment := math.Abs(math.Cos(pointAngle - rangeDirection))
 
-		// Distance from current point to peak
-		distance := math.Sqrt(math.Pow(dirX, 2) + math.Pow(dirY, 2))
-
 		// Create extreme stretching factor:
-		// - Along the range direction: very little distance penalty
-		// - Perpendicular to range: very high distance penalty
-		// This creates very narrow but long ranges
+		// - Along the range direction: very little distance penalty (large stretch)
+		// - Perpendicular to range: very high distance penalty (small stretch)
+		stretchMinimum := 0.15 // Controls width (smaller = narrower)
+		stretchMaximum := 8.0  // Controls length (larger = longer)
 
-		// Start with a severe disparity between along-range and cross-range scaling
-		// 0.2 = extremely narrow perpendicular to range
-		// 6.0 = extends far along the range axis
-		stretchMinimum := 0.2 // Controls width (smaller = narrower)
-		stretchMaximum := 5.0 // Controls length (larger = longer)
+		// Calculate stretch factor with extreme bias for elongation
+		// Using power function to create more pronounced difference
+		stretchFactor := stretchMinimum + (stretchMaximum-stretchMinimum)*math.Pow(angleAlignment, 3)
 
-		// Apply directional stretching - points along the range direction get reduced distance
-		// Higher stretch values = narrower mountains perpendicular to range direction
-		stretchFactor := stretchMinimum + (stretchMaximum-stretchMinimum)*math.Pow(angleAlignment, 2)
-
-		// Apply stretch factor to create a modified distance
-		// Points along the range direction will have effectively much shorter distances
-		// Points perpendicular to range will have effectively much longer distances
+		// Apply the stretch factor to create a modified distance
 		modifiedDistance := distance / stretchFactor
 
-		// Hard distance cutoff for mountains - if beyond the range's influence, contribute nothing
-		// This ensures ranges are exactly as long as we want them
-		maxLengthwise := 10.0 // Maximum tiles along range direction
-		maxCrosswise := 4.0   // Maximum tiles perpendicular to range direction
+		// Calculate rotated coordinates aligned with range direction
+		alignedX := dirX*math.Cos(-rangeDirection) + dirY*math.Sin(-rangeDirection)
+		alignedY := -dirX*math.Sin(-rangeDirection) + dirY*math.Cos(-rangeDirection)
 
-		// Calculate distance components along and perpendicular to range direction
-		// This allows us to precisely control length and width
-		alongRangeComponent := math.Abs(modifiedDistance * math.Cos(pointAngle-rangeDirection))
-		perpRangeComponent := math.Abs(modifiedDistance * math.Sin(pointAngle-rangeDirection))
+		// Use absolute values for dimension checking
+		lengthwiseDistance := math.Abs(alignedX)
+		crosswiseDistance := math.Abs(alignedY)
 
-		// Only contribute to height if within our desired length and width bounds
-		if alongRangeComponent <= maxLengthwise && perpRangeComponent <= maxCrosswise {
-			// Very steep falloff perpendicular to range direction
-			// Much gentler falloff along range direction
-			sigmaPerpendicular := 1.2 // Controls width falloff (smaller = steeper sides)
-			sigmaParallel := 5.0      // Controls length falloff (larger = more gradual along range)
+		// Maximum dimensions for the range
+		maxLengthwise := 15.0 // Maximum tiles along range direction
+		maxCrosswise := 2.0   // Maximum half-width (total width ~4 tiles)
 
-			// Calculate height contribution with different falloff rates in different directions
-			perpFactor := math.Exp(-math.Pow(perpRangeComponent, 2) / (2 * math.Pow(sigmaPerpendicular, 2)))
-			parallelFactor := math.Exp(-math.Pow(alongRangeComponent, 2) / (2 * math.Pow(sigmaParallel, 2)))
+		// Only apply mountain height if within our bounds
+		if lengthwiseDistance <= maxLengthwise && crosswiseDistance <= maxCrosswise {
+			// Different falloff rates in different directions
+			// Use both the stretched distance and the dimensional constraints
 
-			// Combine factors - both need to be high for maximum height
-			heightFactor := perpFactor * parallelFactor
+			// Distance-based falloff using modified (stretched) distance
+			distanceFactor := math.Exp(-math.Pow(modifiedDistance, 2) / 8.0)
+
+			// Dimensional constraints (normalized 0-1 within bounds)
+			normalizedLength := lengthwiseDistance / maxLengthwise
+			normalizedWidth := crosswiseDistance / maxCrosswise
+
+			// Dimension-based falloff - steeper for width, gentler for length
+			widthFactor := 1.0 - math.Pow(normalizedWidth, 1.0)
+			lengthFactor := 1.0 - math.Pow(normalizedLength, 0.7)
+
+			// Combine all factors - both distance and dimensional constraints
+			// This creates the stretched mountain shape while enforcing bounds
+			heightFactor := distanceFactor * widthFactor * lengthFactor
 
 			// Apply some noise along the range for varied peaks
 			heightVariation := perlin.Noise2D(float64(x+peakX)/10, float64(y+peakY)/10) * 0.3
-			mountainHeight := 1.8 * heightFactor * (1.0 + heightVariation)
 
-			// Apply height to the final terrain
-			finalHeight += mountainHeight
+			// Ensure mountain height is substantial
+			baseHeight := 1.8
+			mountainHeight := baseHeight * heightFactor * (1.0 + heightVariation)
+
+			// Only add significant height if the factor is substantial
+			if heightFactor > 0.05 {
+				finalHeight += mountainHeight
+			}
 		}
 	}
 
