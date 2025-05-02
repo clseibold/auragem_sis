@@ -205,37 +205,47 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 	perlin := perlin.NewPerlin(1.5, 4, 3, seed)
 
 	// perlin.Noise2D generates 2-dimensional perlin noise value given an x and y.
-	baseHeight := perlin.Noise2D(float64(x)/MapWidth, float64(y)/MapHeight) * 0.6
-	baseHeight += perlin.Noise2D(float64(x)/(MapWidth/2), float64(y)/(MapHeight/2)) * 0.3
-	baseHeight += perlin.Noise2D(float64(x)/(MapWidth/4), float64(y)/(MapHeight/4)) * 0.1
-	baseHeight += 0.2 // Offset to control water level
+	// Base terrain with multiple octaves to create natural variability
+	// Using larger divisors to represent continental-scale features
+	baseHeight := perlin.Noise2D(float64(x)/(MapWidth*0.7), float64(y)/(MapHeight*0.7)) * 0.5
+	baseHeight += perlin.Noise2D(float64(x)/(MapWidth*0.3), float64(y)/(MapHeight*0.3)) * 0.3
+	baseHeight += perlin.Noise2D(float64(x)/(MapWidth*0.1), float64(y)/(MapHeight*0.1)) * 0.2
+	baseHeight += 0.2 // Baseline elevation adjustment
 
-	// Create a mountain peak effect
+	// Mountain ranges - at regional scale we want elongated ranges, not isolated peaks
 	finalHeight := baseHeight
 	for _, peak := range peaks {
 		peakX := peak.peakX
 		peakY := peak.peakY
 
-		// Calculate the distance from the current point to the peak
+		// Calculate distance to the peak (mountain range center)
 		distance := math.Sqrt(math.Pow(float64(x-peakX), 2) + math.Pow(float64(y-peakY), 2))
 
-		// Create ridge effects by applying directional bias
-		// Create more elongated mountain ranges instead of just circular peaks
+		// Create directional bias for the mountain range
+		// This makes ranges extend in a specific direction rather than being circular
 		dirX := float64(x - peakX)
 		dirY := float64(y - peakY)
 		angle := math.Atan2(dirY, dirX)
 
-		// Use ridge noise to create elongated mountain chains
-		ridgeEffect := math.Sin(angle*2) * 0.3 // Controls the direction of ridges
-		modifiedDistance := distance * (1.0 - ridgeEffect)
+		// Generate a random dominant direction for this mountain range
+		// Each range will extend in a different main direction
+		rangeDirection := math.Pi * float64(int(seed+int64(peakX*peakY))%4) / 4.0
 
-		// Use a more dramatic height formula for mountains
-		sigma := 0.75 // Base width
-		mountainHeight := 1.8 * math.Exp(-math.Pow(modifiedDistance, 2)/(2*math.Pow(sigma, 2)))
+		// Adjust distance based on alignment with the range's main axis
+		// Points along the mountain chain's axis will have effectively "shorter" distances
+		directionAlignment := math.Abs(math.Cos(angle - rangeDirection))
+		stretchFactor := 0.4 + 1.2*directionAlignment // Range from 0.4 to 1.6
 
-		// Apply some noise to the mountain to make it less uniform
-		mountainNoise := perlin.Noise2D(float64(x+peakX)/30, float64(y+peakY)/30) * 0.2
-		mountainHeight *= (1.0 + mountainNoise)
+		// Stretch the distance in the perpendicular direction to create elongated ranges
+		modifiedDistance := distance * (1.0 / stretchFactor)
+
+		// Regional mountains have gentler slopes
+		sigma := 7.0 // Much wider influence for regional scale
+		mountainHeight := 2.0 * math.Exp(-math.Pow(modifiedDistance, 1.8)/(2*math.Pow(sigma, 2)))
+
+		// Apply elevation variability along the range
+		rangeVariability := perlin.Noise2D(float64(x+peakX)/20, float64(y+peakY)/20) * 0.3
+		mountainHeight *= (1.0 + rangeVariability)
 
 		finalHeight += mountainHeight
 	}
