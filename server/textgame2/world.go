@@ -169,6 +169,8 @@ func PrintWorldMap(request *sis.Request) {
 					request.PlainText(" o|") // Water
 				} else if altitude >= 1 {
 					request.PlainText(" 5|") // Mountain
+				} else if altitude >= 0.7 { // Hills?
+					request.PlainText(" 7|")
 				} else {
 					request.PlainText(" 1|") // Plains and hills
 				}
@@ -216,6 +218,8 @@ func PrintWorldMap(request *sis.Request) {
 					request.PlainText(" o|") // Water
 				} else if altitude >= 1 {
 					request.PlainText(" 5|") // Mountain
+				} else if altitude >= 0.7 { // Hills?
+					request.PlainText(" 7|")
 				} else {
 					request.PlainText(" 1|") // Plains and hills
 				}
