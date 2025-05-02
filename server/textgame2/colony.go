@@ -63,7 +63,7 @@ func NewColony(context *Context, name string, initialPopulationSize uint) *Colon
 		a.assignedZone = -1
 	}
 
-	// Basic forest calculations
+	// Basic forest size calculations
 	denseForestTreeSpace := 6                    // square meters, in a dense forest
 	trunkArea := 3                               // square meters
 	treeArea := trunkArea + denseForestTreeSpace // square meters

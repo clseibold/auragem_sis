@@ -34,6 +34,7 @@ type Context struct {
 
 func NewContext() *Context {
 	// TODO: Load in saved game states from save directory (including ticker and time information)
+	generateWorldMap()
 
 	context := new(Context)
 	context.ticker = time.NewTicker(TickRealTimeDuration)
@@ -63,6 +64,8 @@ func (c *Context) Attach(s sis.ServeMux) {
 	group.AddRoute("/resource_zone/:id/", c.firstColony.ResourceZonePage)
 	group.AddRoute("/resource_zone/:id/add_worker", c.firstColony.AddWorkerPage)
 	group.AddRoute("/resource_zone/:id/remove_worker", c.firstColony.RemoveWorkerPage)
+
+	s.AddRoute("/world-map/", PrintWorldMap)
 }
 
 func (c *Context) Homepage(request *sis.Request) {
@@ -89,6 +92,8 @@ Each colony has a set of resource zones. These are zones of resources that are h
 func (c *Context) DesignDocument(request *sis.Request) {
 	request.Gemini(designDocument)
 }
+
+// TODO: When you create a new colony, create a background description of how the people got there.
 
 func (colony *Colony) ColonyPage(request *sis.Request) {
 	request.Heading(1, colony.name)
@@ -140,7 +145,11 @@ func (colony *Colony) ColonyPage(request *sis.Request) {
 			continue
 		}
 
-		request.Link("/resource_zone/"+strconv.Itoa(i), zone.landResource.ToString())
+		if zone.amount == 0 {
+			request.Link("/resource_zone/"+strconv.Itoa(i), zone.landResource.ToString()+" (depleted)")
+		} else {
+			request.Link("/resource_zone/"+strconv.Itoa(i), zone.landResource.ToString())
+		}
 	}
 
 	// Action Links
@@ -161,13 +170,15 @@ func (colony *Colony) ResourceZonePage(request *sis.Request) {
 	request.Gemini("\n")
 	request.Link(path.Join("/resource_zone/", request.GetParam("id"), "/add_worker"), "Add Worker")
 	request.Link(path.Join("/resource_zone/", request.GetParam("id"), "/remove_worker"), "Remove Worker")
+	request.Gemini("\n")
+	request.Link("/", "Back to Colony Overview")
 }
 
 func (colony *Colony) AddWorkerPage(request *sis.Request) {
 	resourceId, _ := strconv.Atoi(request.GetParam("id"))
 	zone := &colony.landResources[resourceId]
 
-	// Pick a (random) worker to add to the zone
+	// Pick a (random) unemployed worker to add to the zone, if one is available
 	for id := range colony.agents {
 		a := &colony.agents[id]
 

@@ -1,6 +1,6 @@
 # Gemini Text Game 2
 
-* Genre: Simulation colony-management.
+* Genre: Survival Strategy Colony-management Simulation.
 * Game loop uses 1-second ticks, and all simulations are based on their number of ticks.
   * Simulations can be sped-up by decreasing the tick duration.
 * When first starting, should be able to do a lot that will affect later game in different ways. But after the first few real-time days, the time it takes to do stuff should lengthen a little bit until it becomes consistent. This allows new players to have something to do when just starting out. The further along a player is, the more things they will be managing in general, so longer wait times won't matter nearly as much. Additionally, the cycle times of each production should be staggered.
