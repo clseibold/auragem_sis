@@ -299,7 +299,7 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 
 			// Apply directional stretching - points along the range direction get reduced distance
 			// Higher stretch values = narrower mountains perpendicular to range direction
-			stretchFactor := 0.45 + 2.5*angleAlignment
+			stretchFactor := 0.42 + 2.53*angleAlignment
 			modifiedDistance := distance / stretchFactor
 
 			// Create more compact mountain ranges, a steeper falloff, with sharper and narrower peaks
