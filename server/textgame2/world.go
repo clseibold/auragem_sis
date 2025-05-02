@@ -203,7 +203,7 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 	perlin := perlin.NewPerlin(1.5, 4, 3, seed)
 
 	baseHeight := perlin.Noise2D(float64(x)/MapWidth, float64(y)/MapHeight) + 0.2
-	heightFactor := float64(2.0)
+	heightFactor := float64(1.0)
 	height := baseHeight * heightFactor
 
 	// Create a mountain peak effect
