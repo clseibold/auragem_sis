@@ -75,7 +75,7 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) float64 {
 		distance := math.Sqrt(math.Pow(float64(x-peakX), 2) + math.Pow(float64(y-peakY), 2))
 
 		// Calculate the mountain contribution using a Gaussian function
-		mountainHeight := math.Exp(math.Pow(-distance, 2) / (2 * math.Pow(sigma, 2)))
+		mountainHeight := math.Exp(-math.Pow(distance, 2) / (2 * math.Pow(sigma, 2)))
 
 		// Add the mountain contribution to the final height
 		finalHeight += mountainHeight
