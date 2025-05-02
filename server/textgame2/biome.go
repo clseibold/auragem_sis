@@ -33,12 +33,14 @@ type LandType uint8
 
 // All of these have variants that encompass or are next to bodies of water (e.g., floodplains that are flooded by rivers)
 const (
-	LandType_Hills LandType = iota
+	LandType_Hills LandType = iota // If altitude is >= 0.8, then they are foothills (next to mountains)
+	// LandType_Foothills          // Near mountains
 	LandType_Mountains
 	LandType_Plains // Plains that are next to rivers (floodplains) have most fertile soil and are where civilizations often started.
 	LandType_Valleys
 	LandType_Plateaus // Rivers can cut through plateaus to create canyons and gorges. Plateaus can also be formed by volcanic activity.
 	LandType_Coastal  // TODO: Implies next to water/sea?
+	LandType_Water
 	LandType_SandDunes
 
 	// Rocky Outcrops?

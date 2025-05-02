@@ -1,12 +1,10 @@
 package textgame2
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 
 	"github.com/aquilax/go-perlin"
-	sis "gitlab.com/sis-suite/smallnetinformationservices"
 )
 
 // TODO: Generate Valleys, Plateaus, and Rivers
@@ -37,8 +35,10 @@ func generateWorldMap() {
 	var seed int64 = 1239462936493264926
 	rand := rand.New(rand.NewSource(seed))
 
+	// Generate mountain peaks
 	MapPeaks = generateMapMountainPeaks(rand)
 
+	// Generate base terrain with mountains
 	for y := range MapHeight {
 		for x := range MapWidth {
 			perlinAltitude, altitude := generateHeight(MapPeaks, x, y, seed)
@@ -47,7 +47,17 @@ func generateWorldMap() {
 		}
 	}
 
+	// Assign basic land types based on altitude
+	assignLandTypes()
+
+	// Generate plateaus (this will set LandType_Plateaus)
 	generatePlateaus(seed)
+
+	// Identify valleys
+	identifyValleys()
+
+	// Identify coastal areas
+	identifyCoastalAreas()
 }
 
 func generateMapMountainPeaks(rand *rand.Rand) []Peak {
@@ -98,280 +108,6 @@ func generateMapMountainPeaks(rand *rand.Rand) []Peak {
 	}
 
 	return peaks
-}
-
-func PrintWorldMap(request *sis.Request) {
-	showValues := false
-	query, _ := request.Query()
-	if query == "values" {
-		showValues = true
-	} else if query == "mountains" {
-		debugMountainDimensions(request)
-		return
-	}
-
-	request.Heading(1, "World Map")
-	request.Gemini("\n")
-	if !showValues {
-		request.Link("/world-map?values", "Show Values")
-		request.Link("/world-map?mountains", "Show Mountain Ranges")
-	} else {
-		request.Link("/world-map", "Show Terrain")
-		request.Link("/world-map?mountains", "Show Mountain Ranges")
-	}
-	request.Gemini("\n")
-
-	request.Gemini("```\n")
-	// Print the peaks
-	request.PlainText("Peaks: ")
-	for _, peak := range MapPeaks {
-		request.PlainText("(%d, %d) ", peak.peakX, peak.peakY)
-	}
-	request.PlainText("\n")
-
-	// Print the lowest and highest tiles
-	request.PlainText("\nLowest and Highest Altitudes on Map with Mountain Peaks:\n")
-	lowest, highest := getMapLowestAndHighestPoints()
-	request.PlainText("Lowest Tile Altitude: %+.2f\n", lowest.altitude)
-	request.PlainText("Highest Tile Altitude: %+.2f\n", highest.altitude)
-
-	request.PlainText("\nWith Full Terrain Generation:\n")
-	for y := range MapHeight {
-		// Heading
-		if y == 0 {
-			if showValues {
-				request.PlainText("|     |")
-			} else {
-				request.PlainText("|  |")
-			}
-			for x := range MapWidth {
-				if showValues {
-					request.PlainText("%5d|", x)
-				} else {
-					request.PlainText("%2d|", x)
-				}
-			}
-			request.PlainText("\n")
-			if showValues {
-				request.PlainText("\n")
-			}
-		}
-
-		if showValues {
-			request.PlainText("|%5d|", y)
-		} else {
-			request.PlainText("|%2d|", y)
-		}
-		for x := range MapWidth {
-			if showValues {
-				request.PlainText(fmt.Sprintf("%+.2f|", Map[y][x].altitude))
-			} else {
-				altitude := Map[y][x].altitude
-				if altitude <= 0 {
-					request.PlainText(" ~|") // Water
-				} else if altitude >= 1 {
-					request.PlainText(" A|") // Mountain
-				} else if altitude >= 0.5 { // Hills and plateaus
-					if Map[y][x].landType == LandType_Plateaus {
-						request.PlainText(" =|")
-					} else {
-						request.PlainText(" n|")
-					}
-				} else if altitude >= 0.3 { // Hills
-					request.PlainText(" +|")
-				} else {
-					request.PlainText("  |") // Plains
-				}
-			}
-		}
-		request.PlainText("\n")
-		if showValues {
-			request.PlainText("\n")
-		}
-	}
-
-	request.PlainText("\nBase Perlin Noise:\n")
-	for y := range MapHeight {
-		// Heading
-		if y == 0 {
-			if showValues {
-				request.PlainText("|     |")
-			} else {
-				request.PlainText("|  |")
-			}
-			for x := range MapWidth {
-				if showValues {
-					request.PlainText(fmt.Sprintf("%5d|", x))
-				} else {
-					request.PlainText(fmt.Sprintf("%2d|", x))
-				}
-			}
-			request.PlainText("\n")
-			if showValues {
-				request.PlainText("\n")
-			}
-		}
-
-		// Values
-		if showValues {
-			request.PlainText("|%5d|", y)
-		} else {
-			request.PlainText("|%2d|", y)
-		}
-		for x := range MapWidth {
-			if showValues {
-				request.PlainText(fmt.Sprintf("%+.2f|", MapPerlin[y][x].altitude))
-			} else {
-				altitude := MapPerlin[y][x].altitude
-				if altitude <= 0 {
-					request.PlainText(" ~|") // Water
-				} else if altitude >= 1 {
-					request.PlainText(" A|") // Mountain
-				} else if altitude >= 0.5 { // Hills?
-					if Map[y][x].landType == LandType_Plateaus {
-						request.PlainText(" =|")
-					} else {
-						request.PlainText(" n|")
-					}
-				} else if altitude >= 0.3 {
-					request.PlainText(" +|")
-				} else {
-					request.PlainText("  |") // Plains
-				}
-			}
-		}
-		request.PlainText("\n")
-		if showValues {
-			request.PlainText("\n")
-		}
-	}
-	request.Gemini("```\n")
-}
-
-func debugMountainDimensions(request *sis.Request) {
-	request.Heading(1, "Mountain Range Dimensions")
-	request.Gemini("\n")
-	request.Link("/world-map/", "Back to World Map")
-	request.Gemini("\n")
-
-	// Create a debug grid
-	debugMap := make([][]string, MapHeight)
-	for y := range debugMap {
-		debugMap[y] = make([]string, MapWidth)
-		for x := range debugMap[y] {
-			debugMap[y][x] = " "
-		}
-	}
-
-	// Mark mountain range areas
-	for y := 0; y < MapHeight; y++ {
-		for x := 0; x < MapWidth; x++ {
-			if Map[y][x].altitude >= 1.0 {
-				debugMap[y][x] = "M"
-			}
-		}
-	}
-
-	// Mark mountain peaks
-	for _, peak := range MapPeaks {
-		debugMap[peak.peakY][peak.peakX] = "P"
-	}
-
-	// Show theoretical stretch zones for one peak
-	if len(MapPeaks) > 0 {
-		peak := MapPeaks[0]
-		rangeDirection := (math.Mod(float64(peak.peakX*peak.peakY+1239462936493264926), 360)) * math.Pi / 180
-
-		// Draw direction line
-		lineLength := 20
-		for i := 0; i < lineLength; i++ {
-			dx := int(math.Round(float64(i) * math.Cos(rangeDirection)))
-			dy := int(math.Round(float64(i) * math.Sin(rangeDirection)))
-
-			nx, ny := peak.peakX+dx, peak.peakY+dy
-			if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
-				if debugMap[ny][nx] == " " {
-					debugMap[ny][nx] = "."
-				}
-			}
-		}
-
-		// Show stretch factor zones
-		for y := 0; y < MapHeight; y++ {
-			for x := 0; x < MapWidth; x++ {
-				// Skip if already marked
-				if debugMap[y][x] != " " {
-					continue
-				}
-
-				// Vector from peak
-				dirX := float64(x - peak.peakX)
-				dirY := float64(y - peak.peakY)
-
-				// Skip if too far
-				dist := math.Sqrt(math.Pow(dirX, 2) + math.Pow(dirY, 2))
-				if dist > 20 {
-					continue
-				}
-
-				// Calculate angle alignment
-				pointAngle := math.Atan2(dirY, dirX)
-				angleAlignment := math.Abs(math.Cos(pointAngle - rangeDirection))
-
-				// Show different stretch zones
-				if angleAlignment > 0.9 {
-					debugMap[y][x] = "S" // Strong stretch
-				} else if angleAlignment > 0.7 {
-					debugMap[y][x] = "s" // Medium stretch
-				} else if angleAlignment > 0.3 {
-					debugMap[y][x] = "w" // Weak stretch
-				}
-			}
-		}
-
-		// Show dimensional constraints
-		maxLengthwise := 15.0
-		maxCrosswise := 2.5
-
-		for y := 0; y < MapHeight; y++ {
-			for x := 0; x < MapWidth; x++ {
-				// Vector from peak
-				dirX := float64(x - peak.peakX)
-				dirY := float64(y - peak.peakY)
-
-				// Calculate rotated coordinates
-				alignedX := dirX*math.Cos(-rangeDirection) + dirY*math.Sin(-rangeDirection)
-				alignedY := -dirX*math.Sin(-rangeDirection) + dirY*math.Cos(-rangeDirection)
-
-				// Use absolute values
-				lengthwiseDistance := math.Abs(alignedX)
-				crosswiseDistance := math.Abs(alignedY)
-
-				// Mark boundary points
-				if (math.Abs(lengthwiseDistance-maxLengthwise) < 0.5 && crosswiseDistance <= maxCrosswise) ||
-					(math.Abs(crosswiseDistance-maxCrosswise) < 0.5 && lengthwiseDistance <= maxLengthwise) {
-					debugMap[y][x] = "+"
-				}
-			}
-		}
-	}
-
-	// Print the debug grid
-	request.Gemini("```\n")
-	for y := 0; y < MapHeight; y++ {
-		for x := 0; x < MapWidth; x++ {
-			request.PlainText(debugMap[y][x])
-		}
-		request.PlainText("\n")
-	}
-	request.Gemini("```\n")
-
-	request.Gemini("Legend:\n")
-	request.Gemini("- P: Mountain peak\n")
-	request.Gemini("- M: Mountain terrain\n")
-	request.Gemini("- .: Direction line\n")
-	request.Gemini("- +: Range boundary\n")
-	request.Gemini("- S/s/w: Strong/medium/weak stretch zones\n")
 }
 
 func getMapLowestAndHighestPoints() (Tile, Tile) {
@@ -520,6 +256,41 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 	return baseHeight, finalHeight
 }
 
+// Do this before generating plateaus and other terrain, but after generating base terrain with mountains.
+func assignLandTypes() {
+	// Assign land types based on altitude and other characteristics
+	for y := 0; y < MapHeight; y++ {
+		for x := 0; x < MapWidth; x++ {
+			altitude := Map[y][x].altitude
+
+			// First, assign basic land types based on altitude
+			if altitude <= 0.0 {
+				// Water features
+				Map[y][x].landType = LandType_Water
+			} else if altitude >= 1.0 {
+				// Mountain terrain
+				Map[y][x].landType = LandType_Mountains
+			} else if altitude >= 0.8 && altitude < 1.0 {
+				// High terrain / foothills - usually near mountains
+				Map[y][x].landType = LandType_Hills
+			} else if altitude >= 0.5 && altitude < 0.8 {
+				// Default to hills for mid-high elevation
+				// (Will be overridden if it's a plateau)
+				Map[y][x].landType = LandType_Hills
+			} else if altitude >= 0.3 && altitude < 0.5 {
+				// Regular hills
+				Map[y][x].landType = LandType_Hills
+			} else {
+				// Plains for low elevation
+				Map[y][x].landType = LandType_Plains
+			}
+
+			// Additional terrain analysis (checking for valleys, etc.)
+			// could be added here
+		}
+	}
+}
+
 func generatePlateaus(seed int64) {
 	// Create a separate Perlin noise generator for plateau locations
 	plateauNoise := perlin.NewPerlin(1.8, 3.0, 2, seed+42)
@@ -634,8 +405,112 @@ func generatePlateaus(seed int64) {
 					edgeBlend = math.Max(0.0, math.Min(0.5, edgeBlend))
 
 					Map[y][x].altitude = tempMap[y][x]*(1-edgeBlend) + avgHeight*edgeBlend
+					Map[y][x].landType = LandType_Plateaus
 				}
 			}
 		}
 	}
 }
+
+func identifyValleys() {
+	// Create temporary array to store gradients
+	gradientMap := make([][]float64, MapHeight)
+	for i := range gradientMap {
+		gradientMap[i] = make([]float64, MapWidth)
+	}
+
+	// Calculate local gradients - how quickly altitude changes
+	for y := 1; y < MapHeight-1; y++ {
+		for x := 1; x < MapWidth-1; x++ {
+			// Skip water
+			if Map[y][x].altitude <= 0 {
+				continue
+			}
+
+			// Calculate average height difference with neighbors
+			totalDiff := 0.0
+			count := 0
+
+			for dy := -1; dy <= 1; dy++ {
+				for dx := -1; dx <= 1; dx++ {
+					if dx == 0 && dy == 0 {
+						continue
+					}
+
+					nx, ny := x+dx, y+dy
+					heightDiff := Map[y][x].altitude - Map[ny][nx].altitude
+					totalDiff += heightDiff
+					count++
+				}
+			}
+
+			// Average gradient
+			gradientMap[y][x] = totalDiff / float64(count)
+		}
+	}
+
+	// Identify valleys - areas lower than surroundings
+	for y := 1; y < MapHeight-1; y++ {
+		for x := 1; x < MapWidth-1; x++ {
+			// Skip water
+			if Map[y][x].altitude <= 0 {
+				continue
+			}
+
+			// If we're lower than average surroundings and not too high
+			if gradientMap[y][x] < -0.05 && Map[y][x].altitude < 0.7 {
+				// Avoid marking plateaus as valleys
+				if Map[y][x].landType != LandType_Plateaus {
+					Map[y][x].landType = LandType_Valleys
+				}
+			}
+		}
+	}
+}
+
+func identifyCoastalAreas() {
+	// Mark tiles near water as coastal
+	for y := 1; y < MapHeight-1; y++ {
+		for x := 1; x < MapWidth-1; x++ {
+			// Skip water tiles
+			if Map[y][x].altitude <= 0 {
+				continue
+			}
+
+			// Check if any neighbor is water
+			hasWaterNeighbor := false
+			for dy := -1; dy <= 1; dy++ {
+				for dx := -1; dx <= 1; dx++ {
+					if dx == 0 && dy == 0 {
+						continue
+					}
+
+					nx, ny := x+dx, y+dy
+					if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
+						if Map[ny][nx].altitude <= 0 {
+							hasWaterNeighbor = true
+							break
+						}
+					}
+				}
+				if hasWaterNeighbor {
+					break
+				}
+			}
+
+			// If next to water and not a mountain, mark as coastal
+			if hasWaterNeighbor && Map[y][x].altitude < 1.0 {
+				Map[y][x].landType = LandType_Coastal
+			}
+		}
+	}
+}
+
+// | Terrain Type | Altitude Range | Display |
+// |--------------|----------------|---------|
+// | Water        | ≤ 0.0          | ~ |
+// | Plains       | 0.0 - 0.3      | (space) |
+// | Hills        | 0.3 - 0.5      | + |
+// | Plateaus     | 0.5 - 0.8      | = |
+// | Rough High   | 0.8 - 1.0      | n |
+// | Mountains    | ≥ 1.0          | A |
