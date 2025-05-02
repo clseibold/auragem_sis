@@ -19,8 +19,10 @@ import (
 // | Mountains    | ≥ 1.0          | A |
 
 // TODO: Canyons, Gorges, Cliffs, Waterfalls, Escarpments, Islands, Caves and Caverns?
-
+// TODO: Aquifers should be generated *before* rainfall&temp. Rainfall/temp + aquifers should determine the locations of springs.
+// TODO: have different rainfall and temp values for the different seasons (seasons being reversed in the southern hemisphere?)
 // TODO: Assign biomes to each tile given its land type, adjacent biomes, and bodies of water
+// TODO: For streams, every tile of the stream should store the uphill tile location (or -1 if it is the source/start) and downhill tile location (or -1 if it's the end)
 
 const MapWidth = 50
 const MapHeight = 50
@@ -38,6 +40,13 @@ type Tile struct {
 	landType LandType
 	isDesert bool
 
+	// Climate factors (0.0 to 1.0 scale)
+	rainfall    float64 // 0.0 = extremely dry, 1.0 = extremely wet
+	temperature float64 // 0.0 = very cold, 1.0 = very hot
+
+	// Climate factors (0.0 to 1.0 scale)
+	climate Climate
+
 	// Water features
 	hasStream bool // Contains a small stream/creek within the tile
 	hasPond   bool // Contains a small pond within the tile
@@ -52,6 +61,67 @@ type Tile struct {
 	hasGameTrail bool // Contains animal paths/trails
 	hasFloodArea bool // Contains area that seasonally floods
 	hasSaltFlat  bool // Contains a small salt flat or mineral deposit
+}
+
+// Climate tracks seasonal variations in temperature and rainfall
+type Climate struct {
+	// Temperature for each season (0.0 = very cold, 1.0 = very hot)
+	winterTemp float64
+	springTemp float64
+	summerTemp float64
+	fallTemp   float64
+
+	// Rainfall for each season (0.0 = extremely dry, 1.0 = extremely wet)
+	winterRain float64
+	springRain float64
+	summerRain float64
+	fallRain   float64
+
+	// Annual averages (for convenience)
+	avgTemp float64
+	avgRain float64
+}
+
+// Season enum for accessing specific seasonal values
+type Season int
+
+const (
+	Winter Season = iota
+	Spring
+	Summer
+	Fall
+)
+
+// Helper methods to get temperature for a specific season
+func (t *Tile) GetTemperature(season Season) float64 {
+	switch season {
+	case Winter:
+		return t.climate.winterTemp
+	case Spring:
+		return t.climate.springTemp
+	case Summer:
+		return t.climate.summerTemp
+	case Fall:
+		return t.climate.fallTemp
+	default:
+		return t.climate.avgTemp
+	}
+}
+
+// Helper methods to get rainfall for a specific season
+func (t *Tile) GetRainfall(season Season) float64 {
+	switch season {
+	case Winter:
+		return t.climate.winterRain
+	case Spring:
+		return t.climate.springRain
+	case Summer:
+		return t.climate.summerRain
+	case Fall:
+		return t.climate.fallRain
+	default:
+		return t.climate.avgRain
+	}
 }
 
 type Peak struct {
@@ -86,6 +156,9 @@ func generateWorldMap() {
 
 	// Generate rivers flowing from high to low elevation
 	generateRivers(seed)
+
+	// Generate climate data (temperature and rainfall)
+	generateClimate(seed)
 
 	// Generate small-scale water features (ponds, streams, springs, and marshes)
 	generateSmallWaterFeatures(seed)
@@ -1000,10 +1073,9 @@ func generateSmallWaterFeatures(seed int64) {
 	rng := rand.New(rand.NewSource(seed + 5552))
 
 	// Parameters for small water features
-	springCount := 8 + rng.Intn(5)      // 8-12 springs
-	marshCount := 12 + rng.Intn(8)      // 12-19 marshes
-	smallRiverCount := 10 + rng.Intn(8) // 10-17 small rivers
-	smallPondCount := 10 + rng.Intn(5)  // 10-14 small ponds
+	springCount := 8 + rng.Intn(5)     // 8-12 springs
+	marshCount := 12 + rng.Intn(8)     // 12-19 marshes
+	smallPondCount := 10 + rng.Intn(5) // 10-14 small ponds
 
 	// Track where we've already placed water features
 	var waterFeaturePlaced [MapHeight][MapWidth]bool
@@ -1032,12 +1104,24 @@ func generateSmallWaterFeatures(seed int64) {
 	var springLocations []struct{ x, y int }
 
 	for attempts := 0; attempts < 200 && springsGenerated < springCount; attempts++ {
-		// Springs often form at specific geological interfaces
-		// Typically at hillsides, mountain bases, or where permeable rock meets impermeable layers
+		// Springs often form at specific geological interfaces,
+		// typically at hillsides, mountain bases, or where permeable
+		// rock meets impermeable layers. They also require adequate
+		// rainfall over the year.
 
 		// Try to find a location at the base of higher elevation
 		x := rng.Intn(MapWidth-2) + 1
 		y := rng.Intn(MapHeight-2) + 1
+
+		// Check annual and seasonal rainfall
+		avgRainfall := Map[y][x].climate.avgRain
+		winterRainfall := Map[y][x].climate.winterRain
+
+		// Calculate the minimum seasonal rainfall (sources need year-round water)
+		minSeasonalRain := math.Min(
+			math.Min(Map[y][x].climate.winterRain, Map[y][x].climate.springRain),
+			math.Min(Map[y][x].climate.summerRain, Map[y][x].climate.fallRain),
+		)
 
 		// Good spring locations: hillsides, mountain bases, or plateau edges
 		isGoodSpringLocation := false
@@ -1070,10 +1154,21 @@ func generateSmallWaterFeatures(seed int64) {
 		if !waterFeaturePlaced[y][x] &&
 			baseElevation > 0.25 && baseElevation < 0.85 &&
 			hasHigherNeighbor &&
+			avgRainfall > 0.3 && // Need moderate annual rainfall
+			minSeasonalRain > 0.2 && // Need some rain even in dry season
 			Map[y][x].landType != LandType_Mountains &&
 			Map[y][x].landType != LandType_Water {
 
-			isGoodSpringLocation = true
+			// Higher rainfall increases spring chance
+			// Snow in winter can feed springs in spring (snowmelt)
+			springChance := 0.4 + avgRainfall*0.4 // 0.4 to 0.8 based on rainfall
+
+			// Winter precipitation as snow (cold + wet winters) helps springs
+			if winterRainfall > 0.4 && Map[y][x].climate.winterTemp < 0.3 {
+				springChance += 0.2 // Snowmelt bonus
+			}
+
+			isGoodSpringLocation = rng.Float64() < springChance
 
 			// Extra check: favor locations at the edge of plateaus or hills
 			if Map[y][x].landType == LandType_Hills ||
@@ -1125,20 +1220,40 @@ func generateSmallWaterFeatures(seed int64) {
 		}
 	}
 
-	// 2. Generate marshes (soggy areas)
+	// 2. Generate marshes (soggy areas) - heavily influenced by seasonal rainfall
 	marshesGenerated := 0
 
 	for attempts := 0; attempts < 200 && marshesGenerated < marshCount; attempts++ {
-		// Marshes typically form in low-lying areas with poor drainage
-		// Or areas with high water tables (near rivers/streams)
+		// Marshes typically form in low-lying areas with poor drainage and high rainfall,
+		// Or areas with high water tables (near rivers/streams).
 
 		// Try to find a location for a marsh
 		x := rng.Intn(MapWidth-2) + 1
 		y := rng.Intn(MapHeight-2) + 1
 
-		// Good marsh locations: low-lying areas, near water, flat terrain
+		// Examine the seasonal rainfall pattern
+		springRain := Map[y][x].climate.springRain
+		summerRain := Map[y][x].climate.summerRain
+		fallRain := Map[y][x].climate.fallRain
+		avgRain := Map[y][x].climate.avgRain
+
+		// Adjust marsh count based on overall map rainfall
+		if avgRain > 0.7 {
+			// More marshes in very wet regions
+			marshCount += 2
+		} else if avgRain < 0.4 {
+			// Fewer marshes in dry regions
+			marshCount = max(5, marshCount-2)
+		}
+
+		// Good marsh locations: low-lying areas, near water, flat terrain, high rainfall
 		isGoodMarshLocation := false
 		elevation := Map[y][x].altitude
+
+		// Marshes need significant rainfall for at least part of the year
+		if avgRain < 0.4 && math.Max(springRain, math.Max(summerRain, fallRain)) < 0.6 {
+			continue // Too dry for a marsh year-round
+		}
 
 		// Check if we're near water or in a low-lying area
 		nearWater := false
@@ -1181,21 +1296,50 @@ func generateSmallWaterFeatures(seed int64) {
 		// Check if this is a suitable location for a marsh
 		if !waterFeaturePlaced[y][x] &&
 			elevation > 0.05 && elevation < 0.4 && // Low-lying areas
+			avgRain > 0.4 && // Sufficient average rainfall
 			Map[y][x].landType != LandType_Mountains &&
 			Map[y][x].landType != LandType_Plateaus {
 
-			// Higher chance in flat and low areas, especially near water
-			if isFlat {
-				isGoodMarshLocation = true
+			// Seasonal marshes form in areas with wet and dry seasons
+			// Permanent marshes need consistently high rainfall
 
-				if nearWater {
-					// Much higher chance near water
-					isGoodMarshLocation = rng.Float64() < 0.8
-				} else {
-					// Lower chance away from water
-					isGoodMarshLocation = rng.Float64() < 0.4
-				}
+			// Calculate seasonal variation in rainfall
+			rainVariation := math.Max(
+				math.Max(springRain, math.Max(summerRain, fallRain))-
+					math.Min(Map[y][x].climate.winterRain, math.Min(springRain, math.Min(summerRain, fallRain))),
+				0.1, // Minimum variation to avoid division by zero
+			)
+
+			// Base chance influenced by rainfall and seasonality
+			marshChance := 0.0
+
+			// Permanent marshes (year-round wet)
+			if avgRain > 0.65 && rainVariation < 0.3 {
+				marshChance = 0.7 // High chance for permanent marsh
+			} else if avgRain > 0.5 {
+				// Seasonal marshes (wet season/dry season)
+				marshChance = 0.5
+			} else if math.Max(springRain, math.Max(summerRain, fallRain)) > 0.7 {
+				// Very seasonal marsh (only during wet season)
+				marshChance = 0.4
+			} else {
+				marshChance = 0.2 // Low baseline chance
 			}
+
+			// Bonus for being near water
+			if nearWater {
+				marshChance += 0.2
+			}
+
+			// Bonus for flat terrain
+			if isFlat {
+				marshChance += 0.2
+			}
+
+			// Cap the chance
+			marshChance = math.Min(marshChance, 0.9)
+
+			isGoodMarshLocation = rng.Float64() < marshChance
 
 			// Special case: near a spring
 			nearSpring := false
@@ -1252,7 +1396,7 @@ func generateSmallWaterFeatures(seed int64) {
 			for dy := -1; dy <= 1; dy++ {
 				for dx := -1; dx <= 1; dx++ {
 					// Skip the spring tile itself
-					if dx == 0 && dy == 0 {
+					if dx == 0 && dy == 0 { // TODO: I might want to remove this.
 						continue
 					}
 
@@ -1285,43 +1429,67 @@ func generateSmallWaterFeatures(seed int64) {
 		x := rng.Intn(MapWidth)
 		y := rng.Intn(MapHeight)
 
+		// Get climate data
+		avgRain := Map[y][x].climate.avgRain
+
+		// Seasonal rainfall variation affects pond persistence
+		winterRain := Map[y][x].climate.winterRain
+		summerRain := Map[y][x].climate.summerRain
+		rainVariation := math.Abs(winterRain - summerRain)
+
 		// Check if this is a suitable location for a pond
 		if !waterFeaturePlaced[y][x] &&
 			Map[y][x].altitude > 0.05 && Map[y][x].altitude < 0.5 &&
+			avgRain > 0.4 && // Need reasonable rainfall
 			Map[y][x].landType != LandType_Mountains &&
 			Map[y][x].landType != LandType_Plateaus {
 
-			// Higher chance in valleys or near marshes
-			placePond := false
+			// Determine if pond is permanent or seasonal // TODO
+			// isPermanent := avgRain > 0.6 && rainVariation < 0.3
 
+			// Base chance for pond formation
+			pondChance := 0.0
+
+			// Higher chance in valleys or near marshes
 			if Map[y][x].landType == LandType_Valleys {
-				placePond = rng.Float64() < 0.7 // High chance in valleys
+				pondChance = 0.6 // High chance in valleys
 			} else {
-				// Check if near a marsh
-				nearMarsh := false
-				for dy := -2; dy <= 2; dy++ {
-					for dx := -2; dx <= 2; dx++ {
-						nx, ny := x+dx, y+dy
-						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
-							if Map[ny][nx].hasMarsh {
-								nearMarsh = true
-								break
-							}
+				pondChance = 0.3 // Base chance
+			}
+
+			// Adjust based on rainfall
+			pondChance += avgRain * 0.2
+
+			// Check if near a marsh
+			nearMarsh := false
+			for dy := -2; dy <= 2; dy++ {
+				for dx := -2; dx <= 2; dx++ {
+					nx, ny := x+dx, y+dy
+					if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
+						if Map[ny][nx].hasMarsh {
+							nearMarsh = true
+							break
 						}
 					}
-					if nearMarsh {
-						break
-					}
 				}
-
 				if nearMarsh {
-					placePond = rng.Float64() < 0.6 // Good chance near marshes
-				} else {
-					placePond = rng.Float64() < 0.3 // Lower chance elsewhere
+					break
 				}
 			}
 
-			if placePond {
+			if nearMarsh {
+				pondChance += 0.2 // Good chance near marshes
+			}
+
+			// Apply seasonal factor - highly seasonal rainfall makes ponds less likely
+			if rainVariation > 0.5 {
+				pondChance -= 0.2 // High variation reduces pond chance
+			}
+
+			// Cap the chance
+			pondChance = math.Max(0.1, math.Min(pondChance, 0.8))
+
+			if rng.Float64() < pondChance {
 				// Set the pond flag
 				Map[y][x].hasPond = true
 
@@ -1333,17 +1501,40 @@ func generateSmallWaterFeatures(seed int64) {
 	}
 
 	// 4. Generate small rivers (streams)
+	// 4. Generate seasonal streams based on rainfall patterns
+	generateSeasonalStreams(seed, springLocations, waterFeaturePlaced)
+}
+
+func generateSeasonalStreams(seed int64, springLocations []struct{ x, y int }, waterFeaturePlaced [MapHeight][MapWidth]bool) {
+	rng := rand.New(rand.NewSource(seed + 8888))
+
+	// Base parameters
+	baseSmallRiverCount := 10 + rng.Intn(8) // 10-17 small rivers
+
+	// Track permanent and seasonal streams separately
 	streamsGenerated := 0
+	seasonalStreamsGenerated := 0
 
 	// First try to place some streams starting from springs
 	for _, spring := range springLocations {
 		// Limit the number of streams
-		if streamsGenerated >= smallRiverCount {
+		if streamsGenerated >= baseSmallRiverCount {
 			break
 		}
 
+		// Check rainfall at spring
+		avgRain := Map[spring.y][spring.x].climate.avgRain
+		/*minSeasonalRain := math.Min(
+		math.Min(Map[spring.y][spring.x].climate.winterRain, Map[spring.y][spring.x].climate.springRain),
+		math.Min(Map[spring.y][spring.x].climate.summerRain, Map[spring.y][spring.x].climate.fallRain),
+		)*/
+
+		// Determine if this will be a permanent or seasonal stream // TODO
+		// isPermanent := avgRain > 0.55 && minSeasonalRain > 0.3
+
 		// Only some springs form streams
-		if rng.Float64() < 0.7 {
+		streamChance := 0.5 + avgRain*0.4
+		if rng.Float64() < streamChance {
 			// First, mark the spring tile as having a stream too
 			Map[spring.y][spring.x].hasStream = true
 
@@ -1351,7 +1542,7 @@ func generateSmallWaterFeatures(seed int64) {
 			streamPath := traceSmallStreamPath(spring.x, spring.y, rng, waterFeaturePlaced)
 
 			// If we found a valid path of appropriate length
-			if len(streamPath) >= 2 && len(streamPath) <= 5 {
+			if len(streamPath) >= 2 && len(streamPath) <= 8 {
 				// Apply the stream to the map
 				for i, point := range streamPath {
 					// Skip the first point since we already marked it
@@ -1373,15 +1564,46 @@ func generateSmallWaterFeatures(seed int64) {
 		}
 	}
 
-	// Generate remaining streams in suitable locations
-	for attempts := 0; attempts < 200 && streamsGenerated < smallRiverCount; attempts++ {
+	// Calculate how many additional seasonal streams to generate based on map conditions
+	mapWetness := 0.0
+	mapCount := 0
+
+	for y := range MapHeight {
+		for x := range MapWidth {
+			if Map[y][x].altitude > 0 {
+				mapWetness += Map[y][x].climate.avgRain
+				mapCount++
+			}
+		}
+	}
+
+	averageMapWetness := 0.5
+	if mapCount > 0 {
+		averageMapWetness = mapWetness / float64(mapCount)
+	}
+
+	// More seasonal streams in wetter maps
+	seasonalStreamTarget := 5 + int(averageMapWetness*15)
+
+	// Generate seasonal streams in suitable locations
+	for attempts := 0; attempts < 200 && seasonalStreamsGenerated < seasonalStreamTarget; attempts++ {
 		// Choose a random location for the stream source
 		x := rng.Intn(MapWidth)
 		y := rng.Intn(MapHeight)
 
-		// Check if this is a suitable location for a stream source
+		// Examine seasonal rainfall
+		springRain := Map[y][x].climate.springRain
+		summerRain := Map[y][x].climate.summerRain
+		fallRain := Map[y][x].climate.fallRain
+		winterRain := Map[y][x].climate.winterRain
+
+		// Calculate peak seasonal rainfall
+		peakRainfall := math.Max(springRain, math.Max(summerRain, math.Max(fallRain, winterRain)))
+
+		// Check if this is a suitable location for a seasonal stream source
 		if !waterFeaturePlaced[y][x] &&
 			Map[y][x].altitude > 0.3 && Map[y][x].altitude < 0.8 &&
+			peakRainfall > 0.6 && // Need high rainfall in at least one season
 			Map[y][x].landType != LandType_Mountains &&
 			Map[y][x].landType != LandType_Plateaus {
 
@@ -1389,19 +1611,19 @@ func generateSmallWaterFeatures(seed int64) {
 			streamPath := traceSmallStreamPath(x, y, rng, waterFeaturePlaced)
 
 			// If we found a valid path of appropriate length
-			if len(streamPath) >= 2 && len(streamPath) <= 5 {
+			if len(streamPath) >= 3 && len(streamPath) <= 8 {
 				// Apply the stream to the map
 				for _, point := range streamPath {
 					sx, sy := point.x, point.y
 
-					// Set the stream flag
+					// Set the stream flag - these will be seasonal
 					Map[sy][sx].hasStream = true
 
 					// Mark as placed to avoid overlaps
 					waterFeaturePlaced[sy][sx] = true
 				}
 
-				streamsGenerated++
+				seasonalStreamsGenerated++
 			}
 		}
 	}
@@ -1517,13 +1739,148 @@ func generatePlainsFeatures(seed int64) {
 		x := rng.Intn(MapWidth)
 		y := rng.Intn(MapHeight)
 
+		// Get climate data
+		avgTemp := Map[y][x].climate.avgTemp
+		avgRain := Map[y][x].climate.avgRain
+
+		// Look at seasonal variations
+		tempRange := math.Max(
+			Map[y][x].climate.summerTemp-Map[y][x].climate.winterTemp,
+			0.1, // Avoid division by zero
+		)
+
+		// Calculate biome suitability for trees
+		// Trees need adequate rainfall and moderate temperatures
+		treeSuitability := 0.0
+
+		if avgRain > 0.4 && avgRain < 0.9 && avgTemp > 0.3 && avgTemp < 0.8 {
+			// Ideal conditions: moderate rainfall and temperature
+			treeSuitability = 0.8
+		} else if avgRain > 0.6 {
+			// High rainfall can support trees even at temperature extremes
+			treeSuitability = 0.6
+		} else if avgRain > 0.3 && avgTemp > 0.4 && avgTemp < 0.7 {
+			// Marginal conditions
+			treeSuitability = 0.4
+		} else {
+			// Poor conditions
+			treeSuitability = 0.2
+		}
+
+		// Extreme seasonal temperature variation makes trees less likely
+		if tempRange > 0.5 {
+			treeSuitability *= 0.8
+		}
+
 		// Check if this is a suitable spot for a grove
 		if !featurePlaced[y][x] &&
 			Map[y][x].landType == LandType_Plains &&
 			Map[y][x].altitude > 0.1 && Map[y][x].altitude < 0.7 {
 
-			// More likely near water sources
-			placeGrove := false
+			// Calculate grove chance based on climate suitability
+			groveChance := treeSuitability
+
+			// Check if near water, since they are more likely near water sources.
+			nearWater := false
+			for dy := -3; dy <= 3; dy++ {
+				for dx := -3; dx <= 3; dx++ {
+					nx, ny := x+dx, y+dy
+					if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
+						if Map[ny][nx].altitude <= 0 || Map[ny][nx].hasStream ||
+							Map[ny][nx].hasPond || Map[ny][nx].hasSpring {
+							nearWater = true
+							break
+						}
+					}
+				}
+				if nearWater {
+					break
+				}
+			}
+
+			if nearWater {
+				groveChance += 0.2 // Higher chance near water
+			}
+
+			// Cap the chance
+			groveChance = math.Min(groveChance, 0.9)
+
+			if rng.Float64() < groveChance {
+				Map[y][x].hasGrove = true
+				featurePlaced[y][x] = true
+
+				// Some groves form small clusters - larger in fertile areas
+				clusterSize := 1
+				if avgRain > 0.6 && avgTemp > 0.4 && avgTemp < 0.7 {
+					// More fertile conditions produce larger groves
+					clusterSize = 1 + rng.Intn(3)
+				} else {
+					// Less optimal conditions produce smaller groves
+					clusterSize = 1 + rng.Intn(2)
+				}
+
+				// Try to add additional grove tiles
+				for range clusterSize {
+					// Pick a random direction
+					dx := rng.Intn(3) - 1
+					dy := rng.Intn(3) - 1
+
+					nx, ny := x+dx, y+dy
+					if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
+						!featurePlaced[ny][nx] &&
+						Map[ny][nx].landType == LandType_Plains {
+						Map[ny][nx].hasGrove = true
+						featurePlaced[ny][nx] = true
+					}
+				}
+
+				grovesGenerated++
+			}
+		}
+	}
+
+	// 2. Generate meadows (flower-rich areas) - affected by climate
+	meadowsGenerated := 0
+
+	for attempts := 0; attempts < 100 && meadowsGenerated < meadowCount; attempts++ {
+		x := rng.Intn(MapWidth)
+		y := rng.Intn(MapHeight)
+
+		// Get climate data
+		// avgTemp := Map[y][x].climate.avgTemp
+		springTemp := Map[y][x].climate.springTemp
+		summerTemp := Map[y][x].climate.summerTemp
+		springRain := Map[y][x].climate.springRain
+		summerRain := Map[y][x].climate.summerRain
+
+		// Meadows flourish in spring and early summer with moderate temps and good rainfall
+		meadowSuitability := 0.0
+
+		// Ideal conditions for meadows: warm spring/summer with adequate rainfall
+		if springTemp > 0.3 && springTemp < 0.7 &&
+			summerTemp > 0.4 && summerTemp < 0.8 &&
+			springRain > 0.4 && summerRain > 0.3 {
+			meadowSuitability = 0.8
+		} else if springRain > 0.5 || summerRain > 0.5 {
+			// Good rainfall can support meadows in less optimal temperatures
+			meadowSuitability = 0.5
+		} else {
+			// Marginal conditions
+			meadowSuitability = 0.3
+		}
+
+		// Check if this is a suitable spot for a meadow
+		if !featurePlaced[y][x] &&
+			Map[y][x].landType == LandType_Plains &&
+			Map[y][x].altitude > 0.1 && Map[y][x].altitude < 0.6 {
+
+			// Calculate meadow chance based on climate suitability
+			meadowChance := meadowSuitability
+
+			// Meadows often form in valleys or near water
+			if Map[y][x].landType == LandType_Valleys {
+				meadowChance += 0.2
+			}
 
 			// Check if near water
 			nearWater := false
@@ -1544,84 +1901,13 @@ func generatePlainsFeatures(seed int64) {
 			}
 
 			if nearWater {
-				placeGrove = rng.Float64() < 0.7 // Higher chance near water
-			} else {
-				placeGrove = rng.Float64() < 0.3 // Lower chance away from water
+				meadowChance += 0.15
 			}
 
-			if placeGrove {
-				Map[y][x].hasGrove = true
-				featurePlaced[y][x] = true
+			// Cap the chance
+			meadowChance = math.Min(meadowChance, 0.9)
 
-				// Some groves form small clusters
-				if rng.Float64() < 0.4 {
-					// Try to add 1-3 adjacent grove tiles
-					extraGroves := 1 + rng.Intn(3)
-					for range extraGroves {
-						// Pick a random direction
-						dx := rng.Intn(3) - 1
-						dy := rng.Intn(3) - 1
-
-						nx, ny := x+dx, y+dy
-						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
-							!featurePlaced[ny][nx] &&
-							Map[ny][nx].landType == LandType_Plains {
-							Map[ny][nx].hasGrove = true
-							featurePlaced[ny][nx] = true
-						}
-					}
-				}
-
-				grovesGenerated++
-			}
-		}
-	}
-
-	// 2. Generate meadows (flower-rich areas)
-	meadowsGenerated := 0
-
-	for attempts := 0; attempts < 100 && meadowsGenerated < meadowCount; attempts++ {
-		x := rng.Intn(MapWidth)
-		y := rng.Intn(MapHeight)
-
-		// Check if this is a suitable spot for a meadow
-		if !featurePlaced[y][x] &&
-			Map[y][x].landType == LandType_Plains &&
-			Map[y][x].altitude > 0.1 && Map[y][x].altitude < 0.6 {
-
-			// Meadows are more likely in wetter areas, but not too wet
-			placeMeadow := false
-
-			// Meadows often form in valleys or near water
-			if Map[y][x].landType == LandType_Valleys {
-				placeMeadow = rng.Float64() < 0.6
-			} else {
-				// Check if near water
-				nearWater := false
-				for dy := -3; dy <= 3; dy++ {
-					for dx := -3; dx <= 3; dx++ {
-						nx, ny := x+dx, y+dy
-						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
-							if Map[ny][nx].altitude <= 0 || Map[ny][nx].hasStream ||
-								Map[ny][nx].hasPond || Map[ny][nx].hasSpring {
-								nearWater = true
-								break
-							}
-						}
-					}
-					if nearWater {
-						break
-					}
-				}
-
-				if nearWater {
-					placeMeadow = rng.Float64() < 0.5
-				} else {
-					placeMeadow = rng.Float64() < 0.2
-				}
-			}
-
-			if placeMeadow {
+			if rng.Float64() < meadowChance {
 				Map[y][x].hasMeadow = true
 				featurePlaced[y][x] = true
 				meadowsGenerated++
@@ -1629,41 +1915,76 @@ func generatePlainsFeatures(seed int64) {
 		}
 	}
 
-	// 3. Generate scrubland (areas with brush and small woody plants)
+	// 3. Generate scrubland (areas with brush and small woody plants) - climate-affected
 	scrubGenerated := 0
 
 	for attempts := 0; attempts < 150 && scrubGenerated < scrubCount; attempts++ {
 		x := rng.Intn(MapWidth)
 		y := rng.Intn(MapHeight)
 
+		// Get climate data
+		avgTemp := Map[y][x].climate.avgTemp
+		avgRain := Map[y][x].climate.avgRain
+		summerTemp := Map[y][x].climate.summerTemp
+
+		// Scrubland occurs in drier, often warmer conditions than forest
+		// But still needs some rainfall
+		scrubSuitability := 0.0
+
+		// Ideal conditions for scrubland: warm and somewhat dry
+		if avgRain > 0.25 && avgRain < 0.55 && avgTemp > 0.45 {
+			scrubSuitability = 0.9
+		} else if avgRain > 0.2 && avgRain < 0.7 {
+			// Moderate conditions
+			scrubSuitability = 0.6
+		} else {
+			// Marginal conditions
+			scrubSuitability = 0.3
+		}
+
+		// Very hot summers favor scrubland over forest
+		if summerTemp > 0.7 {
+			scrubSuitability += 0.1
+		}
+
 		// Check if this is a suitable spot for scrubland
 		if !featurePlaced[y][x] &&
 			Map[y][x].landType == LandType_Plains &&
 			Map[y][x].altitude > 0.2 && Map[y][x].altitude < 0.7 {
 
-			// Scrubland is common in slightly drier areas, but not desert-dry
-			placeScrub := rng.Float64() < 0.5 // Base chance is high, plains often have scrub
+			// Calculate scrub chance based on climate suitability
+			scrubChance := scrubSuitability
 
-			if placeScrub {
+			// Cap the chance
+			scrubChance = math.Min(scrubChance, 0.9)
+
+			if rng.Float64() < scrubChance {
 				Map[y][x].hasScrub = true
 				featurePlaced[y][x] = true
 
 				// Scrubland often forms larger patches
-				if rng.Float64() < 0.7 {
-					// Try to add 2-5 adjacent scrub tiles
-					extraScrub := 2 + rng.Intn(4)
-					for range extraScrub {
-						// Pick a random direction
-						dx := rng.Intn(3) - 1
-						dy := rng.Intn(3) - 1
+				// Size depends on climate - larger patches in optimal conditions
+				patchSize := 1
+				if avgRain > 0.3 && avgRain < 0.5 && avgTemp > 0.5 {
+					// Ideal conditions - larger patches
+					patchSize = 2 + rng.Intn(4)
+				} else {
+					// Less optimal - smaller patches
+					patchSize = 1 + rng.Intn(3)
+				}
 
-						nx, ny := x+dx, y+dy
-						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
-							!featurePlaced[ny][nx] &&
-							Map[ny][nx].landType == LandType_Plains {
-							Map[ny][nx].hasScrub = true
-							featurePlaced[ny][nx] = true
-						}
+				// Try to add additional scrub tiles
+				for range patchSize {
+					// Pick a random direction
+					dx := rng.Intn(3) - 1
+					dy := rng.Intn(3) - 1
+
+					nx, ny := x+dx, y+dy
+					if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
+						!featurePlaced[ny][nx] &&
+						Map[ny][nx].landType == LandType_Plains {
+						Map[ny][nx].hasScrub = true
+						featurePlaced[ny][nx] = true
 					}
 				}
 
@@ -1672,7 +1993,7 @@ func generatePlainsFeatures(seed int64) {
 		}
 	}
 
-	// 4. Generate rock outcroppings
+	// 4. Generate rock outcroppings - less affected by climate, more by geology
 	rocksGenerated := 0
 
 	for attempts := 0; attempts < 100 && rocksGenerated < rockCount; attempts++ {
@@ -1684,15 +2005,34 @@ func generatePlainsFeatures(seed int64) {
 			Map[y][x].landType == LandType_Plains &&
 			Map[y][x].altitude > 0.3 && Map[y][x].altitude < 0.8 {
 
-			// Rocks are more common at higher elevations
-			placeRocks := false
+			// Rocks are more common at higher elevations and in drier areas
+			rockChance := 0.3 // Base chance
+
+			// Higher elevation increases chance
 			if Map[y][x].altitude > 0.6 {
-				placeRocks = rng.Float64() < 0.6
-			} else {
-				placeRocks = rng.Float64() < 0.3
+				rockChance += 0.2
 			}
 
-			if placeRocks {
+			// Drier climates have more exposed rock
+			if Map[y][x].climate.avgRain < 0.4 {
+				rockChance += 0.2
+			}
+
+			// Extremes of temperature (freeze/thaw cycles) can create more exposed rock
+			tempRange := math.Abs(Map[y][x].climate.summerTemp - Map[y][x].climate.winterTemp)
+			if tempRange > 0.4 {
+				rockChance += 0.1
+			}
+
+			// Areas with seasonal flooding tend to expose rocks
+			if Map[y][x].hasFloodArea {
+				rockChance += 0.1
+			}
+
+			// Cap the chance
+			rockChance = math.Min(rockChance, 0.8)
+
+			if rng.Float64() < rockChance {
 				Map[y][x].hasRocks = true
 				featurePlaced[y][x] = true
 				rocksGenerated++
@@ -1700,22 +2040,57 @@ func generatePlainsFeatures(seed int64) {
 		}
 	}
 
-	// 5. Generate salt flats
+	// 5. Generate seasonal flood areas
+	generateFloodAreas(seed)
+
+	// 6. Generate salt flats - highly climate dependent (and dependent on seasonal flood areas)
 	saltFlatsGenerated := 0
 
 	for attempts := 0; attempts < 50 && saltFlatsGenerated < saltFlatCount; attempts++ {
 		x := rng.Intn(MapWidth)
 		y := rng.Intn(MapHeight)
 
+		// Salt flats need hot, dry conditions and are often seasonal
+		avgTemp := Map[y][x].climate.avgTemp
+		avgRain := Map[y][x].climate.avgRain
+		summerTemp := Map[y][x].climate.summerTemp
+
+		// Salt flats need high evaporation (hot) and low rainfall
+		saltFlatSuitability := 0.0
+
+		if avgRain < 0.3 && summerTemp > 0.7 {
+			// Ideal conditions: very hot and dry
+			saltFlatSuitability = 0.8
+		} else if avgRain < 0.4 && avgTemp > 0.6 {
+			// Moderate conditions
+			saltFlatSuitability = 0.4
+		} else {
+			// Poor conditions
+			saltFlatSuitability = 0.1
+		}
+
 		// Check if this is a suitable spot for a salt flat
 		if !featurePlaced[y][x] &&
 			Map[y][x].landType == LandType_Plains &&
 			Map[y][x].altitude > 0.15 && Map[y][x].altitude < 0.4 {
 
-			// Salt flats typically form in dry basins
-			placeSaltFlat := rng.Float64() < 0.3
+			// Calculate salt flat chance
+			saltFlatChance := saltFlatSuitability
 
-			if placeSaltFlat {
+			// Depression or basin increases chance
+			if Map[y][x].landType == LandType_Valleys && Map[y][x].altitude < 0.3 {
+				saltFlatChance += 0.2
+			}
+
+			// Areas with seasonal flooding but high evaporation develop salt flats
+			if Map[y][x].hasFloodArea && summerTemp > 0.7 {
+				saltFlatChance += 0.3
+			}
+
+			// Cap the chance
+			saltFlatChance = math.Min(saltFlatChance, 0.8)
+
+			if rng.Float64() < saltFlatChance {
 				Map[y][x].hasSaltFlat = true
 				featurePlaced[y][x] = true
 
@@ -1744,11 +2119,347 @@ func generatePlainsFeatures(seed int64) {
 		}
 	}
 
-	// 6. Generate seasonal flood areas
-	generateFloodAreas(seed)
-
 	// 7. Generate game trails
 	generateGameTrails(seed)
+}
+
+func generateFloodAreas(seed int64) {
+	rng := rand.New(rand.NewSource(seed + 3333))
+
+	// Parameters for flood areas
+	floodAreaCount := 2 + rng.Intn(4) // 2-5 flood regions based on climate
+
+	// Track all water sources (rivers, lakes, streams)
+	var waterSources []struct{ x, y int }
+
+	for y := range MapHeight {
+		for x := range MapWidth {
+			// Only include major water bodies (no streams)
+			// Seasonal floods typically come from larger bodies of water
+			if Map[y][x].altitude <= 0 { // Only major water bodies
+				waterSources = append(waterSources, struct{ x, y int }{x, y})
+			}
+		}
+	}
+
+	// If we don't have any water sources, we can't have floods
+	if len(waterSources) == 0 {
+		return
+	}
+
+	// Shuffle water sources so we don't always start floods from the same places
+	for i := len(waterSources) - 1; i > 0; i-- {
+		j := rng.Intn(i + 1)
+		waterSources[i], waterSources[j] = waterSources[j], waterSources[i]
+	}
+
+	// Areas we've already checked for flooding potential
+	var checkedTiles [MapHeight][MapWidth]bool
+
+	// Generate each flood region starting from a suitable water source
+	floodAreasGenerated := 0
+	for i := 0; i < len(waterSources) && floodAreasGenerated < floodAreaCount; i++ {
+		source := waterSources[i]
+		x, y := source.x, source.y
+
+		// Ensure this water source hasn't been checked before
+		if checkedTiles[y][x] {
+			continue
+		}
+
+		checkedTiles[y][x] = true
+
+		// Skip if this water tile doesn't have enough adjacent water tiles
+		// This ensures floods only come from substantial water bodies
+		adjacentWaterCount := 0
+		for dy := -1; dy <= 1; dy++ {
+			for dx := -1; dx <= 1; dx++ {
+				if dx == 0 && dy == 0 {
+					continue
+				}
+
+				nx, ny := x+dx, y+dy
+				if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
+					Map[ny][nx].altitude <= 0 { // Adjacent water
+					adjacentWaterCount++
+				}
+			}
+		}
+
+		// Require at least 3 adjacent water tiles
+		// This means floods only start from water "edges" not single water tiles
+		if adjacentWaterCount < 3 {
+			continue // Not a substantial enough water body
+		}
+
+		// Check for seasonal rainfall variation in nearby land
+		// We need an area with significant seasonal variation in rainfall
+		// to create natural flood cycles
+
+		highestSeasonalRain := 0.0
+		lowestSeasonalRain := 1.0
+		neighborCount := 0
+
+		for dy := -3; dy <= 3; dy++ {
+			for dx := -3; dx <= 3; dx++ {
+				nx, ny := x+dx, y+dy
+				if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
+					Map[ny][nx].altitude > 0 {
+
+					// Check seasonal rainfall
+					winterRain := Map[ny][nx].climate.winterRain
+					springRain := Map[ny][nx].climate.springRain
+					summerRain := Map[ny][nx].climate.summerRain
+					fallRain := Map[ny][nx].climate.fallRain
+
+					// Find highest and lowest seasonal rainfall
+					seasonalMax := math.Max(winterRain, math.Max(springRain, math.Max(summerRain, fallRain)))
+					seasonalMin := math.Min(winterRain, math.Min(springRain, math.Min(summerRain, fallRain)))
+
+					if seasonalMax > highestSeasonalRain {
+						highestSeasonalRain = seasonalMax
+					}
+
+					if seasonalMin < lowestSeasonalRain {
+						lowestSeasonalRain = seasonalMin
+					}
+
+					neighborCount++
+				}
+			}
+		}
+
+		// If we didn't find neighboring land, skip this source
+		if neighborCount == 0 {
+			continue
+		}
+
+		// Calculate seasonal variation
+		seasonalVariation := highestSeasonalRain - lowestSeasonalRain
+
+		// Flood regions typically develop in areas with significant seasonal variation
+		// or very high rainfall in at least one season
+		if seasonalVariation < 0.25 && highestSeasonalRain < 0.7 {
+			continue // Not enough seasonal variation for flooding
+		}
+
+		// Flood regions can only form from water sources near low-lying land
+		// hasLowLand := false
+		hasVeryLowLand := false
+
+		// Check if this water source has adjacent low-lying land
+		for dy := -1; dy <= 1; dy++ {
+			for dx := -1; dx <= 1; dx++ {
+				nx, ny := x+dx, y+dy
+
+				if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
+					Map[ny][nx].altitude > 0 && Map[ny][nx].altitude < 0.3 &&
+					Map[ny][nx].landType != LandType_Mountains &&
+					Map[ny][nx].landType != LandType_Plateaus {
+					// hasLowLand = true
+
+					if Map[ny][nx].altitude < 0.15 {
+						hasVeryLowLand = true
+					}
+				}
+			}
+		}
+
+		if !hasVeryLowLand {
+			continue // This water source isn't suitable for flooding
+		}
+
+		// This water source is good for flooding. Generate a connected flood region
+		// Seasonal rain data is included in the flood region calculation
+		floodTiles := generateConnectedFloodRegion(x, y, rng)
+
+		// If we found enough flood tiles, mark it as a flood region
+		if len(floodTiles) >= 3 {
+			// Apply flood area to the map
+			for _, tile := range floodTiles {
+				Map[tile.y][tile.x].hasFloodArea = true
+
+				// Mark a wide radius as checked to avoid too-close flood regions
+				for dy := -4; dy <= 4; dy++ {
+					for dx := -4; dx <= 4; dx++ {
+						nx, ny := tile.x+dx, tile.y+dy
+						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
+							checkedTiles[ny][nx] = true
+						}
+					}
+				}
+			}
+
+			floodAreasGenerated++
+		}
+	}
+}
+
+// Helper function to generate a connected flood region from a water source
+func generateConnectedFloodRegion(waterX, waterY int, rng *rand.Rand) []struct{ x, y int } {
+	// Define a flood fill algorithm that prioritizes lower elevation
+	var floodTiles []struct{ x, y int }
+	var processed [MapHeight][MapWidth]bool
+
+	// Queue for flood fill algorithm
+	queue := []struct {
+		x, y     int
+		distance int // Distance from water source
+	}{
+		{x: waterX, y: waterY, distance: 0},
+	}
+
+	processed[waterY][waterX] = true
+
+	// Base max distance
+	baseMaxDistance := 5 + rng.Intn(7) // 5-11 tiles maximum flood distance
+
+	// Adjust max distance based on seasonal rainfall
+	// Find the season with highest rainfall near the water source
+	highestSeasonalRain := 0.0
+
+	for dy := -2; dy <= 2; dy++ {
+		for dx := -2; dx <= 2; dx++ {
+			nx, ny := waterX+dx, waterY+dy
+			if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight && Map[ny][nx].altitude > 0 {
+				winterRain := Map[ny][nx].climate.winterRain
+				springRain := Map[ny][nx].climate.springRain
+				summerRain := Map[ny][nx].climate.summerRain
+				fallRain := Map[ny][nx].climate.fallRain
+
+				seasonalMax := math.Max(winterRain, math.Max(springRain, math.Max(summerRain, fallRain)))
+				if seasonalMax > highestSeasonalRain {
+					highestSeasonalRain = seasonalMax
+				}
+			}
+		}
+	}
+
+	// Adjust flood distance based on seasonal rainfall
+	maxDistance := baseMaxDistance
+	if highestSeasonalRain > 0.7 {
+		// Higher rainfall seasons create more extensive floods
+		maxDistance += 3
+	} else if highestSeasonalRain < 0.4 {
+		// Low rainfall creates smaller flood zones
+		maxDistance -= 2
+	}
+
+	// Ensure minimum size
+	maxDistance = max(maxDistance, 4)
+
+	// Process queue
+	for len(queue) > 0 {
+		// Get next tile
+		current := queue[0]
+		queue = queue[1:]
+
+		// Skip water tiles (we're looking for land to flood)
+		if Map[current.y][current.x].altitude <= 0 {
+			// But water is part of the flood system, so check its neighbors
+			for dy := -1; dy <= 1; dy++ {
+				for dx := -1; dx <= 1; dx++ {
+					nx, ny := current.x+dx, current.y+dy
+
+					// Check bounds
+					if nx < 0 || nx >= MapWidth || ny < 0 || ny >= MapHeight {
+						continue
+					}
+
+					// Skip processed tiles
+					if processed[ny][nx] {
+						continue
+					}
+
+					// Add to queue
+					queue = append(queue, struct{ x, y, distance int }{
+						x:        nx,
+						y:        ny,
+						distance: current.distance + 1,
+					})
+
+					processed[ny][nx] = true
+				}
+			}
+			continue
+		}
+
+		// We've found a land tile
+		// Check if it's suitable for flooding and not too far from water
+		if current.distance <= maxDistance &&
+			Map[current.y][current.x].altitude < 0.3 &&
+			Map[current.y][current.x].landType != LandType_Mountains &&
+			Map[current.y][current.x].landType != LandType_Plateaus {
+			/*!Map[current.y][current.x].hasGrove*/ // TODO: Do trees typically don't grow in flood zones? Certain species can, afaik
+
+			// Get local rainfall information
+			winterRain := Map[current.y][current.x].climate.winterRain
+			springRain := Map[current.y][current.x].climate.springRain
+			summerRain := Map[current.y][current.x].climate.summerRain
+			fallRain := Map[current.y][current.x].climate.fallRain
+
+			// Find highest seasonal rainfall
+			highestRain := math.Max(winterRain, math.Max(springRain, math.Max(summerRain, fallRain)))
+
+			// The likelihood of flooding decreases with elevation and distance
+			baseChance := 0.75
+			elevationEffect := 0.9
+			distanceEffect := 0.5
+
+			// Adjust flood chance based on seasonal rainfall
+			rainfallEffect := 0.5 + highestRain*0.5 // 0.5 to 1.0 based on rainfall
+
+			floodChance := baseChance - (Map[current.y][current.x].altitude/0.3)*elevationEffect - (float64(current.distance)/float64(maxDistance))*distanceEffect
+			floodChance *= rainfallEffect // Scale by rainfall
+
+			// Additional factor: valleys are more likely to flood
+			if Map[current.y][current.x].landType == LandType_Valleys {
+				floodChance += 0.2
+			}
+
+			// Steep falloff at the edges
+			if float64(current.distance) > float64(maxDistance)*0.7 {
+				floodChance *= 0.5 // Flood probability drops sharply at edges
+			}
+
+			// Apply randomness
+			if rng.Float64() < floodChance {
+				// This tile gets flooded
+				floodTiles = append(floodTiles, struct{ x, y int }{
+					x: current.x,
+					y: current.y,
+				})
+
+				// Add neighbors to queue to continue the flood
+				for dy := -1; dy <= 1; dy++ {
+					for dx := -1; dx <= 1; dx++ {
+						nx, ny := current.x+dx, current.y+dy
+
+						// Check bounds
+						if nx < 0 || nx >= MapWidth || ny < 0 || ny >= MapHeight {
+							continue
+						}
+
+						// Skip processed tiles
+						if processed[ny][nx] {
+							continue
+						}
+
+						// Add to queue with increased distance
+						queue = append(queue, struct{ x, y, distance int }{
+							x:        nx,
+							y:        ny,
+							distance: current.distance + 1,
+						})
+
+						processed[ny][nx] = true
+					}
+				}
+			}
+		}
+	}
+
+	return floodTiles
 }
 
 func generateGameTrails(seed int64) {
@@ -1765,6 +2476,7 @@ func generateGameTrails(seed int64) {
 		// 1. Connect water sources to food sources (meadows, groves)
 		// 2. Connect different biomes/terrain types
 		// 3. Follow paths of least resistance (valleys, passes)
+		// 4. May be seasonal depending on climate (migration routes)
 
 		// Find a good starting point - typically water, meadows, or groves
 		var startX, startY int
@@ -1788,6 +2500,9 @@ func generateGameTrails(seed int64) {
 				}
 			}
 		}
+
+		// Determine if this is a seasonal migration route or regular game trail
+		isMigrationRoute := rng.Float64() < 0.3 // 30% chance for seasonal migration routes
 
 		// 75% of trails start at water, 25% at food sources
 		if len(waterSources) > 0 && rng.Float64() < 0.75 {
@@ -1822,7 +2537,48 @@ func generateGameTrails(seed int64) {
 		var targetX, targetY int
 		foundTarget := false
 
-		if len(waterSources) > 0 && len(foodSources) > 0 {
+		if isMigrationRoute {
+			// For migration routes, we want to connect areas with different seasonal conditions
+			// Animals migrate to find better conditions as seasons change
+
+			// Get climate at start location
+			startWinterTemp := Map[startY][startX].climate.winterTemp
+			startSummerTemp := Map[startY][startX].climate.summerTemp
+
+			// Find a suitable migration destination with different seasonal patterns
+			for range 30 {
+				x := rng.Intn(MapWidth)
+				y := rng.Intn(MapHeight)
+
+				// Skip water and points too close to start
+				if Map[y][x].altitude <= 0 {
+					continue
+				}
+
+				// Calculate distance
+				dist := math.Sqrt(math.Pow(float64(x-startX), 2) + math.Pow(float64(y-startY), 2))
+				if dist < 10 || dist > 30 {
+					continue // Too close or too far
+				}
+
+				// Check for different seasonal patterns
+				targetWinterTemp := Map[y][x].climate.winterTemp
+				targetSummerTemp := Map[y][x].climate.summerTemp
+
+				// Look for contrasting conditions (warmer winters or cooler summers)
+				tempDiff := math.Abs(targetWinterTemp-startWinterTemp) +
+					math.Abs(targetSummerTemp-startSummerTemp)
+
+				if tempDiff > 0.3 {
+					// Found a location with sufficiently different seasonal conditions
+					targetX, targetY = x, y
+					foundTarget = true
+					break
+				}
+			}
+		} else if len(waterSources) > 0 && len(foodSources) > 0 {
+			// Regular game trail - connect water to food or different terrain
+
 			// If we started at water, look for food
 			isWaterStart := false
 			for _, source := range waterSources {
@@ -1911,15 +2667,19 @@ func generateGameTrails(seed int64) {
 	}
 }
 
-// Helper function to find a game trail path (uses A* with terrain costs)
+// Helper function to find a game trail path (uses A* with terrain costs and considers seasonal climate)
 func findGameTrailPath(startX, startY, targetX, targetY int, rng *rand.Rand) []struct{ x, y int } {
-	// Define terrain cost factors
+	// Define terrain cost factors, including seasonal considerations
 	// Animals will prefer easier paths (valleys) and avoid difficult ones (steep mountains)
 	getTerrainCost := func(x, y int) float64 {
 		// Water is impassable
 		if Map[y][x].altitude <= 0 {
 			return math.Inf(1)
 		}
+
+		// Get climate information
+		avgTemp := Map[y][x].climate.avgTemp
+		avgRain := Map[y][x].climate.avgRain
 
 		// Base costs by terrain type
 		var baseCost float64
@@ -1941,19 +2701,41 @@ func findGameTrailPath(startX, startY, targetX, targetY int, rng *rand.Rand) []s
 			}
 		case LandType_Coastal:
 			baseCost = 1.1 // Slightly harder than plains
+		case LandType_SandDunes:
+			baseCost = 2.5 // Difficult to traverse
 		default:
 			baseCost = 1.0
 		}
 
 		// Modify costs for specific features animals might prefer or avoid
+		// Animals prefer areas with food and water
 		if Map[y][x].hasGrove {
-			baseCost *= 0.9 // Animals like cover
+			baseCost *= 0.8 // Animals like cover
 		}
 		if Map[y][x].hasMeadow {
-			baseCost *= 0.9 // Animals like food
+			baseCost *= 0.7 // Animals like food
 		}
+		if Map[y][x].hasStream || Map[y][x].hasPond || Map[y][x].hasSpring {
+			baseCost *= 0.6 // Animals strongly prefer paths near water
+		}
+
+		// Animals avoid certain features
 		if Map[y][x].hasRocks {
 			baseCost *= 1.3 // Animals avoid rocky areas
+		}
+		if Map[y][x].isDesert && avgRain < 0.3 {
+			baseCost *= 1.5 // Animals avoid very dry areas unless necessary
+		}
+
+		// Climate considerations
+		// Animals prefer moderate temperatures
+		if avgTemp < 0.2 || avgTemp > 0.8 {
+			baseCost *= 1.2 // Avoid temperature extremes
+		}
+
+		// Extremely wet areas can be difficult to traverse
+		if avgRain > 0.8 {
+			baseCost *= 1.2
 		}
 
 		// Add some randomness (animals don't always take perfect paths)
@@ -2100,257 +2882,18 @@ func abs(x int) int {
 	return x
 }
 
-func generateFloodAreas(seed int64) {
-	rng := rand.New(rand.NewSource(seed + 3333))
-
-	// Parameters for flood areas
-	floodAreaCount := 2 + rng.Intn(2) // 2-3 flood regions
-
-	// Track all water sources (rivers, lakes, streams)
-	var waterSources []struct{ x, y int }
-
-	for y := range MapHeight {
-		for x := range MapWidth {
-			// Only include major water bodies (no streams)
-			// Seasonal floods typically come from larger bodies of water
-			if Map[y][x].altitude <= 0 { // Only major water bodies
-				waterSources = append(waterSources, struct{ x, y int }{x, y})
-			}
-		}
-	}
-
-	// If we don't have any water sources, we can't have floods
-	if len(waterSources) == 0 {
-		return
-	}
-
-	// Shuffle water sources so we don't always start floods from the same places
-	for i := len(waterSources) - 1; i > 0; i-- {
-		j := rng.Intn(i + 1)
-		waterSources[i], waterSources[j] = waterSources[j], waterSources[i]
-	}
-
-	// Areas we've already checked for flooding potential
-	var checkedTiles [MapHeight][MapWidth]bool
-
-	// Generate each flood region starting from a suitable water source
-	floodAreasGenerated := 0
-	for i := 0; i < len(waterSources) && floodAreasGenerated < floodAreaCount; i++ {
-		source := waterSources[i]
-		x, y := source.x, source.y
-
-		// Ensure this water source hasn't been checked before
-		if checkedTiles[y][x] {
-			continue
-		}
-
-		checkedTiles[y][x] = true
-
-		// Skip if this water tile doesn't have enough adjacent water tiles
-		// This ensures floods only come from substantial water bodies
-		adjacentWaterCount := 0
-		for dy := -1; dy <= 1; dy++ {
-			for dx := -1; dx <= 1; dx++ {
-				if dx == 0 && dy == 0 {
-					continue
-				}
-
-				nx, ny := x+dx, y+dy
-				if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
-					Map[ny][nx].altitude <= 0 { // Adjacent water
-					adjacentWaterCount++
-				}
-			}
-		}
-
-		// Require at least 3 adjacent water tiles
-		// This means floods only start from water "edges" not single water tiles
-		if adjacentWaterCount < 3 {
-			continue // Not a substantial enough water body
-		}
-
-		// Flood regions can only form from water sources near low-lying land
-		// hasLowLand := false
-		hasVeryLowLand := false
-
-		// Check if this water source has adjacent low-lying land
-		for dy := -1; dy <= 1; dy++ {
-			for dx := -1; dx <= 1; dx++ {
-				nx, ny := x+dx, y+dy
-
-				if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
-					Map[ny][nx].altitude > 0 && Map[ny][nx].altitude < 0.3 &&
-					Map[ny][nx].landType != LandType_Mountains &&
-					Map[ny][nx].landType != LandType_Plateaus {
-					// hasLowLand = true
-
-					if Map[ny][nx].altitude < 0.15 {
-						hasVeryLowLand = true
-					}
-				}
-			}
-		}
-
-		if !hasVeryLowLand {
-			continue // This water source isn't suitable for flooding
-		}
-
-		// This water source is good for flooding. Generate a connected flood region
-		floodTiles := generateConnectedFloodRegion(x, y, rng)
-
-		// If we found enough flood tiles, mark it as a flood region
-		if len(floodTiles) >= 3 {
-			// Apply flood area to the map
-			for _, tile := range floodTiles {
-				Map[tile.y][tile.x].hasFloodArea = true
-
-				// Mark a wide radius as checked to avoid too-close flood regions
-				for dy := -4; dy <= 4; dy++ {
-					for dx := -4; dx <= 4; dx++ {
-						nx, ny := tile.x+dx, tile.y+dy
-						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
-							checkedTiles[ny][nx] = true
-						}
-					}
-				}
-			}
-
-			floodAreasGenerated++
-		}
-	}
-}
-
-// Helper function to generate a connected flood region from a water source
-func generateConnectedFloodRegion(waterX, waterY int, rng *rand.Rand) []struct{ x, y int } {
-	// Define a flood fill algorithm that prioritizes lower elevation
-	var floodTiles []struct{ x, y int }
-	var processed [MapHeight][MapWidth]bool
-
-	// Queue for flood fill algorithm
-	queue := []struct {
-		x, y     int
-		distance int // Distance from water source
-	}{
-		{x: waterX, y: waterY, distance: 0},
-	}
-
-	processed[waterY][waterX] = true
-
-	maxDistance := 5 + rng.Intn(7) // 8-12 tiles maximum flood distance
-
-	// Process queue
-	for len(queue) > 0 {
-		// Get next tile
-		current := queue[0]
-		queue = queue[1:]
-
-		// Skip water tiles (we're looking for land to flood)
-		if Map[current.y][current.x].altitude <= 0 {
-			// But water is part of the flood system, so check its neighbors
-			for dy := -1; dy <= 1; dy++ {
-				for dx := -1; dx <= 1; dx++ {
-					nx, ny := current.x+dx, current.y+dy
-
-					// Check bounds
-					if nx < 0 || nx >= MapWidth || ny < 0 || ny >= MapHeight {
-						continue
-					}
-
-					// Skip processed tiles
-					if processed[ny][nx] {
-						continue
-					}
-
-					// Add to queue
-					queue = append(queue, struct{ x, y, distance int }{
-						x:        nx,
-						y:        ny,
-						distance: current.distance + 1,
-					})
-
-					processed[ny][nx] = true
-				}
-			}
-			continue
-		}
-
-		// We've found a land tile
-		// Check if it's suitable for flooding and not too far from water
-		if current.distance <= maxDistance &&
-			Map[current.y][current.x].altitude < 0.3 &&
-			Map[current.y][current.x].landType != LandType_Mountains &&
-			Map[current.y][current.x].landType != LandType_Plateaus &&
-			!Map[current.y][current.x].hasGrove && // Trees typically don't grow in flood zones
-			!Map[current.y][current.x].hasSaltFlat { // Salt flats form in areas that DON'T flood
-
-			// The likelihood of flooding decreases with elevation and distance
-			baseChance := 0.8
-			elevationEffect := 0.9
-			distanceEffect := 0.5
-			floodChance := baseChance - (Map[current.y][current.x].altitude/0.3)*elevationEffect - (float64(current.distance)/float64(maxDistance))*distanceEffect
-
-			// Additional factor: valleys are more likely to flood
-			if Map[current.y][current.x].landType == LandType_Valleys {
-				floodChance += 0.2
-			}
-
-			// Steep falloff at the edges
-			if float64(current.distance) > float64(maxDistance)*0.7 {
-				floodChance *= 0.5 // Flood probability drops sharply at edges
-			}
-
-			// Apply randomness
-			if rng.Float64() < floodChance {
-				// This tile gets flooded
-				floodTiles = append(floodTiles, struct{ x, y int }{
-					x: current.x,
-					y: current.y,
-				})
-
-				// Add neighbors to queue to continue the flood
-				for dy := -1; dy <= 1; dy++ {
-					for dx := -1; dx <= 1; dx++ {
-						nx, ny := current.x+dx, current.y+dy
-
-						// Check bounds
-						if nx < 0 || nx >= MapWidth || ny < 0 || ny >= MapHeight {
-							continue
-						}
-
-						// Skip processed tiles
-						if processed[ny][nx] {
-							continue
-						}
-
-						// Add to queue with increased distance
-						queue = append(queue, struct{ x, y, distance int }{
-							x:        nx,
-							y:        ny,
-							distance: current.distance + 1,
-						})
-
-						processed[ny][nx] = true
-					}
-				}
-			}
-		}
-	}
-
-	return floodTiles
-}
-
 func generateDeserts(seed int64) {
 	rng := rand.New(rand.NewSource(seed + 9876))
 
 	// Create desert noise patterns
 	// We'll use a combination of noises to create realistic desert distributions
-	desertNoise := perlin.NewPerlin(2.5, 3.0, 2, seed+444)
-	rainfallNoise := perlin.NewPerlin(3.0, 2.5, 2, seed+555)
-	temperatureNoise := perlin.NewPerlin(4.0, 2.0, 3, seed+666)
+	// desertNoise := perlin.NewPerlin(2.5, 3.0, 2, seed+444)
+	// rainfallNoise := perlin.NewPerlin(3.0, 2.5, 2, seed+555)
+	// temperatureNoise := perlin.NewPerlin(4.0, 2.0, 3, seed+666)
 
 	// Parameters for desert generation
-	equator := MapHeight / 2        // The vertical center of the map is the equator
-	equatorWidth := MapHeight * 0.4 // Deserts typically form in bands north and south of equator
+	//equator := MapHeight / 2        // The vertical center of the map is the equator
+	//equatorWidth := MapHeight * 0.4 // Deserts typically form in bands north and south of equator
 
 	// Process all map tiles to determine desert regions
 	for y := range MapHeight {
@@ -2360,148 +2903,726 @@ func generateDeserts(seed int64) {
 				continue
 			}
 
-			// 1. Calculate latitude factor - deserts tend to form in specific latitude bands
-			// Distance from equator (normalized to 0-1 range where 0 = equator, 1 = pole)
-			distanceFromEquator := math.Abs(float64(y-equator)) / float64(MapHeight/2)
+			// Desert determination is now direct based on temperature and rainfall
+			// Get seasonal climate data
+			avgTemp := Map[y][x].climate.avgTemp
+			avgRain := Map[y][x].climate.avgRain
 
-			// Use equatorWidth to create proper desert bands
-			// This creates a peak at about 30° latitude (distance of 0.33 from equator)
-			// For a 50-tile height map, this would be roughly 8-9 tiles from the equator
-			desertLatitudeBandCenter := equatorWidth / float64(MapHeight) // ~0.3-0.4
+			// Get the hottest season's temperature and driest season's rainfall
+			hottestTemp := math.Max(
+				math.Max(Map[y][x].climate.winterTemp, Map[y][x].climate.springTemp),
+				math.Max(Map[y][x].climate.summerTemp, Map[y][x].climate.fallTemp),
+			)
 
-			// Calculate how close this tile is to the ideal desert latitude
-			// (1.0 means perfectly in the desert band, 0.0 means far from it)
-			latitudeMatch := max(1.0-math.Abs(distanceFromEquator-desertLatitudeBandCenter)*3.0, 0)
-			latitudeFactor := latitudeMatch
+			driestRain := math.Min(
+				math.Min(Map[y][x].climate.winterRain, Map[y][x].climate.springRain),
+				math.Min(Map[y][x].climate.summerRain, Map[y][x].climate.fallRain),
+			)
 
-			// 2. Rainfall factor - less rain = more desert
-			// Use noise to simulate rainfall patterns (0 = dry, 1 = wet)
-			rainfallValue := rainfallNoise.Noise2D(float64(x)/(MapWidth*0.3), float64(y)/(MapHeight*0.3))
-			// Normalize to 0-1 range
-			rainfallValue = (rainfallValue + 1.0) / 2.0
-			// Invert so high values mean less rain (more desert)
-			rainfallFactor := 1.0 - rainfallValue
+			// Calculate seasonal variation
+			tempRange := math.Abs(Map[y][x].climate.summerTemp - Map[y][x].climate.winterTemp)
+			rainRange := math.Max(
+				math.Max(Map[y][x].climate.winterRain, Map[y][x].climate.springRain),
+				math.Max(Map[y][x].climate.summerRain, Map[y][x].climate.fallRain),
+			) - driestRain
 
-			// 3. Temperature factor - hotter areas more likely to be deserts
-			// Use noise for temperature variations within latitude bands
-			temperatureValue := temperatureNoise.Noise2D(float64(x)/(MapWidth*0.4), float64(y)/(MapHeight*0.4))
-			// Normalize to 0-1 range
-			temperatureValue = (temperatureValue + 1.0) / 2.0
-			// Adjust with latitude - equator is hotter
-			temperatureFactor := temperatureValue * (1.0 - distanceFromEquator*0.5)
+			// Desert criteria based on climate patterns
+			// True deserts are hot and dry year-round
+			isExtremeTrueDesert := avgTemp > 0.7 && avgRain < 0.2 && driestRain < 0.15 && hottestTemp > 0.8
 
-			// 4. Terrain factor - slightly higher elevation more likely for deserts
-			// (but not too high where mountains create rainfall)
-			terrainFactor := 0.0
-			if Map[y][x].altitude > 0.2 && Map[y][x].altitude < 0.7 {
-				terrainFactor = 0.4
-			}
+			// Hot deserts have hot summers but can have cooler winters
+			isHotDesert := hottestTemp > 0.75 && avgRain < 0.25 && driestRain < 0.2
 
-			// 5. Local variance for desert patterns (to break up uniform desert regions)
-			desertVariation := desertNoise.Noise2D(float64(x)/(MapWidth*0.2), float64(y)/(MapHeight*0.2))
-			desertVariation = (desertVariation + 1.0) / 2.0
+			// Semi-desert/arid regions: somewhat hot and dry with seasonal variation
+			isSemiDesert := avgTemp > 0.6 && avgRain < 0.35 && driestRain < 0.25
 
-			// 6. Calculate final desert probability
-			// Weight the factors by importance
-			desertProbability := (latitudeFactor*0.4 + rainfallFactor*0.3 + temperatureFactor*0.2 + terrainFactor*0.1 + desertVariation*0.3) / 1.4 // Normalize the weights
+			// Cold deserts exist with extreme temperature ranges but consistent dryness
+			isColdDesert := tempRange > 0.5 && avgTemp < 0.6 && avgRain < 0.3 && driestRain < 0.2
 
-			// 7. Apply threshold - determine if this tile is a desert
-			desertThreshold := 0.52 // Adjust this to control total desert coverage
-
-			if desertProbability > desertThreshold {
-				// Mark as desert
+			if isExtremeTrueDesert || isHotDesert || isSemiDesert || isColdDesert {
 				Map[y][x].isDesert = true
 
-				// 8. Potentially remove incompatible features in desert areas
-				// Deserts can have these features but they're less common
+				// Determine desert intensity for feature adjustment
+				desertIntensity := 0.0
 
-				// Only remove if we're in a more extreme desert (higher probability)
-				extremeDesertThreshold := 0.70
-				if desertProbability > extremeDesertThreshold {
-					// Water features are rare in extreme deserts
-					if Map[y][x].hasStream && rng.Float64() < 0.7 {
+				if isExtremeTrueDesert {
+					desertIntensity = 0.9 // Extreme true desert (very strong effects)
+				} else if isHotDesert {
+					desertIntensity = 0.7 // Hot desert (strong effects)
+				} else if isColdDesert {
+					desertIntensity = 0.6 // Cold desert (moderate effects)
+				} else if isSemiDesert {
+					desertIntensity = 0.4 // Semi-desert (mild effects)
+				}
+
+				// Apply feature modifications based on desert intensity
+
+				// 1. Water features (rarer in more intense deserts)
+				// Streams can be seasonal in deserts
+				if Map[y][x].hasStream {
+					// Most streams in hot deserts are ephemeral (seasonal)
+					if desertIntensity > 0.7 && rng.Float64() < 0.8 {
+						Map[y][x].hasStream = false
+					} else if desertIntensity > 0.5 && rng.Float64() < 0.6 {
+						Map[y][x].hasStream = false
+					} else if desertIntensity > 0.3 && rng.Float64() < 0.4 {
 						Map[y][x].hasStream = false
 					}
-					if Map[y][x].hasPond && rng.Float64() < 0.8 {
+				}
+
+				// Ponds are very rare in hot deserts, can exist in cold deserts
+				if Map[y][x].hasPond {
+					if isHotDesert && rng.Float64() < 0.9 {
+						Map[y][x].hasPond = false
+					} else if desertIntensity > 0.5 && rng.Float64() < 0.7 {
+						Map[y][x].hasPond = false
+					} else if desertIntensity > 0.3 && rng.Float64() < 0.5 {
 						Map[y][x].hasPond = false
 					}
-					if Map[y][x].hasSpring && rng.Float64() < 0.6 {
+				}
+
+				// Springs can exist in deserts but are rare
+				if Map[y][x].hasSpring {
+					if desertIntensity > 0.7 && rng.Float64() < 0.7 {
+						Map[y][x].hasSpring = false
+					} else if desertIntensity > 0.5 && rng.Float64() < 0.5 {
+						Map[y][x].hasSpring = false
+					} else if desertIntensity > 0.3 && rng.Float64() < 0.3 {
 						Map[y][x].hasSpring = false
 					}
-					if Map[y][x].hasMarsh && rng.Float64() < 0.9 {
+				}
+
+				// Marshes are extremely rare in hot deserts
+				if Map[y][x].hasMarsh {
+					if desertIntensity > 0.7 && rng.Float64() < 0.95 {
+						Map[y][x].hasMarsh = false
+					} else if desertIntensity > 0.5 && rng.Float64() < 0.8 {
+						Map[y][x].hasMarsh = false
+					} else if desertIntensity > 0.3 && rng.Float64() < 0.6 {
 						Map[y][x].hasMarsh = false
 					}
-					if Map[y][x].hasFloodArea && rng.Float64() < 0.8 {
+				}
+
+				// Flood areas can exist seasonally in deserts
+				if Map[y][x].hasFloodArea {
+					// Desert floods are typically flash floods
+					// More likely if there's high seasonal rainfall variation
+					if rainRange < 0.3 || (desertIntensity > 0.7 && rng.Float64() < 0.7) {
 						Map[y][x].hasFloodArea = false
-					}
-				} else {
-					// Moderate deserts - water features are uncommon but not rare
-					if Map[y][x].hasStream && rng.Float64() < 0.4 {
-						Map[y][x].hasStream = false
-					}
-					if Map[y][x].hasPond && rng.Float64() < 0.5 {
-						Map[y][x].hasPond = false
-					}
-					if Map[y][x].hasSpring && rng.Float64() < 0.3 {
-						Map[y][x].hasSpring = false
-					}
-					if Map[y][x].hasMarsh && rng.Float64() < 0.6 {
-						Map[y][x].hasMarsh = false
-					}
-					if Map[y][x].hasFloodArea && rng.Float64() < 0.5 {
+					} else if desertIntensity > 0.5 && rng.Float64() < 0.5 {
 						Map[y][x].hasFloodArea = false
 					}
 				}
 
-				// Vegetation is very rare in extreme deserts, uncommon in moderate deserts
+				// 2. Vegetation features
+				// Groves are extremely rare in true deserts, possible in semi-arid regions
 				if Map[y][x].hasGrove {
-					if desertProbability > extremeDesertThreshold {
-						// 90% chance to remove groves in extreme desert
-						if rng.Float64() < 0.9 {
-							Map[y][x].hasGrove = false
-						}
-					} else {
-						// 60% chance to remove groves in moderate desert
-						if rng.Float64() < 0.6 {
-							Map[y][x].hasGrove = false
-						}
+					if desertIntensity > 0.7 && rng.Float64() < 0.95 {
+						Map[y][x].hasGrove = false
+					} else if desertIntensity > 0.5 && rng.Float64() < 0.8 {
+						Map[y][x].hasGrove = false
+					} else if desertIntensity > 0.3 && rng.Float64() < 0.6 {
+						Map[y][x].hasGrove = false
 					}
 				}
 
+				// Meadows are extremely rare in true deserts
 				if Map[y][x].hasMeadow {
-					if desertProbability > extremeDesertThreshold {
-						// 95% chance to remove meadows in extreme desert
-						if rng.Float64() < 0.95 {
-							Map[y][x].hasMeadow = false
-						}
-					} else {
-						// 70% chance to remove meadows in moderate desert
-						if rng.Float64() < 0.7 {
-							Map[y][x].hasMeadow = false
-						}
+					// Deserts can have spring wildflower blooms after rain
+					// But persistent meadows are very rare
+					if desertIntensity > 0.7 && rng.Float64() < 0.95 {
+						Map[y][x].hasMeadow = false
+					} else if desertIntensity > 0.5 && rng.Float64() < 0.85 {
+						Map[y][x].hasMeadow = false
+					} else if desertIntensity > 0.3 && rng.Float64() < 0.7 {
+						Map[y][x].hasMeadow = false
 					}
 				}
 
+				// 3. Add desert-specific features
 				// Increase chance of scrubland and rocks in deserts
 				if !Map[y][x].hasScrub && !Map[y][x].hasRocks && !Map[y][x].hasSaltFlat {
-					// Add scrubland (desert brush)
-					if rng.Float64() < 0.4 {
-						Map[y][x].hasScrub = true
-					} else if rng.Float64() < 0.3 {
-						Map[y][x].hasRocks = true
-					} else if rng.Float64() < 0.15 && Map[y][x].altitude < 0.4 {
+					// Desert vegetation pattern depends on desert type
+					if isHotDesert || isExtremeTrueDesert {
+						// Hot deserts have more scrub and rocks
+						if rng.Float64() < 0.5 {
+							Map[y][x].hasScrub = true
+						} else if rng.Float64() < 0.4 {
+							Map[y][x].hasRocks = true
+						}
+					} else if isColdDesert {
+						// Cold deserts have more rocks and less vegetation
+						if rng.Float64() < 0.6 {
+							Map[y][x].hasRocks = true
+						} else if rng.Float64() < 0.3 {
+							Map[y][x].hasScrub = true
+						}
+					} else {
+						// Semi-deserts have more vegetation
+						if rng.Float64() < 0.6 {
+							Map[y][x].hasScrub = true
+						} else if rng.Float64() < 0.3 {
+							Map[y][x].hasRocks = true
+						}
+					}
+
+					// Salt flats in appropriate desert basins
+					// More common in hot deserts with seasonal water
+					if Map[y][x].altitude < 0.4 &&
+						(isHotDesert || isExtremeTrueDesert) &&
+						rng.Float64() < 0.2 {
 						Map[y][x].hasSaltFlat = true
 					}
 				}
 
-				// Special case: if this is an extreme desert and it's in plains,
-				// there's a chance to generate sand dunes
-				if desertProbability > extremeDesertThreshold &&
+				// 4. Generate sand dunes in very dry, hot areas with appropriate terrain
+				if (isHotDesert || isExtremeTrueDesert) &&
 					Map[y][x].landType == LandType_Plains &&
-					rng.Float64() < 0.3 {
+					avgRain < 0.2 &&
+					hottestTemp > 0.75 &&
+					rng.Float64() < 0.4 {
 					Map[y][x].landType = LandType_SandDunes
 				}
 			}
+		}
+	}
+}
+
+// generateClimate calculates realistic temperature and rainfall patterns for all seasons
+func generateClimate(seed int64) {
+	// rng := rand.New(rand.NewSource(seed + 54321))
+
+	// Create noise patterns for base climate variation
+	rainfallNoise := perlin.NewPerlin(2.5, 2.0, 3, seed+111)
+	temperatureNoise := perlin.NewPerlin(3.0, 2.5, 2, seed+222)
+	localVariationNoise := perlin.NewPerlin(5.0, 2.0, 2, seed+333)
+
+	// Additional noise for seasonal variations
+	winterNoise := perlin.NewPerlin(2.8, 2.0, 2, seed+444)
+	summerNoise := perlin.NewPerlin(2.8, 2.0, 2, seed+555)
+	springNoise := perlin.NewPerlin(2.8, 2.0, 2, seed+666)
+	fallNoise := perlin.NewPerlin(2.8, 2.0, 2, seed+777)
+
+	// Define the equator position
+	equator := MapHeight / 2
+
+	// Track all water bodies for rainfall calculations
+	var waterBodies []struct{ x, y int }
+	var rivers []struct{ x, y int }
+
+	// Find all water bodies and rivers for rainfall influence
+	for y := range MapHeight {
+		for x := range MapWidth {
+			if Map[y][x].altitude <= 0 {
+				// Major water body (lake, ocean)
+				waterBodies = append(waterBodies, struct{ x, y int }{x, y})
+			} else if Map[y][x].landType == LandType_Water && Map[y][x].altitude <= 0 {
+				// River
+				rivers = append(rivers, struct{ x, y int }{x, y})
+			}
+		}
+	}
+
+	// Calculate climate factors for each tile
+	for y := range MapHeight {
+		for x := range MapWidth {
+			// Determine which hemisphere this tile is in
+			isNorthernHemisphere := y < equator
+
+			// 1. BASE ANNUAL TEMPERATURE CALCULATION
+
+			// Calculate latitude impact on temperature (equator is hottest)
+			distanceFromEquator := math.Abs(float64(y-equator)) / float64(MapHeight/2)
+			// Temperature decreases as you move away from equator (0.0-1.0)
+			latitudeTemp := 1.0 - math.Pow(distanceFromEquator, 0.8)
+
+			// Altitude impact on temperature (higher = colder)
+			altitude := Map[y][x].altitude
+			altitudeTemp := 0.0
+			if altitude <= 0 {
+				// Water bodies maintain more stable temperatures
+				altitudeTemp = 0.6
+			} else {
+				// Temperature decreases with elevation
+				altitudeTemp = math.Max(0, 1.0-altitude*0.8)
+			}
+
+			// Global temperature variation from noise
+			tempVariation := (temperatureNoise.Noise2D(float64(x)/(MapWidth*0.4), float64(y)/(MapHeight*0.4)) + 1) / 2
+
+			// Local temperature variation
+			localTemp := (localVariationNoise.Noise2D(float64(x)/(MapWidth*0.1), float64(y)/(MapHeight*0.1)) + 1) / 6
+
+			// Calculate base annual temperature (0.0 to 1.0 scale)
+			baseTemp := (latitudeTemp*0.6 + altitudeTemp*0.3 + tempVariation*0.3) / 1.2
+			baseTemp += localTemp - 0.08 // Adjust range slightly
+
+			// 2. BASE ANNUAL RAINFALL CALCULATION
+
+			// Basic rainfall pattern from noise (continental precipitation patterns)
+			continentalRainfall := (rainfallNoise.Noise2D(float64(x)/(MapWidth*0.3), float64(y)/(MapHeight*0.3)) + 1) / 2
+
+			// Calculate proximity to water bodies (affects rainfall)
+			proximityToWater := calculateWaterProximity(x, y, waterBodies, rivers)
+
+			// Mountains increase rainfall on windward sides (simplified)
+			orographicEffect := 0.0
+			if Map[y][x].altitude > 0.7 && Map[y][x].altitude < 1.3 {
+				// Higher elevations capture more moisture
+				orographicEffect = (Map[y][x].altitude - 0.7) * 0.5
+			}
+
+			// Rain shadow effect - areas behind mountains get less rain
+			rainShadowEffect := calculateRainShadow(x, y)
+
+			// Calculate base rainfall (0.0 to 1.0 scale)
+			baseRainfall := (continentalRainfall*0.3 + proximityToWater*0.4 + orographicEffect*0.2) / 0.9
+			baseRainfall -= rainShadowEffect * 0.3
+
+			// Adjust rainfall based on latitude (tropical and temperate regions get more rain)
+			if distanceFromEquator < 0.3 || (distanceFromEquator > 0.6 && distanceFromEquator < 0.8) {
+				baseRainfall *= 1.3
+			}
+
+			// Local rainfall variation
+			localRain := (localVariationNoise.Noise2D(float64(x+50)/(MapWidth*0.05), float64(y+50)/(MapHeight*0.05)) + 1) / 10
+			baseRainfall += localRain - 0.05
+
+			// 3. CALCULATE SEASONAL VARIATIONS
+
+			// Initialize climate structure
+			var climate Climate
+
+			// Seasonal temperature variations based on hemisphere
+			// First, calculate raw seasonal temperatures (before hemisphere adjustment)
+
+			// Seasonal temperature modifiers
+			// These create the temperature difference between seasons
+			summerModifier := 0.25  // Hotter in summer
+			winterModifier := -0.25 // Colder in winter
+
+			// Moderate spring/fall modifiers
+			springModifier := 0.0 // Neutral in spring
+			fallModifier := 0.0   // Neutral in fall
+
+			// Apply local seasonal variations from noise
+			winterLocalVariation := (winterNoise.Noise2D(float64(x)/(MapWidth*0.3), float64(y)/(MapHeight*0.3)) + 1) / 10
+			summerLocalVariation := (summerNoise.Noise2D(float64(x)/(MapWidth*0.3), float64(y)/(MapHeight*0.3)) + 1) / 10
+			springLocalVariation := (springNoise.Noise2D(float64(x)/(MapWidth*0.3), float64(y)/(MapHeight*0.3)) + 1) / 10
+			fallLocalVariation := (fallNoise.Noise2D(float64(x)/(MapWidth*0.3), float64(y)/(MapHeight*0.3)) + 1) / 10
+
+			// Calculate seasonal modifiers accounting for latitude
+			// Seasonal variation increases with distance from equator
+			seasonalRange := 0.2 + distanceFromEquator*0.4 // 0.2 at equator, up to 0.6 at poles
+			winterMod := winterModifier*seasonalRange + winterLocalVariation - 0.05
+			summerMod := summerModifier*seasonalRange + summerLocalVariation - 0.05
+			springMod := springModifier*seasonalRange + springLocalVariation - 0.05
+			fallMod := fallModifier*seasonalRange + fallLocalVariation - 0.05
+
+			// Calculate raw seasonal temperatures (before hemisphere adjustment)
+			rawWinterTemp := math.Max(0.0, math.Min(1.0, baseTemp+winterMod))
+			rawSummerTemp := math.Max(0.0, math.Min(1.0, baseTemp+summerMod))
+			rawSpringTemp := math.Max(0.0, math.Min(1.0, baseTemp+springMod))
+			rawFallTemp := math.Max(0.0, math.Min(1.0, baseTemp+fallMod))
+
+			// Now apply hemisphere-specific assignments
+			if isNorthernHemisphere {
+				// Northern hemisphere seasons are aligned with their names
+				climate.winterTemp = rawWinterTemp
+				climate.springTemp = rawSpringTemp
+				climate.summerTemp = rawSummerTemp
+				climate.fallTemp = rawFallTemp
+			} else {
+				// Southern hemisphere has opposite seasons
+				climate.winterTemp = rawSummerTemp // Winter in S.H. = Summer in N.H.
+				climate.springTemp = rawFallTemp   // Spring in S.H. = Fall in N.H.
+				climate.summerTemp = rawWinterTemp // Summer in S.H. = Winter in N.H.
+				climate.fallTemp = rawSpringTemp   // Fall in S.H. = Spring in N.H.
+			}
+
+			// 4. CALCULATE SEASONAL RAINFALL
+
+			// Seasonal rainfall patterns
+			// In most climates, there's a rainy season and a dry season
+			// The timing varies by latitude and climate type
+
+			// Apply water body influence more strongly to certain seasons
+			// Water bodies moderate nearby temperature and increase rainfall
+			waterInfluence := proximityToWater * 0.3
+
+			// Base seasonal rainfall values
+			baseWinterRain := baseRainfall
+			baseSpringRain := baseRainfall
+			baseSummerRain := baseRainfall
+			baseFallRain := baseRainfall
+
+			// Apply seasonal rainfall patterns based on latitude
+			if distanceFromEquator < 0.25 {
+				// Tropical pattern - wet and dry seasons, less seasonal variation
+				// Typically wet summer, drier winter in tropics
+				baseSummerRain += 0.2
+				baseWinterRain -= 0.1
+			} else if distanceFromEquator < 0.5 {
+				// Subtropical pattern - typically dry summers, wet winters
+				baseSummerRain -= 0.2
+				baseWinterRain += 0.15
+				baseSpringRain += 0.1
+				baseFallRain += 0.05
+			} else {
+				// Temperate/Polar pattern - more evenly distributed, slightly wetter in spring/fall
+				baseSpringRain += 0.1
+				baseFallRain += 0.1
+				baseSummerRain += 0.05
+			}
+
+			// Apply local seasonal rainfall variations
+			winterRainVar := (winterNoise.Noise2D(float64(x+100)/(MapWidth*0.2), float64(y+100)/(MapHeight*0.2)) + 1) / 8
+			summerRainVar := (summerNoise.Noise2D(float64(x+200)/(MapWidth*0.2), float64(y+200)/(MapHeight*0.2)) + 1) / 8
+			springRainVar := (springNoise.Noise2D(float64(x+300)/(MapWidth*0.2), float64(y+300)/(MapHeight*0.2)) + 1) / 8
+			fallRainVar := (fallNoise.Noise2D(float64(x+400)/(MapWidth*0.2), float64(y+400)/(MapHeight*0.2)) + 1) / 8
+
+			// Add variation and water influence to seasonal rainfall
+			rawWinterRain := math.Max(0.0, math.Min(1.0, baseWinterRain+winterRainVar-0.06+waterInfluence))
+			rawSummerRain := math.Max(0.0, math.Min(1.0, baseSummerRain+summerRainVar-0.06+waterInfluence))
+			rawSpringRain := math.Max(0.0, math.Min(1.0, baseSpringRain+springRainVar-0.06+waterInfluence))
+			rawFallRain := math.Max(0.0, math.Min(1.0, baseFallRain+fallRainVar-0.06+waterInfluence))
+
+			// Apply hemisphere-specific seasonal rainfall
+			if isNorthernHemisphere {
+				climate.winterRain = rawWinterRain
+				climate.springRain = rawSpringRain
+				climate.summerRain = rawSummerRain
+				climate.fallRain = rawFallRain
+			} else {
+				// Southern hemisphere has opposite seasons
+				climate.winterRain = rawSummerRain
+				climate.springRain = rawFallRain
+				climate.summerRain = rawWinterRain
+				climate.fallRain = rawSpringRain
+			}
+
+			// 5. CALCULATE ANNUAL AVERAGES
+			climate.avgTemp = (climate.winterTemp + climate.springTemp + climate.summerTemp + climate.fallTemp) / 4.0
+			climate.avgRain = (climate.winterRain + climate.springRain + climate.summerRain + climate.fallRain) / 4.0
+
+			// 6. APPLY WATER BODY ADJUSTMENTS
+			// Water bodies have more stable temperatures year-round
+			if Map[y][x].altitude <= 0 {
+				// Moderate the seasonal extremes for water
+				avgTemp := climate.avgTemp
+				seasonalRange := 0.15 // Reduced seasonal variation for water
+
+				// Water warms/cools more slowly than land
+				if isNorthernHemisphere {
+					climate.winterTemp = avgTemp - seasonalRange
+					climate.summerTemp = avgTemp + seasonalRange
+					// Spring is warming, fall is cooling - offset peaks
+					climate.springTemp = avgTemp - seasonalRange*0.3
+					climate.fallTemp = avgTemp + seasonalRange*0.3
+				} else {
+					climate.summerTemp = avgTemp - seasonalRange
+					climate.winterTemp = avgTemp + seasonalRange
+					// Fall is warming, spring is cooling in southern hemisphere
+					climate.fallTemp = avgTemp - seasonalRange*0.3
+					climate.springTemp = avgTemp + seasonalRange*0.3
+				}
+
+				// Water doesn't need rainfall values (set to moderate for coastline influence)
+				moderate := 0.6
+				climate.winterRain = moderate
+				climate.springRain = moderate
+				climate.summerRain = moderate
+				climate.fallRain = moderate
+				climate.avgRain = moderate
+			}
+
+			// Save the climate data to the tile
+			Map[y][x].climate = climate
+		}
+	}
+
+	// Apply additional climate adjustments
+	refineClimate()
+}
+
+// Calculate how close a tile is to water bodies (affects rainfall and temperature)
+func calculateWaterProximity(x, y int, waterBodies, rivers []struct{ x, y int }) float64 {
+	// Start with no water influence
+	proximity := 0.0
+
+	// Check proximity to major water bodies (lakes, oceans)
+	// Water bodies have stronger influence than rivers
+	for _, wb := range waterBodies {
+		dist := math.Sqrt(math.Pow(float64(x-wb.x), 2) + math.Pow(float64(y-wb.y), 2))
+
+		// Water influence drops with distance
+		if dist < 12 {
+			// Closer water has stronger influence
+			influence := math.Max(0, 1.0-dist/12.0)
+			proximity = math.Max(proximity, influence)
+		}
+	}
+
+	// Check proximity to rivers (less influence than major water bodies)
+	for _, r := range rivers {
+		dist := math.Sqrt(math.Pow(float64(x-r.x), 2) + math.Pow(float64(y-r.y), 2))
+
+		// River influence drops with distance but is weaker than lakes/oceans
+		if dist < 5 {
+			influence := math.Max(0, (1.0-dist/5.0)*0.7) // 70% as effective as major water
+			proximity = math.Max(proximity, influence)
+		}
+	}
+
+	// Also consider small water features
+	if Map[y][x].hasStream || Map[y][x].hasPond || Map[y][x].hasSpring {
+		proximity = math.Max(proximity, 0.4) // Local water sources have modest influence
+	}
+
+	return proximity
+}
+
+// Calculate rain shadow effect caused by mountains
+func calculateRainShadow(x, y int) float64 {
+	rainShadow := 0.0
+
+	// Simplified approach: check if there are mountains to the "west" (left)
+	// In a more realistic model, you would consider prevailing wind direction
+	mountainCount := 0
+	maxCheck := 8 // How far to look for mountains
+
+	for dist := 1; dist <= maxCheck; dist++ {
+		checkX := x - dist // Look "west"
+
+		if checkX >= 0 && checkX < MapWidth {
+			if Map[y][checkX].altitude >= 1.0 {
+				// Found a mountain - stronger effect if closer
+				mountainEffect := (float64(maxCheck) - float64(dist)) / float64(maxCheck)
+				mountainCount++
+				rainShadow += mountainEffect * 0.1
+			}
+		}
+	}
+
+	// Cap the rain shadow effect
+	return math.Min(rainShadow, 0.6)
+}
+
+// Apply final adjustments to climate based on terrain features and land types
+func refineClimate() {
+	// Adjustments based on specific terrain features
+	for y := range MapHeight {
+		for x := range MapWidth {
+			// Skip water tiles - they already have special handling
+			if Map[y][x].altitude <= 0 {
+				continue
+			}
+
+			// Valleys tend to collect moisture
+			if Map[y][x].landType == LandType_Valleys {
+				Map[y][x].climate.winterRain = math.Min(1.0, Map[y][x].climate.winterRain+0.1)
+				Map[y][x].climate.springRain = math.Min(1.0, Map[y][x].climate.springRain+0.1)
+				Map[y][x].climate.summerRain = math.Min(1.0, Map[y][x].climate.summerRain+0.1)
+				Map[y][x].climate.fallRain = math.Min(1.0, Map[y][x].climate.fallRain+0.1)
+				Map[y][x].climate.avgRain = math.Min(1.0, Map[y][x].climate.avgRain+0.1)
+
+				// Valleys can be colder in winter (cold air sinks)
+				Map[y][x].climate.winterTemp = math.Max(0.0, Map[y][x].climate.winterTemp-0.1)
+			}
+
+			// Plateaus tend to be drier than surrounding areas
+			if Map[y][x].landType == LandType_Plateaus {
+				Map[y][x].climate.winterRain = math.Max(0.0, Map[y][x].climate.winterRain-0.15)
+				Map[y][x].climate.springRain = math.Max(0.0, Map[y][x].climate.springRain-0.15)
+				Map[y][x].climate.summerRain = math.Max(0.0, Map[y][x].climate.summerRain-0.15)
+				Map[y][x].climate.fallRain = math.Max(0.0, Map[y][x].climate.fallRain-0.15)
+				Map[y][x].climate.avgRain = math.Max(0.0, Map[y][x].climate.avgRain-0.15)
+
+				// Plateaus have more extreme temperatures (colder winters, hotter summers)
+				Map[y][x].climate.winterTemp = math.Max(0.0, Map[y][x].climate.winterTemp-0.1)
+				Map[y][x].climate.summerTemp = math.Min(1.0, Map[y][x].climate.summerTemp+0.1)
+			}
+
+			// Coastal areas have moderated temperatures and higher humidity
+			if Map[y][x].landType == LandType_Coastal {
+				// Moderate extreme temperatures (move toward middle)
+				avgTemp := Map[y][x].climate.avgTemp
+
+				// Reduce the difference between seasonal extremes
+				Map[y][x].climate.winterTemp = Map[y][x].climate.winterTemp*0.7 + avgTemp*0.3
+				Map[y][x].climate.summerTemp = Map[y][x].climate.summerTemp*0.7 + avgTemp*0.3
+				Map[y][x].climate.springTemp = Map[y][x].climate.springTemp*0.8 + avgTemp*0.2
+				Map[y][x].climate.fallTemp = Map[y][x].climate.fallTemp*0.8 + avgTemp*0.2
+
+				// Increase rainfall across all seasons
+				Map[y][x].climate.winterRain = math.Min(1.0, Map[y][x].climate.winterRain+0.15)
+				Map[y][x].climate.springRain = math.Min(1.0, Map[y][x].climate.springRain+0.15)
+				Map[y][x].climate.summerRain = math.Min(1.0, Map[y][x].climate.summerRain+0.15)
+				Map[y][x].climate.fallRain = math.Min(1.0, Map[y][x].climate.fallRain+0.15)
+				Map[y][x].climate.avgRain = math.Min(1.0, Map[y][x].climate.avgRain+0.15)
+			}
+
+			// Water bodies have moderated temperatures
+			if Map[y][x].altitude <= 0 {
+				// Water temperature changes more slowly than land
+				// Moderate extreme temperatures (move toward middle)
+				avgTemp := Map[y][x].climate.avgTemp
+
+				// Reduce the difference between seasonal extremes
+				Map[y][x].climate.winterTemp = Map[y][x].climate.winterTemp*0.7 + avgTemp*0.3
+				Map[y][x].climate.summerTemp = Map[y][x].climate.summerTemp*0.7 + avgTemp*0.3
+				Map[y][x].climate.springTemp = Map[y][x].climate.springTemp*0.8 + avgTemp*0.2
+				Map[y][x].climate.fallTemp = Map[y][x].climate.fallTemp*0.8 + avgTemp*0.2
+
+				// Increase rainfall across all seasons
+				Map[y][x].climate.winterRain = math.Min(1.0, Map[y][x].climate.winterRain+0.15)
+				Map[y][x].climate.springRain = math.Min(1.0, Map[y][x].climate.springRain+0.15)
+				Map[y][x].climate.summerRain = math.Min(1.0, Map[y][x].climate.summerRain+0.15)
+				Map[y][x].climate.fallRain = math.Min(1.0, Map[y][x].climate.fallRain+0.15)
+				Map[y][x].climate.avgRain = math.Min(1.0, Map[y][x].climate.avgRain+0.15)
+			}
+
+			// Marshes are wetter
+			if Map[y][x].hasMarsh {
+				Map[y][x].climate.winterRain = math.Min(1.0, Map[y][x].climate.winterRain+0.25)
+				Map[y][x].climate.springRain = math.Min(1.0, Map[y][x].climate.springRain+0.25)
+				Map[y][x].climate.summerRain = math.Min(1.0, Map[y][x].climate.summerRain+0.25)
+				Map[y][x].climate.fallRain = math.Min(1.0, Map[y][x].climate.fallRain+0.25)
+				Map[y][x].climate.avgRain = math.Min(1.0, Map[y][x].climate.avgRain+0.25)
+			}
+
+			// SandDunes and desert areas are drier
+			if Map[y][x].landType == LandType_SandDunes || Map[y][x].isDesert {
+				Map[y][x].climate.winterRain = math.Max(0.0, Map[y][x].climate.winterRain-0.3)
+				Map[y][x].climate.springRain = math.Max(0.0, Map[y][x].climate.springRain-0.3)
+				Map[y][x].climate.summerRain = math.Max(0.0, Map[y][x].climate.summerRain-0.3)
+				Map[y][x].climate.fallRain = math.Max(0.0, Map[y][x].climate.fallRain-0.3)
+				Map[y][x].climate.avgRain = math.Max(0.0, Map[y][x].climate.avgRain-0.3)
+
+				// Deserts have more extreme temperatures (very hot days, cold nights)
+				// This is simplified to seasonal scale, but represents the high variation
+				Map[y][x].climate.summerTemp = math.Min(1.0, Map[y][x].climate.summerTemp+0.2)
+				Map[y][x].climate.winterTemp = math.Max(0.0, Map[y][x].climate.winterTemp-0.1)
+			}
+		}
+	}
+
+	// Apply smoothing to prevent unrealistic sharp transitions
+	smoothClimate()
+}
+
+// Apply a smoothing pass to climate data to prevent unrealistic sharp transitions
+func smoothClimate() {
+	// Create temporary arrays for smoothed values (for each season)
+	var tempWinter [MapHeight][MapWidth]float64
+	var tempSpring [MapHeight][MapWidth]float64
+	var tempSummer [MapHeight][MapWidth]float64
+	var tempFall [MapHeight][MapWidth]float64
+
+	var rainWinter [MapHeight][MapWidth]float64
+	var rainSpring [MapHeight][MapWidth]float64
+	var rainSummer [MapHeight][MapWidth]float64
+	var rainFall [MapHeight][MapWidth]float64
+
+	// Copy existing values
+	for y := range MapHeight {
+		for x := range MapWidth {
+			tempWinter[y][x] = Map[y][x].climate.winterTemp
+			tempSpring[y][x] = Map[y][x].climate.springTemp
+			tempSummer[y][x] = Map[y][x].climate.summerTemp
+			tempFall[y][x] = Map[y][x].climate.fallTemp
+
+			rainWinter[y][x] = Map[y][x].climate.winterRain
+			rainSpring[y][x] = Map[y][x].climate.springRain
+			rainSummer[y][x] = Map[y][x].climate.summerRain
+			rainFall[y][x] = Map[y][x].climate.fallRain
+		}
+	}
+
+	// Apply simple averaging filter
+	for y := 1; y < MapHeight-1; y++ {
+		for x := 1; x < MapWidth-1; x++ {
+			// Skip deep water tiles for complete smoothing
+			if Map[y][x].altitude <= -0.3 {
+				continue
+			}
+
+			// Calculate average of surrounding tiles for each season
+			wTempSum, spTempSum, suTempSum, fTempSum := 0.0, 0.0, 0.0, 0.0
+			wRainSum, spRainSum, suRainSum, fRainSum := 0.0, 0.0, 0.0, 0.0
+			count := 0
+
+			for dy := -1; dy <= 1; dy++ {
+				for dx := -1; dx <= 1; dx++ {
+					nx, ny := x+dx, y+dy
+					if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
+						// Temperature smoothing
+						wTempSum += Map[ny][nx].climate.winterTemp
+						spTempSum += Map[ny][nx].climate.springTemp
+						suTempSum += Map[ny][nx].climate.summerTemp
+						fTempSum += Map[ny][nx].climate.fallTemp
+
+						// Only smooth rainfall for land tiles
+						if Map[y][x].altitude > 0 {
+							wRainSum += Map[ny][nx].climate.winterRain
+							spRainSum += Map[ny][nx].climate.springRain
+							suRainSum += Map[ny][nx].climate.summerRain
+							fRainSum += Map[ny][nx].climate.fallRain
+						}
+
+						count++
+					}
+				}
+			}
+
+			if count > 0 {
+				// Blend original value with average (80% original, 20% average for gentle smoothing)
+				blendFactor := 0.8
+
+				// Temperature smoothing
+				tempWinter[y][x] = Map[y][x].climate.winterTemp*blendFactor + (wTempSum/float64(count))*(1-blendFactor)
+				tempSpring[y][x] = Map[y][x].climate.springTemp*blendFactor + (spTempSum/float64(count))*(1-blendFactor)
+				tempSummer[y][x] = Map[y][x].climate.summerTemp*blendFactor + (suTempSum/float64(count))*(1-blendFactor)
+				tempFall[y][x] = Map[y][x].climate.fallTemp*blendFactor + (fTempSum/float64(count))*(1-blendFactor)
+
+				// Rainfall smoothing (only for land)
+				if Map[y][x].altitude > 0 {
+					rainWinter[y][x] = Map[y][x].climate.winterRain*blendFactor + (wRainSum/float64(count))*(1-blendFactor)
+					rainSpring[y][x] = Map[y][x].climate.springRain*blendFactor + (spRainSum/float64(count))*(1-blendFactor)
+					rainSummer[y][x] = Map[y][x].climate.summerRain*blendFactor + (suRainSum/float64(count))*(1-blendFactor)
+					rainFall[y][x] = Map[y][x].climate.fallRain*blendFactor + (fRainSum/float64(count))*(1-blendFactor)
+				}
+			}
+		}
+	}
+
+	// Apply the smoothed values
+	for y := range MapHeight {
+		for x := range MapWidth {
+			// Apply temperature smoothing
+			Map[y][x].climate.winterTemp = tempWinter[y][x]
+			Map[y][x].climate.springTemp = tempSpring[y][x]
+			Map[y][x].climate.summerTemp = tempSummer[y][x]
+			Map[y][x].climate.fallTemp = tempFall[y][x]
+
+			// Apply rainfall smoothing (only for land)
+			if Map[y][x].altitude > 0 {
+				Map[y][x].climate.winterRain = rainWinter[y][x]
+				Map[y][x].climate.springRain = rainSpring[y][x]
+				Map[y][x].climate.summerRain = rainSummer[y][x]
+				Map[y][x].climate.fallRain = rainFall[y][x]
+			}
+
+			// Recalculate averages
+			Map[y][x].climate.avgTemp = (Map[y][x].climate.winterTemp +
+				Map[y][x].climate.springTemp +
+				Map[y][x].climate.summerTemp +
+				Map[y][x].climate.fallTemp) / 4.0
+
+			Map[y][x].climate.avgRain = (Map[y][x].climate.winterRain +
+				Map[y][x].climate.springRain +
+				Map[y][x].climate.summerRain +
+				Map[y][x].climate.fallRain) / 4.0
 		}
 	}
 }
