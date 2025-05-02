@@ -181,9 +181,9 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 		// Extended maximum dimensions for smoother falloff
 		// Inner bounds = hard constraints, outer bounds = falloff zone
 		innerLengthwise := 8.5  // Core range length
-		outerLengthwise := 13.5 // Extended falloff zone
-		innerCrosswise := 2.0   // Core range half-width
-		outerCrosswise := 4.0   // Extended falloff zone
+		outerLengthwise := 10.5 // Extended falloff zone
+		innerCrosswise := 1.75  // Core range half-width
+		outerCrosswise := 3.75  // Extended falloff zone
 
 		// Only process points within the extended range boundaries
 		if lengthwiseDistance <= outerLengthwise && crosswiseDistance <= outerCrosswise {
