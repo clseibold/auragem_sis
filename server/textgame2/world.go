@@ -50,9 +50,9 @@ func PrintWorldMap(request *sis.Request) {
 	for y := 0; y < MapHeight; y++ {
 		request.Gemini("|")
 		for x := 0; x < MapWidth; x++ {
-			request.Gemini(fmt.Sprintf("%.1f|", Map[y][x].altitude))
+			request.PlainText(fmt.Sprintf("%.2f|", Map[y][x].altitude))
 		}
-		request.Gemini("\n")
+		request.PlainText("\n")
 	}
 	request.Gemini("```\n")
 }
