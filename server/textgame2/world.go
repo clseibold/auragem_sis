@@ -200,15 +200,18 @@ func getMapLowestAndHighestPoints() (Tile, Tile) {
 }
 
 func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
+	// perlin.NewPerlin(alpha, beta, n, seed)
+	// NewPerlin creates new Perlin noise generator In what follows “alpha” is the weight when the sum is formed. Typically it is 2, As this approaches 1 the function is noisier. “beta” is the harmonic scaling/spacing, typically 2, n is the number of iterations and seed is the math.rand seed value to use.
 	perlin := perlin.NewPerlin(1.5, 4, 3, seed)
 
-	baseHeight := perlin.Noise2D(float64(x)/MapWidth, float64(y)/MapHeight) + 0.2
-	heightFactor := float64(1.0)
-	height := baseHeight * heightFactor
+	// perlin.Noise2D generates 2-dimensional perlin noise value given an x and y.
+	baseHeight := perlin.Noise2D(float64(x)/MapWidth, float64(y)/MapHeight) * 0.6
+	baseHeight += perlin.Noise2D(float64(x)/(MapWidth/2), float64(y)/(MapHeight/2)) * 0.3
+	baseHeight += perlin.Noise2D(float64(x)/(MapWidth/4), float64(y)/(MapHeight/4)) * 0.1
+	baseHeight += 0.2 // Offset to control water level
 
 	// Create a mountain peak effect
-	finalHeight := height
-	var sigma float64 = 0.75 // Width of peak, larger means mountains affect more points farther away from the peak
+	finalHeight := baseHeight
 	for _, peak := range peaks {
 		peakX := peak.peakX
 		peakY := peak.peakY
@@ -216,10 +219,24 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 		// Calculate the distance from the current point to the peak
 		distance := math.Sqrt(math.Pow(float64(x-peakX), 2) + math.Pow(float64(y-peakY), 2))
 
-		// Calculate the mountain contribution using a Gaussian function
-		mountainHeight := math.Exp(-math.Pow(distance, 2) / (2 * math.Pow(sigma, 2)))
+		// Create ridge effects by applying directional bias
+		// Create more elongated mountain ranges instead of just circular peaks
+		dirX := float64(x - peakX)
+		dirY := float64(y - peakY)
+		angle := math.Atan2(dirY, dirX)
 
-		// Add the mountain contribution to the final height
+		// Use ridge noise to create elongated mountain chains
+		ridgeEffect := math.Sin(angle*2) * 0.3 // Controls the direction of ridges
+		modifiedDistance := distance * (1.0 - ridgeEffect)
+
+		// Use a more dramatic height formula for mountains
+		sigma := 0.75 // Base width
+		mountainHeight := 1.8 * math.Exp(-math.Pow(modifiedDistance, 2)/(2*math.Pow(sigma, 2)))
+
+		// Apply some noise to the mountain to make it less uniform
+		mountainNoise := perlin.Noise2D(float64(x+peakX)/30, float64(y+peakY)/30) * 0.2
+		mountainHeight *= (1.0 + mountainNoise)
+
 		finalHeight += mountainHeight
 	}
 
