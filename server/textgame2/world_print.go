@@ -84,7 +84,7 @@ func PrintWorldMap(request *sis.Request) {
 				request.PlainText("\n")
 			}
 		} else if y == 0 && noNumbers {
-			request.PlainText(strings.Repeat("-", MapWidth+2))
+			request.PlainText(strings.Repeat("-", (MapWidth+2)*3))
 			request.PlainText("\n")
 		}
 
@@ -149,7 +149,7 @@ func PrintWorldMap(request *sis.Request) {
 
 		// Bottom border
 		if noNumbers && y == MapWidth-1 {
-			request.PlainText(strings.Repeat("-", MapWidth+2))
+			request.PlainText(strings.Repeat("-", (MapWidth+2)*3))
 			request.PlainText("\n")
 		}
 	}
@@ -175,7 +175,7 @@ func PrintWorldMap(request *sis.Request) {
 				request.PlainText("\n")
 			}
 		} else if y == 0 && noNumbers {
-			request.PlainText(strings.Repeat("-", MapWidth+2))
+			request.PlainText(strings.Repeat("-", (MapWidth+2)*3))
 			request.PlainText("\n")
 		}
 
@@ -220,7 +220,7 @@ func PrintWorldMap(request *sis.Request) {
 
 		// Bottom border
 		if noNumbers && y == MapWidth-1 {
-			request.PlainText(strings.Repeat("-", MapWidth+2))
+			request.PlainText(strings.Repeat("-", (MapWidth+2)*3))
 			request.PlainText("\n")
 		}
 	}
