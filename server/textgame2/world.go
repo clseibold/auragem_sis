@@ -9,6 +9,9 @@ import (
 	sis "gitlab.com/sis-suite/smallnetinformationservices"
 )
 
+// TODO: Generate Valleys, Plateaus, and Rivers
+// TODO: Assign land types to each tile. Then assign biomes to each tile given its land type, adjacent biomes, and bodies of water
+
 const MapWidth = 50
 const MapHeight = 50
 
@@ -55,11 +58,19 @@ func generateWorldMap() {
 func PrintWorldMap(request *sis.Request) {
 	request.Gemini("```\n")
 	// Print the peaks
+	request.PlainText("Peaks: ")
 	for _, peak := range MapPeaks {
 		request.PlainText("(%d, %d) ", peak.peakX, peak.peakY)
 	}
+	request.PlainText("\n")
 
-	request.PlainText("\n\nJust Perlin Noise:\n")
+	// Print the lowest and highest tiles
+	request.PlainText("\nLowest and Highest Altitudes on Map with Mountain Peaks:\n")
+	lowest, highest := getMapLowestAndHighestPoints()
+	request.PlainText("Lowest Tile Altitude: %+.2f\n", lowest.altitude)
+	request.PlainText("Highest Tile Altitude: %+.2f\n", highest.altitude)
+
+	request.PlainText("\nJust Perlin Noise:\n")
 	for y := range MapHeight {
 		// Heading
 		if y == 0 {
@@ -96,6 +107,23 @@ func PrintWorldMap(request *sis.Request) {
 		request.PlainText("\n\n")
 	}
 	request.Gemini("```\n")
+}
+
+func getMapLowestAndHighestPoints() (Tile, Tile) {
+	var lowest Tile
+	var highest Tile
+	for y := range MapHeight {
+		for x := range MapWidth {
+			if Map[y][x].altitude < lowest.altitude {
+				lowest = Map[y][x]
+			}
+			if Map[y][x].altitude > highest.altitude {
+				highest = Map[y][x]
+			}
+		}
+	}
+
+	return lowest, highest
 }
 
 func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
