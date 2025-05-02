@@ -35,12 +35,12 @@ func generateWorldMap() {
 		peakX := rand.Intn(MapWidth)
 		peakY := rand.Intn(MapHeight)
 
-		peaks = append(peaks, Peak{peakX, peakY})
+		MapPeaks = append(MapPeaks, Peak{peakX, peakY})
 	}
 
 	for y := 0; y < MapHeight; y++ {
 		for x := 0; x < MapWidth; x++ {
-			altitude := generateHeight(peaks, x, y, 1)
+			altitude := generateHeight(MapPeaks, x, y, 1)
 			Map[y][x] = Tile{altitude: altitude}
 		}
 	}
