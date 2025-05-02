@@ -2,6 +2,7 @@ package textgame2
 
 import (
 	"fmt"
+	"strings"
 
 	sis "gitlab.com/sis-suite/smallnetinformationservices"
 )
@@ -10,7 +11,7 @@ const divider = ":"
 
 func PrintWorldMap(request *sis.Request) {
 	divider := " "
-	noBorders := true
+	noNumbers := true
 
 	showValues := false
 	query, _ := request.Query()
@@ -22,15 +23,15 @@ func PrintWorldMap(request *sis.Request) {
 	} else if query == "landtypes" {
 		debugLandTypes(request)
 		return
-	} else if query == "withborders" {
+	} else if query == "withnumbers" {
 		divider = ":"
-		noBorders = false
+		noNumbers = false
 	}
 
 	request.Heading(1, "World Map")
 	request.Gemini("\n")
 	if !showValues {
-		if noBorders {
+		if noNumbers {
 			request.Link("/world-map?withborders", "Show With Map Numbers")
 		} else {
 			request.Link("/world-map", "Show Without Map Numbers")
@@ -38,7 +39,7 @@ func PrintWorldMap(request *sis.Request) {
 		request.Link("/world-map?values", "Show Values")
 		request.Link("/world-map?landtypes", "Show Land Types")
 	} else {
-		if noBorders {
+		if noNumbers {
 			request.Link("/world-map?withborders", "Show With Map Numbers")
 		} else {
 			request.Link("/world-map", "Show Without Map Numbers")
@@ -64,8 +65,8 @@ func PrintWorldMap(request *sis.Request) {
 
 	request.PlainText("\nWith Full Terrain Generation:\n")
 	for y := range MapHeight {
-		// Heading
-		if y == 0 && !noBorders {
+		// Heading/Top border
+		if y == 0 && !noNumbers {
 			if showValues {
 				request.PlainText(divider + "     " + divider)
 			} else {
@@ -82,14 +83,19 @@ func PrintWorldMap(request *sis.Request) {
 			if showValues {
 				request.PlainText("\n")
 			}
+		} else if y == 0 && noNumbers {
+			request.PlainText(strings.Repeat("-", MapWidth+2))
+			request.PlainText("\n")
 		}
 
-		if !noBorders {
+		if !noNumbers {
 			if showValues {
 				request.PlainText(divider+"%5d"+divider, y)
 			} else {
 				request.PlainText(divider+"%2d"+divider, y)
 			}
+		} else { // Left Border
+			request.PlainText("|")
 		}
 		for x := range MapWidth {
 			if showValues {
@@ -131,16 +137,27 @@ func PrintWorldMap(request *sis.Request) {
 				request.PlainText(divider)
 			}
 		}
+
+		if noNumbers { // Right Border
+			request.PlainText("|")
+		}
+
 		request.PlainText("\n")
 		if showValues {
+			request.PlainText("\n")
+		}
+
+		// Bottom border
+		if noNumbers {
+			request.PlainText(strings.Repeat("-", MapWidth+2))
 			request.PlainText("\n")
 		}
 	}
 
 	request.PlainText("\nBase Perlin Noise:\n")
 	for y := range MapHeight {
-		// Heading
-		if y == 0 && !noBorders {
+		// Heading/Top border
+		if y == 0 && !noNumbers {
 			if showValues {
 				request.PlainText(divider + "     " + divider)
 			} else {
@@ -157,14 +174,19 @@ func PrintWorldMap(request *sis.Request) {
 			if showValues {
 				request.PlainText("\n")
 			}
+		} else if y == 0 && noNumbers {
+			request.PlainText(strings.Repeat("-", MapWidth+2))
+			request.PlainText("\n")
 		}
 
-		if !noBorders {
+		if !noNumbers {
 			if showValues {
 				request.PlainText(divider+"%5d"+divider, y)
 			} else {
 				request.PlainText(divider+"%2d"+divider, y)
 			}
+		} else { // Left Border
+			request.PlainText("|")
 		}
 		for x := range MapWidth {
 			if showValues {
@@ -186,8 +208,19 @@ func PrintWorldMap(request *sis.Request) {
 				request.PlainText(divider)
 			}
 		}
+
+		if noNumbers { // Right Border
+			request.PlainText("|")
+		}
+
 		request.PlainText("\n")
 		if showValues {
+			request.PlainText("\n")
+		}
+
+		// Bottom border
+		if noNumbers {
+			request.PlainText(strings.Repeat("-", MapWidth+2))
 			request.PlainText("\n")
 		}
 	}
