@@ -143,25 +143,57 @@ func PrintWorldMap(request *sis.Request) {
 				case LandType_Water:
 					request.PlainText("~")
 				case LandType_Mountains:
-					request.PlainText("▲") // Mountain
+					if tile.isDesert {
+						request.PlainText("^")
+					} else {
+						request.PlainText("▲")
+					}
 				case LandType_Plateaus:
-					request.PlainText("≡") // Plateau
+					if tile.isDesert {
+						request.PlainText("≡")
+					} else {
+						request.PlainText("≡") // Plateau
+					}
 				case LandType_Hills:
 					if Map[y][x].altitude >= 0.8 {
-						request.PlainText("n") // High hills/foothills
+						if tile.isDesert {
+							request.PlainText("⁑")
+						} else {
+							request.PlainText("n") // High hills/foothills
+						}
 					} else {
-						request.PlainText("+") // Regular hills
+						if tile.isDesert {
+							request.PlainText("⌒")
+						} else {
+							request.PlainText("+") // Regular hills
+						}
 					}
 				case LandType_Valleys:
-					request.PlainText("⌄") // Valley
+					if tile.isDesert {
+						request.PlainText(" ⌣|")
+					} else {
+						request.PlainText("⌄") // Valley
+					}
 				case LandType_Coastal:
-					request.PlainText("c") // Coastal
+					if tile.isDesert {
+						request.PlainText("⌇")
+					} else {
+						request.PlainText("c") // Coastal
+					}
 				case LandType_Plains:
-					request.PlainText(" ") // Plains
+					if tile.isDesert {
+						request.PlainText(":")
+					} else {
+						request.PlainText(" ") // Plains
+					}
 				case LandType_SandDunes:
 					request.PlainText("s") // Sand Dunes
 				default:
-					request.PlainText(" ") // Default plains
+					if tile.isDesert {
+						request.PlainText(":")
+					} else {
+						request.PlainText(" ") // Default plains
+					}
 				}
 				request.PlainText(divider)
 			}

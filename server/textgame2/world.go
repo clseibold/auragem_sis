@@ -18,7 +18,7 @@ import (
 // | Rough High   | 0.8 - 1.0      | n |
 // | Mountains    | ≥ 1.0          | A |
 
-// TODO: Canyons, Gorges, Cliffs, Waterfalls, Escarpments, Islands, Caves and Caverns?, Rock formations
+// TODO: Canyons, Gorges, Cliffs, Waterfalls, Escarpments, Islands, Caves and Caverns?
 
 // TODO: Assign biomes to each tile given its land type, adjacent biomes, and bodies of water
 
@@ -36,6 +36,7 @@ type Tile struct {
 	altitude float64
 	biome    Biome
 	landType LandType
+	isDesert bool
 
 	// Water features
 	hasStream bool // Contains a small stream/creek within the tile
@@ -91,6 +92,9 @@ func generateWorldMap() {
 
 	// Generate plains-specific features to add variety
 	generatePlainsFeatures(seed)
+
+	// Generate desert regions (after other features so we can adjust them)
+	generateDeserts(seed)
 
 	// Identify valleys
 	identifyValleys()
@@ -2333,4 +2337,171 @@ func generateConnectedFloodRegion(waterX, waterY int, rng *rand.Rand) []struct{ 
 	}
 
 	return floodTiles
+}
+
+func generateDeserts(seed int64) {
+	rng := rand.New(rand.NewSource(seed + 9876))
+
+	// Create desert noise patterns
+	// We'll use a combination of noises to create realistic desert distributions
+	desertNoise := perlin.NewPerlin(2.5, 3.0, 2, seed+444)
+	rainfallNoise := perlin.NewPerlin(3.0, 2.5, 2, seed+555)
+	temperatureNoise := perlin.NewPerlin(4.0, 2.0, 3, seed+666)
+
+	// Parameters for desert generation
+	equator := MapHeight / 2        // The vertical center of the map is the equator
+	equatorWidth := MapHeight * 0.4 // Deserts typically form in bands north and south of equator
+
+	// Process all map tiles to determine desert regions
+	for y := range MapHeight {
+		for x := range MapWidth {
+			// Skip water tiles - deserts don't form on water
+			if Map[y][x].altitude <= 0 {
+				continue
+			}
+
+			// 1. Calculate latitude factor - deserts tend to form in specific latitude bands
+			// Distance from equator (normalized to 0-1 range where 0 = equator, 1 = pole)
+			distanceFromEquator := math.Abs(float64(y-equator)) / float64(MapHeight/2)
+
+			// Use equatorWidth to create proper desert bands
+			// This creates a peak at about 30° latitude (distance of 0.33 from equator)
+			// For a 50-tile height map, this would be roughly 8-9 tiles from the equator
+			desertLatitudeBandCenter := equatorWidth / float64(MapHeight) // ~0.3-0.4
+
+			// Calculate how close this tile is to the ideal desert latitude
+			// (1.0 means perfectly in the desert band, 0.0 means far from it)
+			latitudeMatch := max(1.0-math.Abs(distanceFromEquator-desertLatitudeBandCenter)*3.0, 0)
+			latitudeFactor := latitudeMatch
+
+			// 2. Rainfall factor - less rain = more desert
+			// Use noise to simulate rainfall patterns (0 = dry, 1 = wet)
+			rainfallValue := rainfallNoise.Noise2D(float64(x)/(MapWidth*0.3), float64(y)/(MapHeight*0.3))
+			// Normalize to 0-1 range
+			rainfallValue = (rainfallValue + 1.0) / 2.0
+			// Invert so high values mean less rain (more desert)
+			rainfallFactor := 1.0 - rainfallValue
+
+			// 3. Temperature factor - hotter areas more likely to be deserts
+			// Use noise for temperature variations within latitude bands
+			temperatureValue := temperatureNoise.Noise2D(float64(x)/(MapWidth*0.4), float64(y)/(MapHeight*0.4))
+			// Normalize to 0-1 range
+			temperatureValue = (temperatureValue + 1.0) / 2.0
+			// Adjust with latitude - equator is hotter
+			temperatureFactor := temperatureValue * (1.0 - distanceFromEquator*0.5)
+
+			// 4. Terrain factor - slightly higher elevation more likely for deserts
+			// (but not too high where mountains create rainfall)
+			terrainFactor := 0.0
+			if Map[y][x].altitude > 0.2 && Map[y][x].altitude < 0.7 {
+				terrainFactor = 0.4
+			}
+
+			// 5. Local variance for desert patterns (to break up uniform desert regions)
+			desertVariation := desertNoise.Noise2D(float64(x)/(MapWidth*0.2), float64(y)/(MapHeight*0.2))
+			desertVariation = (desertVariation + 1.0) / 2.0
+
+			// 6. Calculate final desert probability
+			// Weight the factors by importance
+			desertProbability := (latitudeFactor*0.4 + rainfallFactor*0.3 + temperatureFactor*0.2 + terrainFactor*0.1 + desertVariation*0.3) / 1.4 // Normalize the weights
+
+			// 7. Apply threshold - determine if this tile is a desert
+			desertThreshold := 0.52 // Adjust this to control total desert coverage
+
+			if desertProbability > desertThreshold {
+				// Mark as desert
+				Map[y][x].isDesert = true
+
+				// 8. Potentially remove incompatible features in desert areas
+				// Deserts can have these features but they're less common
+
+				// Only remove if we're in a more extreme desert (higher probability)
+				extremeDesertThreshold := 0.70
+				if desertProbability > extremeDesertThreshold {
+					// Water features are rare in extreme deserts
+					if Map[y][x].hasStream && rng.Float64() < 0.7 {
+						Map[y][x].hasStream = false
+					}
+					if Map[y][x].hasPond && rng.Float64() < 0.8 {
+						Map[y][x].hasPond = false
+					}
+					if Map[y][x].hasSpring && rng.Float64() < 0.6 {
+						Map[y][x].hasSpring = false
+					}
+					if Map[y][x].hasMarsh && rng.Float64() < 0.9 {
+						Map[y][x].hasMarsh = false
+					}
+					if Map[y][x].hasFloodArea && rng.Float64() < 0.8 {
+						Map[y][x].hasFloodArea = false
+					}
+				} else {
+					// Moderate deserts - water features are uncommon but not rare
+					if Map[y][x].hasStream && rng.Float64() < 0.4 {
+						Map[y][x].hasStream = false
+					}
+					if Map[y][x].hasPond && rng.Float64() < 0.5 {
+						Map[y][x].hasPond = false
+					}
+					if Map[y][x].hasSpring && rng.Float64() < 0.3 {
+						Map[y][x].hasSpring = false
+					}
+					if Map[y][x].hasMarsh && rng.Float64() < 0.6 {
+						Map[y][x].hasMarsh = false
+					}
+					if Map[y][x].hasFloodArea && rng.Float64() < 0.5 {
+						Map[y][x].hasFloodArea = false
+					}
+				}
+
+				// Vegetation is very rare in extreme deserts, uncommon in moderate deserts
+				if Map[y][x].hasGrove {
+					if desertProbability > extremeDesertThreshold {
+						// 90% chance to remove groves in extreme desert
+						if rng.Float64() < 0.9 {
+							Map[y][x].hasGrove = false
+						}
+					} else {
+						// 60% chance to remove groves in moderate desert
+						if rng.Float64() < 0.6 {
+							Map[y][x].hasGrove = false
+						}
+					}
+				}
+
+				if Map[y][x].hasMeadow {
+					if desertProbability > extremeDesertThreshold {
+						// 95% chance to remove meadows in extreme desert
+						if rng.Float64() < 0.95 {
+							Map[y][x].hasMeadow = false
+						}
+					} else {
+						// 70% chance to remove meadows in moderate desert
+						if rng.Float64() < 0.7 {
+							Map[y][x].hasMeadow = false
+						}
+					}
+				}
+
+				// Increase chance of scrubland and rocks in deserts
+				if !Map[y][x].hasScrub && !Map[y][x].hasRocks && !Map[y][x].hasSaltFlat {
+					// Add scrubland (desert brush)
+					if rng.Float64() < 0.4 {
+						Map[y][x].hasScrub = true
+					} else if rng.Float64() < 0.3 {
+						Map[y][x].hasRocks = true
+					} else if rng.Float64() < 0.15 && Map[y][x].altitude < 0.4 {
+						Map[y][x].hasSaltFlat = true
+					}
+				}
+
+				// Special case: if this is an extreme desert and it's in plains,
+				// there's a chance to generate sand dunes
+				if desertProbability > extremeDesertThreshold &&
+					Map[y][x].landType == LandType_Plains &&
+					rng.Float64() < 0.3 {
+					Map[y][x].landType = LandType_SandDunes
+				}
+			}
+		}
+	}
 }
