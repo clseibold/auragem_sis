@@ -59,13 +59,13 @@ func (c *Context) Attach(s sis.ServeMux) {
 	s.AddRoute("/", c.Homepage)
 	s.AddRoute("/about/", c.About)
 	s.AddRoute("/design/", c.DesignDocument)
+	s.AddRoute("/world-map/", PrintWorldMap)
+
 	group := s.Group("/test/")
 	group.AddRoute("/", c.firstColony.ColonyPage)
 	group.AddRoute("/resource_zone/:id/", c.firstColony.ResourceZonePage)
 	group.AddRoute("/resource_zone/:id/add_worker", c.firstColony.AddWorkerPage)
 	group.AddRoute("/resource_zone/:id/remove_worker", c.firstColony.RemoveWorkerPage)
-
-	s.AddRoute("/world-map/", PrintWorldMap)
 }
 
 func (c *Context) Homepage(request *sis.Request) {
@@ -73,6 +73,8 @@ func (c *Context) Homepage(request *sis.Request) {
 	request.Gemini("\n")
 	request.Link("/about/", "About")
 	request.Link("/test/", "Test Colony")
+	request.Gemini("\n")
+	request.Link("/world-map/", "World Map")
 }
 
 func (c *Context) About(request *sis.Request) {

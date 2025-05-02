@@ -55,11 +55,19 @@ func PrintWorldMap(request *sis.Request) {
 	for _, peak := range MapPeaks {
 		request.PlainText("(%d, %d) ", peak.peakX, peak.peakY)
 	}
-	request.PlainText("\n\n")
+	request.PlainText("\n\nJust Perlin Noise:\n")
 	for y := 0; y < MapHeight; y++ {
 		request.PlainText("|")
 		for x := 0; x < MapWidth; x++ {
 			request.PlainText(fmt.Sprintf("%.2f|", MapPerlin[y][x].altitude))
+		}
+		request.PlainText("\n\n")
+	}
+	request.PlainText("\nWith Mountain Peaks:\n")
+	for y := 0; y < MapHeight; y++ {
+		request.PlainText("|")
+		for x := 0; x < MapWidth; x++ {
+			request.PlainText(fmt.Sprintf("%.2f|", Map[y][x].altitude))
 		}
 		request.PlainText("\n\n")
 	}
@@ -69,7 +77,7 @@ func PrintWorldMap(request *sis.Request) {
 func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 	perlin := perlin.NewPerlin(2, 2, 3, seed)
 
-	baseHeight := (perlin.Noise2D(float64(x), float64(y)) + 1) * 0.5 // Scale to [0, 1]
+	baseHeight := (perlin.Noise2D(float64(x)/MapWidth, float64(y)/MapHeight) + 1) * 0.5 // Scale to [0, 1]
 	heightFactor := float64(1)
 	height := baseHeight * heightFactor
 
