@@ -36,21 +36,80 @@ func generateWorldMap() {
 	var seed int64 = 1239462936493264926
 	rand := rand.New(rand.NewSource(seed))
 
-	MapPeaks = make([]Peak, 0, 4)
-	MapPeaks = append(MapPeaks, Peak{peakX: 10, peakY: 0})
-
-	// Generate random peaks in four quadrants of map
-
-	MapPeaks = append(MapPeaks, Peak{rand.Intn(MapWidth / 2), rand.Intn(MapHeight / 2)})
-	MapPeaks = append(MapPeaks, Peak{rand.Intn(MapWidth/2) - 1 + MapWidth/2, rand.Intn(MapHeight / 2)})
-	MapPeaks = append(MapPeaks, Peak{rand.Intn(MapWidth / 2), rand.Intn(MapHeight/2) - 1 + MapHeight/2})
-	MapPeaks = append(MapPeaks, Peak{rand.Intn(MapWidth/2) - 1 + MapWidth/2, rand.Intn(MapHeight/2) - 1 + MapHeight/2})
+	generateMapMountainPeaks(rand)
 
 	for y := range MapHeight {
 		for x := range MapWidth {
 			perlinAltitude, altitude := generateHeight(MapPeaks, x, y, seed)
 			Map[y][x] = Tile{altitude: altitude}
 			MapPerlin[y][x] = Tile{altitude: perlinAltitude}
+		}
+	}
+}
+
+func generateMapMountainPeaks(rand *rand.Rand) {
+	MapPeaks = make([]Peak, 0, 4)
+	//MapPeaks = append(MapPeaks, Peak{peakX: 10, peakY: 0})
+
+	// Keep mountains away from map edges to prevent them from being cut off
+	edgeBuffer := 5
+
+	// Create 3-4 mountain peaks with more spacing between them
+	// First peak in upper left quadrant
+	MapPeaks = append(MapPeaks, Peak{
+		peakX: edgeBuffer + rand.Intn(MapWidth/4),
+		peakY: edgeBuffer + rand.Intn(MapHeight/4),
+	})
+
+	// Second peak in lower right quadrant
+	MapPeaks = append(MapPeaks, Peak{
+		peakX: MapWidth/2 + rand.Intn(MapWidth/4),
+		peakY: MapHeight/2 + rand.Intn(MapHeight/4),
+	})
+
+	// Third peak - ensure it's far enough from existing peaks
+	for attempts := 0; attempts < 10; attempts++ {
+		candidateX := edgeBuffer + rand.Intn(MapWidth-2*edgeBuffer)
+		candidateY := edgeBuffer + rand.Intn(MapHeight-2*edgeBuffer)
+
+		// Check distance to existing peaks
+		tooClose := false
+		for _, peak := range MapPeaks {
+			dist := math.Sqrt(math.Pow(float64(candidateX-peak.peakX), 2) +
+				math.Pow(float64(candidateY-peak.peakY), 2))
+			if dist < 15 { // Ensure peaks are well-separated
+				tooClose = true
+				break
+			}
+		}
+
+		if !tooClose {
+			MapPeaks = append(MapPeaks, Peak{peakX: candidateX, peakY: candidateY})
+			break
+		}
+	}
+
+	// Occasionally add a fourth peak for variety (25% chance)
+	if rand.Float64() < 0.25 {
+		for attempts := 0; attempts < 10; attempts++ {
+			candidateX := edgeBuffer + rand.Intn(MapWidth-2*edgeBuffer)
+			candidateY := edgeBuffer + rand.Intn(MapHeight-2*edgeBuffer)
+
+			// Check distance
+			tooClose := false
+			for _, peak := range MapPeaks {
+				dist := math.Sqrt(math.Pow(float64(candidateX-peak.peakX), 2) +
+					math.Pow(float64(candidateY-peak.peakY), 2))
+				if dist < 18 {
+					tooClose = true
+					break
+				}
+			}
+
+			if !tooClose {
+				MapPeaks = append(MapPeaks, Peak{peakX: candidateX, peakY: candidateY})
+				break
+			}
 		}
 	}
 }
@@ -222,7 +281,7 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 
 		// Only apply mountain effects within a reasonable radius.
 		// This ensures mountains don't cover too much of the map, only about 10-12%
-		maxMountainInfluence := 7.0 // Tilse from peak
+		maxMountainInfluence := 9.0 // Tiles from peak
 
 		if distance < maxMountainInfluence {
 			// Create directional bias for elongated ranges
@@ -244,7 +303,7 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 			modifiedDistance := distance / stretchFactor
 
 			// Create more compact mountain ranges, a steeper falloff, with sharper and narrower peaks
-			sigma := 2.8 // Controls mountain width
+			sigma := 2.7 // Controls mountain width
 
 			// Height falloff based on distance from peak
 			// Switch exponent of modifiedDistance from 2.0 to 1.8 for more aggressive falloff for narrower mountains
