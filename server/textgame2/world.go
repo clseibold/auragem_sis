@@ -308,8 +308,8 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 // Do this before generating plateaus and other terrain, but after generating base terrain with mountains.
 func assignLandTypes() {
 	// Assign land types based on altitude and other characteristics
-	for y := 0; y < MapHeight; y++ {
-		for x := 0; x < MapWidth; x++ {
+	for y := range MapHeight {
+		for x := range MapWidth {
 			altitude := Map[y][x].altitude
 
 			// First, assign basic land types based on altitude
@@ -352,8 +352,8 @@ func generatePlateaus(seed int64) {
 
 	// First pass - identify potential plateau regions
 	potentialPlateaus := 0
-	for y := 0; y < MapHeight; y++ {
-		for x := 0; x < MapWidth; x++ {
+	for y := range MapHeight {
+		for x := range MapWidth {
 			// Skip areas that are too low (water) or mountains
 			// Also skip areas that are already too high (near mountains)
 			if Map[y][x].altitude <= 0.25 || Map[y][x].altitude >= 0.9 {
@@ -375,8 +375,8 @@ func generatePlateaus(seed int64) {
 		heightNoise := perlin.NewPerlin(2.5, 2.0, 2, seed+84)
 
 		// Second pass - apply plateau heights
-		for y := 0; y < MapHeight; y++ {
-			for x := 0; x < MapWidth; x++ {
+		for y := range MapHeight {
+			for x := range MapWidth {
 				// Skip areas that are too low (water) or near mountains
 				if Map[y][x].altitude <= 0.25 || Map[y][x].altitude >= 0.9 {
 					continue
@@ -397,13 +397,8 @@ func generatePlateaus(seed int64) {
 					blendStrength := (plateauValue - plateauThreshold) * 3.0
 					blendStrength = math.Min(blendStrength, plateauFlatness)
 
-					// Calculate the new height as a blend between original and plateau
-					newHeight := Map[y][x].altitude*(1-blendStrength) + plateauHeight*blendStrength
-
-					// Ensure plateau remains in proper range
-					if newHeight > 0.9 {
-						newHeight = 0.9 // Cap plateau height below mountains
-					}
+					// Calculate the new height as a blend between original and plateau, capping at 0.9
+					newHeight := min(Map[y][x].altitude*(1-blendStrength)+plateauHeight*blendStrength, 0.9)
 
 					// Apply the new height
 					Map[y][x].altitude = newHeight
@@ -414,8 +409,8 @@ func generatePlateaus(seed int64) {
 
 		// Smooth plateau edges (keeping the same code from before)
 		var tempMap [MapHeight][MapWidth]float64
-		for y := 0; y < MapHeight; y++ {
-			for x := 0; x < MapWidth; x++ {
+		for y := range MapHeight {
+			for x := range MapWidth {
 				tempMap[y][x] = Map[y][x].altitude
 			}
 		}
@@ -570,16 +565,14 @@ func createWaterBodies(seed int64) {
 
 	// Generate water bodies using separate noise
 	waterNoise := perlin.NewPerlin(2.2, 2.0, 2, seed+789)
-	secondaryWaterNoise := perlin.NewPerlin(1.8, 2.5, 2, seed+367)
 	detailNoise := perlin.NewPerlin(3.0, 1.5, 2, seed+921)
 
 	// CHANGED: Parameters for water generation
 	largeWaterThreshold := -0.60  // Raised from -0.65 (more frequent)
 	mediumWaterThreshold := -0.53 // New intermediate size water bodies
-	smallWaterThreshold := -0.48  // New small water bodies
-	maxElevationForWater := 0.35  // Keep the same
+	maxElevationForWater := 0.35
 
-	// ADDED: Track water bodies to maintain proper spacing
+	// Track water bodies to maintain proper spacing
 	var waterTiles [MapHeight][MapWidth]bool
 
 	// First pass - create smaller, more numerous water bodies
@@ -593,10 +586,10 @@ func createWaterBodies(seed int64) {
 			// Generate water body noise
 			waterValue := waterNoise.Noise2D(float64(x)/(MapWidth*0.25), float64(y)/(MapHeight*0.25))
 
-			// ADDED: Detail noise to break up water edges
+			// Detail noise to break up water edges
 			detailValue := detailNoise.Noise2D(float64(x)/(MapWidth*0.05), float64(y)/(MapHeight*0.05)) * 0.1
 
-			// CHANGED: Different sizes of water bodies
+			// Different sizes of water bodies
 			if waterValue < largeWaterThreshold && Map[y][x].altitude < maxElevationForWater {
 				// Check spacing from existing water bodies
 				tooClose := false
@@ -626,7 +619,7 @@ func createWaterBodies(seed int64) {
 					Map[y][x].landType = LandType_Water
 					waterTiles[y][x] = true
 
-					// ADDED: Generate a small cluster of water around large bodies
+					// Generate a small cluster of water around large bodies
 					// But limit the size with a strict radius check
 					maxRadius := 1 + rng.Intn(2) // 1-2 tile radius max
 
@@ -695,54 +688,12 @@ func createWaterBodies(seed int64) {
 			}
 		}
 	}
-
-	// Second pass - add very small water bodies (ponds)
-	for y := 0; y < MapHeight; y++ {
-		for x := 0; x < MapWidth; x++ {
-			// Skip existing water and higher terrain
-			if Map[y][x].altitude <= 0 || Map[y][x].altitude >= 0.9 {
-				continue
-			}
-
-			// Generate secondary water noise
-			secondaryWater := secondaryWaterNoise.Noise2D(float64(x)/(MapWidth*0.15),
-				float64(y)/(MapHeight*0.15))
-
-			// Add small ponds where secondary noise is very negative and terrain is low
-			if secondaryWater < smallWaterThreshold && Map[y][x].altitude < 0.25 {
-				// Check spacing
-				tooClose := false
-				searchRadius := 1 // Smallest spacing for small bodies
-
-				for dy := -searchRadius; dy <= searchRadius; dy++ {
-					for dx := -searchRadius; dx <= searchRadius; dx++ {
-						nx, ny := x+dx, y+dy
-						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
-							waterTiles[ny][nx] {
-							tooClose = true
-							break
-						}
-					}
-					if tooClose {
-						break
-					}
-				}
-
-				if !tooClose {
-					// Just a single-tile pond
-					Map[y][x].altitude = -0.05
-					Map[y][x].landType = LandType_Water
-					waterTiles[y][x] = true
-				}
-			}
-		}
-	}
 }
 
 func countWaterTiles(waterTiles [MapHeight][MapWidth]bool) int {
 	count := 0
-	for y := 0; y < MapHeight; y++ {
-		for x := 0; x < MapWidth; x++ {
+	for y := range MapHeight {
+		for x := range MapWidth {
 			if waterTiles[y][x] {
 				count++
 			}
@@ -1819,8 +1770,8 @@ func generateGameTrails(seed int64) {
 		waterSources := make([]struct{ x, y int }, 0)
 		foodSources := make([]struct{ x, y int }, 0)
 
-		for y := 0; y < MapHeight; y++ {
-			for x := 0; x < MapWidth; x++ {
+		for y := range MapHeight {
+			for x := range MapWidth {
 				// Water sources
 				if Map[y][x].altitude <= 0 || Map[y][x].hasPond ||
 					Map[y][x].hasStream || Map[y][x].hasSpring {
@@ -1847,7 +1798,7 @@ func generateGameTrails(seed int64) {
 
 		if !foundStart {
 			// If no water or food sources, just pick a random non-water tile
-			for i := 0; i < 20; i++ {
+			for range 20 {
 				x := rng.Intn(MapWidth)
 				y := rng.Intn(MapHeight)
 				if Map[y][x].altitude > 0 {
@@ -1917,7 +1868,7 @@ func generateGameTrails(seed int64) {
 			startTerrainType := Map[startY][startX].landType
 
 			// Try to find a different terrain type
-			for i := 0; i < 20; i++ {
+			for range 20 {
 				x := rng.Intn(MapWidth)
 				y := rng.Intn(MapHeight)
 
@@ -2154,8 +2105,8 @@ func generateFloodAreas(seed int64) {
 	// Track all water sources (rivers, lakes, streams)
 	var waterSources []struct{ x, y int }
 
-	for y := 0; y < MapHeight; y++ {
-		for x := 0; x < MapWidth; x++ {
+	for y := range MapHeight {
+		for x := range MapWidth {
 			// Only include major water bodies (no streams)
 			// Seasonal floods typically come from larger bodies of water
 			if Map[y][x].altitude <= 0 { // Only major water bodies
