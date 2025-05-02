@@ -633,6 +633,7 @@ func createWaterBodies(seed int64) {
 		}
 	}
 }
+
 func generateRivers(seed int64) {
 	// Initialize random source for river generation
 	rng := rand.New(rand.NewSource(seed + 12345))
@@ -648,6 +649,9 @@ func generateRivers(seed int64) {
 
 	// Track tiles that already have rivers to avoid overlaps
 	var riverTiles [MapHeight][MapWidth]bool
+
+	// Track "river influence zone" - areas near rivers where new rivers shouldn't start
+	var riverInfluence [MapHeight][MapWidth]bool
 
 	// Find all potential river source points
 	type potentialSource struct {
@@ -712,17 +716,21 @@ func generateRivers(seed int64) {
 	riversCreated := 0
 
 	// Try to create rivers starting from the best source points
-	// Process them in order of score (best first)
 	for i := 0; i < len(potentialSources) && riversCreated < numberOfRivers; i++ {
 		source := potentialSources[i]
 
-		// Ensure this point hasn't been used by another river already
+		// Skip if this source is already part of a river
 		if riverTiles[source.y][source.x] {
 			continue
 		}
 
+		// NEW: Skip if this source is too close to an existing river
+		if riverInfluence[source.y][source.x] {
+			continue
+		}
+
 		// Trace river path from this source
-		river := traceRiverPath(source.x, source.y, rng, riverTiles, minRiverLength, maxRiverLength)
+		river := traceRiverPath(source.x, source.y, rng, riverTiles, riverInfluence, minRiverLength, maxRiverLength)
 
 		// Only apply rivers that meet the minimum length requirement
 		if len(river) >= minRiverLength {
@@ -739,6 +747,20 @@ func generateRivers(seed int64) {
 				// Make this point water
 				Map[y][x].altitude = -0.05
 				Map[y][x].landType = LandType_Water
+
+				// NEW: Mark river influence zone - area around the river where new rivers shouldn't go
+				for dy := -2; dy <= 2; dy++ {
+					for dx := -2; dx <= 2; dx++ {
+						nx, ny := x+dx, y+dy
+						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
+							// Distance-based influence (stronger near the river)
+							distance := math.Sqrt(float64(dx*dx + dy*dy))
+							if distance <= 2.0 {
+								riverInfluence[ny][nx] = true
+							}
+						}
+					}
+				}
 
 				// Create river valleys by slightly lowering adjacent terrain
 				for dy := -1; dy <= 1; dy++ {
@@ -763,8 +785,7 @@ func generateRivers(seed int64) {
 	}
 }
 
-// Trace a river path from the starting point to a low point or existing water
-func traceRiverPath(startX, startY int, rng *rand.Rand, riverTiles [MapHeight][MapWidth]bool, minLength, maxLength int) []struct{ x, y int } {
+func traceRiverPath(startX, startY int, rng *rand.Rand, riverTiles [MapHeight][MapWidth]bool, riverInfluence [MapHeight][MapWidth]bool, minLength, maxLength int) []struct{ x, y int } {
 	// River path
 	path := make([]struct{ x, y int }, 0, maxLength)
 	path = append(path, struct{ x, y int }{startX, startY})
@@ -779,9 +800,10 @@ func traceRiverPath(startX, startY int, rng *rand.Rand, riverTiles [MapHeight][M
 	for len(path) < maxLength {
 		// Determine possible flow directions
 		type flowOption struct {
-			x, y      int
-			elevation float64
-			distance  float64 // Distance from ideal flow direction
+			x, y           int
+			elevation      float64
+			distance       float64 // Distance from ideal flow direction
+			riverProximity float64 // NEW: Penalty for being near existing rivers
 		}
 
 		options := make([]flowOption, 0, 8)
@@ -790,7 +812,6 @@ func traceRiverPath(startX, startY int, rng *rand.Rand, riverTiles [MapHeight][M
 		currentElevation := Map[y][x].altitude
 
 		// Calculate flow direction based on overall slope and existing path
-		// This helps rivers maintain a consistent direction
 		flowDirX, flowDirY := 0.0, 0.0
 
 		// Look at the last few points in the path to determine trend
@@ -834,7 +855,6 @@ func traceRiverPath(startX, startY int, rng *rand.Rand, riverTiles [MapHeight][M
 				neighborElevation := Map[ny][nx].altitude
 				if neighborElevation < currentElevation || neighborElevation <= 0 {
 					// Calculate how well this direction aligns with the current flow trend
-					// Higher alignment = more natural meandering
 					alignment := 1.0
 					if pathLength > lookback {
 						dotProduct := flowDirX*float64(dx) + flowDirY*float64(dy)
@@ -844,15 +864,24 @@ func traceRiverPath(startX, startY int, rng *rand.Rand, riverTiles [MapHeight][M
 					// Add noise to make the flow more natural
 					noiseValue := flowNoise.Noise2D(float64(nx)/10.0, float64(ny)/10.0)
 
+					// Add a penalty for flowing near existing rivers
+					// This discourages rivers from running parallel to each other
+					riverProximityPenalty := 0.0
+					if riverInfluence[ny][nx] {
+						// Strong penalty for getting too close to existing rivers
+						riverProximityPenalty = 0.5
+					}
+
 					// Calculate elevation difference including noise and flow alignment
 					elevationDiff := currentElevation - neighborElevation
-					flowScore := elevationDiff + noiseValue*0.1 + alignment*0.2
+					flowScore := elevationDiff + noiseValue*0.1 + alignment*0.2 - riverProximityPenalty
 
 					options = append(options, flowOption{
-						x:         nx,
-						y:         ny,
-						elevation: neighborElevation,
-						distance:  flowScore,
+						x:              nx,
+						y:              ny,
+						elevation:      neighborElevation,
+						distance:       flowScore,
+						riverProximity: riverProximityPenalty,
 					})
 				}
 			}
@@ -864,6 +893,7 @@ func traceRiverPath(startX, startY int, rng *rand.Rand, riverTiles [MapHeight][M
 		}
 
 		// Choose the best option, favoring steeper descent and flow alignment
+		// But avoiding proximity to other rivers
 		bestOption := options[0]
 		for _, option := range options {
 			if option.distance > bestOption.distance {
@@ -878,19 +908,12 @@ func traceRiverPath(startX, startY int, rng *rand.Rand, riverTiles [MapHeight][M
 		// If we've reached a water body or existing river, we're done
 		if Map[y][x].altitude <= 0 {
 			// We reached water, the river is complete
-			// Return the path only if it meets our minimum length requirement
-			// or if the path is already quite long despite not reaching water
 			if len(path) >= minLength {
 				return path
 			}
 			break
 		}
 	}
-
-	// At this point, we've either:
-	// 1. Reached the max length limit
-	// 2. Reached a local minimum with no way down
-	// 3. Reached water but the path was too short
 
 	// Only return the path if it meets the minimum length requirement
 	if len(path) >= minLength {
