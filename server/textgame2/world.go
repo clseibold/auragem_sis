@@ -574,7 +574,7 @@ func createWaterBodies(seed int64) {
 	secondaryWaterNoise := perlin.NewPerlin(1.8, 2.5, 2, seed+367)
 
 	// Parameters for water body generation
-	mainWaterThreshold := -0.55      // less negative = more water
+	mainWaterThreshold := -0.50      // -0.55      // less negative = more water
 	secondaryWaterThreshold := -0.60 // Threshold for secondary water features
 	maxElevationForWater := 0.35
 
