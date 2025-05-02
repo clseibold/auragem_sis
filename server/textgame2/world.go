@@ -312,7 +312,7 @@ func debugMountainDimensions(request *sis.Request) {
 
 		// Show dimensional constraints
 		maxLengthwise := 15.0
-		maxCrosswise := 2.0
+		maxCrosswise := 2.5
 
 		for y := 0; y < MapHeight; y++ {
 			for x := 0; x < MapWidth; x++ {
@@ -431,7 +431,7 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 
 		// Maximum dimensions for the range
 		maxLengthwise := 15.0 // Maximum tiles along range direction
-		maxCrosswise := 2.0   // Maximum half-width (total width ~4 tiles)
+		maxCrosswise := 2.5   // Maximum half-width (total width ~4 tiles)
 
 		// Only apply mountain height if within our bounds
 		if lengthwiseDistance <= maxLengthwise && crosswiseDistance <= maxCrosswise {
