@@ -454,14 +454,18 @@ func identifyValleys() {
 					}
 
 					nx, ny := x+dx, y+dy
-					heightDiff := Map[y][x].altitude - Map[ny][nx].altitude
-					totalDiff += heightDiff
-					count++
+					if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
+						heightDiff := Map[y][x].altitude - Map[ny][nx].altitude
+						totalDiff += heightDiff
+						count++
+					}
 				}
 			}
 
 			// Average gradient
-			gradientMap[y][x] = totalDiff / float64(count)
+			if count > 0 {
+				gradientMap[y][x] = totalDiff / float64(count)
+			}
 		}
 	}
 
@@ -475,8 +479,9 @@ func identifyValleys() {
 
 			// If we're lower than average surroundings and not too high
 			if gradientMap[y][x] < -0.05 && Map[y][x].altitude < 0.7 {
-				// Avoid marking plateaus as valleys
-				if Map[y][x].landType != LandType_Plateaus {
+				// Avoid marking plateaus or mountains as valleys
+				if Map[y][x].landType != LandType_Plateaus &&
+					Map[y][x].landType != LandType_Mountains {
 					Map[y][x].landType = LandType_Valleys
 				}
 			}
@@ -514,9 +519,14 @@ func identifyCoastalAreas() {
 				}
 			}
 
-			// If next to water and not a mountain, mark as coastal
+			// If next to water and not a mountain or plateau, mark as coastal
+			// Preserve valleys that are next to water - these are river valleys
 			if hasWaterNeighbor && Map[y][x].altitude < 1.0 {
-				Map[y][x].landType = LandType_Coastal
+				// Don't overwrite valleys or plateaus
+				if Map[y][x].landType != LandType_Valleys &&
+					Map[y][x].landType != LandType_Plateaus {
+					Map[y][x].landType = LandType_Coastal
+				}
 			}
 		}
 	}
@@ -622,12 +632,13 @@ func createWaterBodies(seed int64) {
 		}
 	}
 }
+
 func generateRivers(seed int64) {
 	// Initialize random source for river generation
 	rng := rand.New(rand.NewSource(seed + 12345))
 
 	// Parameters for river generation
-	numberOfRivers := 4 + rng.Intn(3) // 4-6 rivers
+	numberOfRivers := 5 + rng.Intn(3) // 5-7 rivers
 	minRiverLength := 5               // Minimum tiles a river should span
 	maxRiverLength := 25              // Maximum river length (to prevent infinite loops)
 	minElevationStart := 0.6          // Rivers start in higher elevations
@@ -639,13 +650,13 @@ func generateRivers(seed int64) {
 	var riverTiles [MapHeight][MapWidth]bool
 
 	// Generate each river
-	for r := 0; r < numberOfRivers; r++ {
+	for range numberOfRivers {
 		// Find a good starting point - preferably in hills or mountains
 		var startX, startY int
 		var foundStart bool
 
 		// Try multiple times to find a good starting point
-		for attempts := 0; attempts < 100; attempts++ {
+		for range 200 { // TODO: This is not very efficient.
 			// Choose a random high point
 			candidateX := rng.Intn(MapWidth)
 			candidateY := rng.Intn(MapHeight)
