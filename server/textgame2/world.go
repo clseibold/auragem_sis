@@ -92,23 +92,26 @@ func PrintWorldMap(request *sis.Request) {
 			if showValues {
 				request.PlainText("|     |")
 			} else {
-				request.PlainText("|   |")
+				request.PlainText("|  |")
 			}
 			for x := range MapWidth {
 				if showValues {
 					request.PlainText(fmt.Sprintf("%5d|", x))
 				} else {
-					request.PlainText(fmt.Sprintf("%3d|", x))
+					request.PlainText(fmt.Sprintf("%2d|", x))
 				}
 			}
-			request.PlainText("\n\n")
+			request.PlainText("\n")
+			if showValues {
+				request.PlainText("\n")
+			}
 		}
 
 		// Values
 		if showValues {
 			request.PlainText("|%5d|", y)
 		} else {
-			request.PlainText("|%3d|", y)
+			request.PlainText("|%2d|", y)
 		}
 		for x := range MapWidth {
 			if showValues {
@@ -116,15 +119,18 @@ func PrintWorldMap(request *sis.Request) {
 			} else {
 				altitude := MapPerlin[y][x].altitude
 				if altitude <= 0 {
-					request.PlainText(" o |") // Water
+					request.PlainText(" o|") // Water
 				} else if altitude >= 1 {
-					request.PlainText(" 5 |") // Mountain
+					request.PlainText(" 5|") // Mountain
 				} else {
-					request.PlainText(" 1 |") // Plains and hills
+					request.PlainText(" 1|") // Plains and hills
 				}
 			}
 		}
-		request.PlainText("\n\n")
+		request.PlainText("\n")
+		if showValues {
+			request.PlainText("\n")
+		}
 	}
 
 	request.PlainText("\nWith Mountain Peaks:\n")
@@ -134,22 +140,25 @@ func PrintWorldMap(request *sis.Request) {
 			if showValues {
 				request.PlainText("|     |")
 			} else {
-				request.PlainText("|   |")
+				request.PlainText("|  |")
 			}
 			for x := range MapWidth {
 				if showValues {
 					request.PlainText("%5d|", x)
 				} else {
-					request.PlainText("%3d|", x)
+					request.PlainText("%2d|", x)
 				}
 			}
-			request.PlainText("\n\n")
+			request.PlainText("\n")
+			if showValues {
+				request.PlainText("\n")
+			}
 		}
 
 		if showValues {
 			request.PlainText("|%5d|", y)
 		} else {
-			request.PlainText("|%3d|", y)
+			request.PlainText("|%2d|", y)
 		}
 		for x := range MapWidth {
 			if showValues {
@@ -157,15 +166,18 @@ func PrintWorldMap(request *sis.Request) {
 			} else {
 				altitude := Map[y][x].altitude
 				if altitude <= 0 {
-					request.PlainText(" o |") // Water
+					request.PlainText(" o|") // Water
 				} else if altitude >= 1 {
-					request.PlainText(" 5 |") // Mountain
+					request.PlainText(" 5|") // Mountain
 				} else {
-					request.PlainText(" 1 |") // Plains and hills
+					request.PlainText(" 1|") // Plains and hills
 				}
 			}
 		}
-		request.PlainText("\n\n")
+		request.PlainText("\n")
+		if showValues {
+			request.PlainText("\n")
+		}
 	}
 	request.Gemini("```\n")
 }
@@ -188,15 +200,15 @@ func getMapLowestAndHighestPoints() (Tile, Tile) {
 }
 
 func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
-	perlin := perlin.NewPerlin(2, 4, 3, seed)
+	perlin := perlin.NewPerlin(1.5, 4, 3, seed)
 
-	baseHeight := perlin.Noise2D(float64(x)/MapWidth, float64(y)/MapHeight) + 0.04
+	baseHeight := perlin.Noise2D(float64(x)/MapWidth, float64(y)/MapHeight) + 0.2
 	heightFactor := float64(2.0)
 	height := baseHeight * heightFactor
 
 	// Create a mountain peak effect
 	finalHeight := height
-	var sigma float64 = 0.5 // Width of peak, larger means mountains affect more points farther away from the peak
+	var sigma float64 = 1 // Width of peak, larger means mountains affect more points farther away from the peak
 	for _, peak := range peaks {
 		peakX := peak.peakX
 		peakY := peak.peakY
