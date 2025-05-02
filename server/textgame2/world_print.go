@@ -7,7 +7,7 @@ import (
 	sis "gitlab.com/sis-suite/smallnetinformationservices"
 )
 
-const divider = ":"
+const globalDivider = "|"
 
 func PrintWorldMap(request *sis.Request) {
 	divider := " "
@@ -24,7 +24,7 @@ func PrintWorldMap(request *sis.Request) {
 		debugLandTypes(request)
 		return
 	} else if query == "withnumbers" {
-		divider = ":"
+		divider = globalDivider
 		noNumbers = false
 	}
 
@@ -32,7 +32,7 @@ func PrintWorldMap(request *sis.Request) {
 	request.Gemini("\n")
 	if !showValues {
 		if noNumbers {
-			request.Link("/world-map?withborders", "Show With Map Numbers")
+			request.Link("/world-map?withnumbers", "Show With Map Numbers")
 		} else {
 			request.Link("/world-map", "Show Without Map Numbers")
 		}
@@ -40,7 +40,7 @@ func PrintWorldMap(request *sis.Request) {
 		request.Link("/world-map?landtypes", "Show Land Types")
 	} else {
 		if noNumbers {
-			request.Link("/world-map?withborders", "Show With Map Numbers")
+			request.Link("/world-map?withnumbers", "Show With Map Numbers")
 		} else {
 			request.Link("/world-map", "Show Without Map Numbers")
 		}
@@ -154,76 +154,78 @@ func PrintWorldMap(request *sis.Request) {
 		}
 	}
 
-	request.PlainText("\nBase Perlin Noise:\n")
-	for y := range MapHeight {
-		// Heading/Top border
-		if y == 0 && !noNumbers {
-			if showValues {
-				request.PlainText(divider + "     " + divider)
-			} else {
-				request.PlainText(divider + "  " + divider)
+	/*
+		request.PlainText("\nBase Perlin Noise:\n")
+		for y := range MapHeight {
+			// Heading/Top border
+			if y == 0 && !noNumbers {
+				if showValues {
+					request.PlainText(divider + "     " + divider)
+				} else {
+					request.PlainText(divider + "  " + divider)
+				}
+				for x := range MapWidth {
+					if showValues {
+						request.PlainText(fmt.Sprintf("%5d"+divider, x))
+					} else {
+						request.PlainText(fmt.Sprintf("%2d"+divider, x))
+					}
+				}
+				request.PlainText("\n")
+				if showValues {
+					request.PlainText("\n")
+				}
+			} else if y == 0 && noNumbers {
+				request.PlainText(strings.Repeat("-", (MapWidth+2)*3))
+				request.PlainText("\n")
+			}
+
+			if !noNumbers {
+				if showValues {
+					request.PlainText(divider+"%5d"+divider, y)
+				} else {
+					request.PlainText(divider+"%2d"+divider, y)
+				}
+			} else { // Left Border
+				request.PlainText("|")
 			}
 			for x := range MapWidth {
 				if showValues {
-					request.PlainText(fmt.Sprintf("%5d"+divider, x))
+					request.PlainText(fmt.Sprintf("%+.2f"+divider, MapPerlin[y][x].altitude))
 				} else {
-					request.PlainText(fmt.Sprintf("%2d"+divider, x))
+					altitude := MapPerlin[y][x].altitude
+					request.PlainText(" ") // Prefix
+					if altitude <= 0 {
+						request.PlainText("~") // Water
+					} else if altitude >= 1 {
+						request.PlainText("▲") // Mountain
+					} else if altitude >= 0.8 { // Foothills
+						request.PlainText("n")
+					} else if altitude >= 0.3 {
+						request.PlainText("+")
+					} else {
+						request.PlainText(" ") // Plains
+					}
+					request.PlainText(divider)
 				}
 			}
+
+			if noNumbers { // Right Border
+				request.PlainText("|")
+			}
+
 			request.PlainText("\n")
 			if showValues {
 				request.PlainText("\n")
 			}
-		} else if y == 0 && noNumbers {
-			request.PlainText(strings.Repeat("-", (MapWidth+2)*3))
-			request.PlainText("\n")
-		}
 
-		if !noNumbers {
-			if showValues {
-				request.PlainText(divider+"%5d"+divider, y)
-			} else {
-				request.PlainText(divider+"%2d"+divider, y)
-			}
-		} else { // Left Border
-			request.PlainText("|")
-		}
-		for x := range MapWidth {
-			if showValues {
-				request.PlainText(fmt.Sprintf("%+.2f"+divider, MapPerlin[y][x].altitude))
-			} else {
-				altitude := MapPerlin[y][x].altitude
-				request.PlainText(" ") // Prefix
-				if altitude <= 0 {
-					request.PlainText("~") // Water
-				} else if altitude >= 1 {
-					request.PlainText("▲") // Mountain
-				} else if altitude >= 0.8 { // Foothills
-					request.PlainText("n")
-				} else if altitude >= 0.3 {
-					request.PlainText("+")
-				} else {
-					request.PlainText(" ") // Plains
-				}
-				request.PlainText(divider)
+			// Bottom border
+			if noNumbers && y == MapWidth-1 {
+				request.PlainText(strings.Repeat("-", (MapWidth+2)*3))
+				request.PlainText("\n")
 			}
 		}
-
-		if noNumbers { // Right Border
-			request.PlainText("|")
-		}
-
-		request.PlainText("\n")
-		if showValues {
-			request.PlainText("\n")
-		}
-
-		// Bottom border
-		if noNumbers && y == MapWidth-1 {
-			request.PlainText(strings.Repeat("-", (MapWidth+2)*3))
-			request.PlainText("\n")
-		}
-	}
+	*/
 
 	request.PlainText("\nLegend:\n")
 	request.PlainText("- ~: Water (lake/river)\n")
@@ -241,6 +243,8 @@ func PrintWorldMap(request *sis.Request) {
 }
 
 func debugLandTypes(request *sis.Request) {
+	divider := globalDivider
+
 	request.Heading(1, "Land Types Map")
 	request.Gemini("\n")
 	request.Link("/world-map/", "Back to World Map")
