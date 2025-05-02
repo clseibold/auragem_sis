@@ -2130,7 +2130,7 @@ func generateFloodAreas(seed int64) {
 		}
 
 		// Flood regions can only form from water sources near low-lying land
-		hasLowLand := false
+		// hasLowLand := false
 		hasVeryLowLand := false
 
 		// Check if this water source has adjacent low-lying land
@@ -2142,7 +2142,7 @@ func generateFloodAreas(seed int64) {
 					Map[ny][nx].altitude > 0 && Map[ny][nx].altitude < 0.3 &&
 					Map[ny][nx].landType != LandType_Mountains &&
 					Map[ny][nx].landType != LandType_Plateaus {
-					hasLowLand = true
+					// hasLowLand = true
 
 					if Map[ny][nx].altitude < 0.15 {
 						hasVeryLowLand = true
