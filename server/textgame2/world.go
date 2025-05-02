@@ -174,7 +174,7 @@ func PrintWorldMap(request *sis.Request) {
 				} else if altitude >= 0.4 {
 					request.PlainText(" +|")
 				} else {
-					request.PlainText(" =|") // Plains and hills
+					request.PlainText(" -|") // Plains and hills
 				}
 			}
 		}
@@ -225,7 +225,7 @@ func PrintWorldMap(request *sis.Request) {
 				} else if altitude >= 0.4 {
 					request.PlainText(" +|")
 				} else {
-					request.PlainText(" =|") // Plains and hills
+					request.PlainText(" -|") // Plains and hills
 				}
 			}
 		}
