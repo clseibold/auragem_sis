@@ -222,7 +222,7 @@ func debugLandTypes(request *sis.Request) {
 	for _, lt := range landTypes {
 		count := landTypeCounts[lt]
 		percentage := float64(count) / float64(totalTiles) * 100.0
-		request.Gemini("| %s | %d | %.2f%% |\n", landTypeNames[lt], count, percentage)
+		request.Gemini(fmt.Sprintf("| %s | %d | %.2f%% |\n", landTypeNames[lt], count, percentage))
 	}
 
 	request.Gemini("\n## Land Types Map\n\n")
