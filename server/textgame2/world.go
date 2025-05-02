@@ -47,6 +47,9 @@ func generateWorldMap() {
 		}
 	}
 
+	// Create additional water bodies to reach ~2% water coverage
+	createWaterBodies(seed)
+
 	// Assign basic land types based on altitude
 	assignLandTypes()
 
@@ -131,9 +134,19 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 	perlin := perlin.NewPerlin(2.0, 2.5, 3, seed)
 
 	// Generate base terrain with gentle hills
-	baseHeight := perlin.Noise2D(float64(x)/(MapWidth*0.6), float64(y)/(MapHeight*0.6)) * 0.5
-	baseHeight += perlin.Noise2D(float64(x)/(MapWidth*0.15), float64(y)/(MapHeight*0.15)) * 0.1
-	baseHeight += 0.2 // Baseline offset
+	baseHeight := perlin.Noise2D(float64(x)/(MapWidth*0.7), float64(y)/(MapHeight*0.7)) * 0.45
+	secondaryNoise := perlin.Noise2D(float64(x)/(MapWidth*0.18), float64(y)/(MapHeight*0.18)) * 0.1
+	tertiaryNoise := perlin.Noise2D(float64(x+50)/(MapWidth*0.3), float64(y+50)/(MapHeight*0.3)) * 0.15
+	baseHeight += secondaryNoise + tertiaryNoise + 0.2 // With added baseline offset
+
+	// Adjust mid-range heights to create more distinct plains/hills separation
+	// This will help spread out hills more evenly
+	if baseHeight > 0.3 && baseHeight < 0.4 {
+		// Create a steeper transition between plains and hills
+		// This makes hills more distinct and better distributed
+		transitionFactor := (baseHeight - 0.3) / 0.1
+		baseHeight = 0.3 + transitionFactor*0.15
+	}
 
 	finalHeight := baseHeight
 
@@ -296,7 +309,7 @@ func generatePlateaus(seed int64) {
 	plateauNoise := perlin.NewPerlin(1.8, 3.0, 2, seed+42)
 
 	// Parameters for plateau generation
-	plateauThreshold := 0.58       // Higher value = fewer plateaus
+	plateauThreshold := 0.54       // Higher value = fewer plateaus
 	plateauHeightBase := 0.65      // Base elevation for plateaus (higher than hills)
 	plateauHeightVariation := 0.15 // How much elevation varies between plateaus
 	plateauFlatness := 0.85        // How flat plateaus are (higher = flatter)
@@ -501,6 +514,31 @@ func identifyCoastalAreas() {
 			// If next to water and not a mountain, mark as coastal
 			if hasWaterNeighbor && Map[y][x].altitude < 1.0 {
 				Map[y][x].landType = LandType_Coastal
+			}
+		}
+	}
+}
+
+// Add this function to create additional water bodies
+func createWaterBodies(seed int64) {
+	// Generate water bodies using separate noise
+	waterNoise := perlin.NewPerlin(2.2, 2.0, 2, seed+789)
+
+	for y := 0; y < MapHeight; y++ {
+		for x := 0; x < MapWidth; x++ {
+			// Skip existing water and mountains
+			if Map[y][x].altitude <= 0 || Map[y][x].altitude >= 0.9 {
+				continue
+			}
+
+			// Generate water body noise
+			waterValue := waterNoise.Noise2D(float64(x)/(MapWidth*0.25), float64(y)/(MapHeight*0.25))
+
+			// Create water where the noise is strongly negative and terrain is low
+			if waterValue < -0.65 && Map[y][x].altitude < 0.3 {
+				// Depress terrain below water level
+				Map[y][x].altitude = -0.1
+				Map[y][x].landType = LandType_Water
 			}
 		}
 	}
