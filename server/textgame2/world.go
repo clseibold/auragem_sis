@@ -1,6 +1,7 @@
 package textgame2
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"sort"
@@ -1450,7 +1451,6 @@ func generatePlainsFeatures(seed int64) {
 	meadowCount := 15 + rng.Intn(10)  // 15-24 flower meadows
 	scrubCount := 25 + rng.Intn(15)   // 25-39 scrubland patches
 	rockCount := 10 + rng.Intn(8)     // 10-17 rock outcroppings
-	gameTrailCount := 8 + rng.Intn(5) // 8-12 game trails
 	floodAreaCount := 6 + rng.Intn(5) // 6-10 seasonal flood areas
 	saltFlatCount := 3 + rng.Intn(3)  // 3-5 salt flats
 
@@ -1458,8 +1458,8 @@ func generatePlainsFeatures(seed int64) {
 	var featurePlaced [MapHeight][MapWidth]bool
 
 	// Mark existing water and special features as unavailable
-	for y := 0; y < MapHeight; y++ {
-		for x := 0; x < MapWidth; x++ {
+	for y := range MapHeight {
+		for x := range MapWidth {
 			// Skip tiles that already have features
 			if Map[y][x].altitude <= 0 || // Water
 				Map[y][x].hasStream ||
@@ -1518,7 +1518,7 @@ func generatePlainsFeatures(seed int64) {
 				if rng.Float64() < 0.4 {
 					// Try to add 1-3 adjacent grove tiles
 					extraGroves := 1 + rng.Intn(3)
-					for e := 0; e < extraGroves; e++ {
+					for range extraGroves {
 						// Pick a random direction
 						dx := rng.Intn(3) - 1
 						dy := rng.Intn(3) - 1
@@ -1613,7 +1613,7 @@ func generatePlainsFeatures(seed int64) {
 				if rng.Float64() < 0.7 {
 					// Try to add 2-5 adjacent scrub tiles
 					extraScrub := 2 + rng.Intn(4)
-					for e := 0; e < extraScrub; e++ {
+					for range extraScrub {
 						// Pick a random direction
 						dx := rng.Intn(3) - 1
 						dy := rng.Intn(3) - 1
@@ -1662,101 +1662,7 @@ func generatePlainsFeatures(seed int64) {
 	}
 
 	// 5. Generate game trails
-	trailsGenerated := 0
-
-	for attempts := 0; attempts < 50 && trailsGenerated < gameTrailCount; attempts++ {
-		// Game trails typically start at water sources and go to other features
-
-		// Find a water source to start from
-		waterSources := make([]struct{ x, y int }, 0)
-
-		for y := 0; y < MapHeight; y++ {
-			for x := 0; x < MapWidth; x++ {
-				if Map[y][x].altitude <= 0 || Map[y][x].hasPond || Map[y][x].hasStream {
-					waterSources = append(waterSources, struct{ x, y int }{x, y})
-				}
-			}
-		}
-
-		if len(waterSources) == 0 {
-			break // No water sources to start from
-		}
-
-		// Pick a random water source
-		source := waterSources[rng.Intn(len(waterSources))]
-
-		// Create a trail from this source
-		x, y := source.x, source.y
-		trailLength := 3 + rng.Intn(5) // Trails are 3-7 tiles long
-
-		// Pick a random direction that isn't into water
-		var dx, dy int
-		for {
-			dx = rng.Intn(3) - 1
-			dy = rng.Intn(3) - 1
-			if dx != 0 || dy != 0 {
-				nx, ny := x+dx, y+dy
-				if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
-					Map[ny][nx].altitude > 0 {
-					break
-				}
-			}
-		}
-
-		// Form the trail
-		validTrail := true
-		for i := 0; i < trailLength; i++ {
-			x += dx
-			y += dy
-
-			// Stay on map
-			if x < 0 || x >= MapWidth || y < 0 || y >= MapHeight {
-				validTrail = false
-				break
-			}
-
-			// Don't put trails in water
-			if Map[y][x].altitude <= 0 {
-				validTrail = false
-				break
-			}
-
-			// Mark as game trail (ok to overlap with other features)
-			Map[y][x].hasGameTrail = true
-
-			// Occasionally change direction slightly
-			if rng.Float64() < 0.3 {
-				// Small direction change
-				dx += rng.Intn(3) - 1
-				dy += rng.Intn(3) - 1
-
-				// Ensure we're still moving
-				if dx == 0 && dy == 0 {
-					if rng.Float64() < 0.5 {
-						dx = 1
-					} else {
-						dy = 1
-					}
-				}
-
-				// Limit max speed
-				if dx > 1 {
-					dx = 1
-				} else if dx < -1 {
-					dx = -1
-				}
-				if dy > 1 {
-					dy = 1
-				} else if dy < -1 {
-					dy = -1
-				}
-			}
-		}
-
-		if validTrail {
-			trailsGenerated++
-		}
-	}
+	generateGameTrails(seed)
 
 	// 6. Generate seasonal flood areas
 	floodAreasGenerated := 0
@@ -1810,7 +1716,7 @@ func generatePlainsFeatures(seed int64) {
 				if rng.Float64() < 0.6 {
 					// Try to add 1-3 adjacent flood area tiles
 					extraFlood := 1 + rng.Intn(3)
-					for e := 0; e < extraFlood; e++ {
+					for range extraFlood {
 						// Pick a random direction
 						dx := rng.Intn(3) - 1
 						dy := rng.Intn(3) - 1
@@ -1874,4 +1780,353 @@ func generatePlainsFeatures(seed int64) {
 			}
 		}
 	}
+}
+
+func generateGameTrails(seed int64) {
+	rng := rand.New(rand.NewSource(seed + 8765))
+
+	// Parameters
+	gameTrailCount := 8 + rng.Intn(5) // 8-12 game trails
+
+	// Game trails can cross any terrain except water
+	trailsGenerated := 0
+
+	for attempts := 0; attempts < 100 && trailsGenerated < gameTrailCount; attempts++ {
+		// Game trails typically:
+		// 1. Connect water sources to food sources (meadows, groves)
+		// 2. Connect different biomes/terrain types
+		// 3. Follow paths of least resistance (valleys, passes)
+
+		// Find a good starting point - typically water, meadows, or groves
+		var startX, startY int
+		foundStart := false
+
+		// Try to find water first (most common starting point)
+		waterSources := make([]struct{ x, y int }, 0)
+		foodSources := make([]struct{ x, y int }, 0)
+
+		for y := 0; y < MapHeight; y++ {
+			for x := 0; x < MapWidth; x++ {
+				// Water sources
+				if Map[y][x].altitude <= 0 || Map[y][x].hasPond ||
+					Map[y][x].hasStream || Map[y][x].hasSpring {
+					waterSources = append(waterSources, struct{ x, y int }{x, y})
+				}
+
+				// Food sources
+				if Map[y][x].hasMeadow || Map[y][x].hasGrove {
+					foodSources = append(foodSources, struct{ x, y int }{x, y})
+				}
+			}
+		}
+
+		// 75% of trails start at water, 25% at food sources
+		if len(waterSources) > 0 && rng.Float64() < 0.75 {
+			source := waterSources[rng.Intn(len(waterSources))]
+			startX, startY = source.x, source.y
+			foundStart = true
+		} else if len(foodSources) > 0 {
+			source := foodSources[rng.Intn(len(foodSources))]
+			startX, startY = source.x, source.y
+			foundStart = true
+		}
+
+		if !foundStart {
+			// If no water or food sources, just pick a random non-water tile
+			for i := 0; i < 20; i++ {
+				x := rng.Intn(MapWidth)
+				y := rng.Intn(MapHeight)
+				if Map[y][x].altitude > 0 {
+					startX, startY = x, y
+					foundStart = true
+					break
+				}
+			}
+		}
+
+		if !foundStart {
+			continue // Couldn't find a start point
+		}
+
+		// Now find a destination - typically a different type of area than the start
+		// If we started at water, aim for food. If we started at food, aim for water.
+		var targetX, targetY int
+		foundTarget := false
+
+		if len(waterSources) > 0 && len(foodSources) > 0 {
+			// If we started at water, look for food
+			isWaterStart := false
+			for _, source := range waterSources {
+				if source.x == startX && source.y == startY {
+					isWaterStart = true
+					break
+				}
+			}
+
+			if isWaterStart && len(foodSources) > 0 {
+				// Select a food source that's reasonably distant (8-20 tiles)
+				validTargets := make([]struct{ x, y int }, 0)
+				for _, target := range foodSources {
+					dist := math.Sqrt(math.Pow(float64(target.x-startX), 2) +
+						math.Pow(float64(target.y-startY), 2))
+					if dist >= 8 && dist <= 25 {
+						validTargets = append(validTargets, target)
+					}
+				}
+
+				if len(validTargets) > 0 {
+					target := validTargets[rng.Intn(len(validTargets))]
+					targetX, targetY = target.x, target.y
+					foundTarget = true
+				}
+			} else if !isWaterStart && len(waterSources) > 0 {
+				// Select a water source that's reasonably distant
+				validTargets := make([]struct{ x, y int }, 0)
+				for _, target := range waterSources {
+					dist := math.Sqrt(math.Pow(float64(target.x-startX), 2) +
+						math.Pow(float64(target.y-startY), 2))
+					if dist >= 8 && dist <= 25 {
+						validTargets = append(validTargets, target)
+					}
+				}
+
+				if len(validTargets) > 0 {
+					target := validTargets[rng.Intn(len(validTargets))]
+					targetX, targetY = target.x, target.y
+					foundTarget = true
+				}
+			}
+		}
+
+		// If we couldn't find a specific target, just pick a different terrain type
+		if !foundTarget {
+			startTerrainType := Map[startY][startX].landType
+
+			// Try to find a different terrain type
+			for i := 0; i < 20; i++ {
+				x := rng.Intn(MapWidth)
+				y := rng.Intn(MapHeight)
+
+				// Ensure it's not water and different from start
+				if Map[y][x].altitude > 0 && Map[y][x].landType != startTerrainType {
+					dist := math.Sqrt(math.Pow(float64(x-startX), 2) +
+						math.Pow(float64(y-startY), 2))
+					if dist >= 8 && dist <= 25 {
+						targetX, targetY = x, y
+						foundTarget = true
+						break
+					}
+				}
+			}
+		}
+
+		if !foundTarget {
+			continue // Couldn't find a target
+		}
+
+		// Now trace a path from start to target
+		// Animals will follow the path of least resistance
+		path := findGameTrailPath(startX, startY, targetX, targetY, rng)
+
+		if len(path) >= 5 {
+			// Apply the trail to the map
+			for _, point := range path {
+				x, y := point.x, point.y
+
+				// Game trails can go through other features
+				Map[y][x].hasGameTrail = true
+			}
+
+			trailsGenerated++
+		}
+	}
+}
+
+// Helper function to find a game trail path (uses A* with terrain costs)
+func findGameTrailPath(startX, startY, targetX, targetY int, rng *rand.Rand) []struct{ x, y int } {
+	// Define terrain cost factors
+	// Animals will prefer easier paths (valleys) and avoid difficult ones (steep mountains)
+	getTerrainCost := func(x, y int) float64 {
+		// Water is impassable
+		if Map[y][x].altitude <= 0 {
+			return math.Inf(1)
+		}
+
+		// Base costs by terrain type
+		var baseCost float64
+		switch Map[y][x].landType {
+		case LandType_Plains:
+			baseCost = 1.0 // Easiest to traverse
+		case LandType_Valleys:
+			baseCost = 0.8 // Even easier (animals prefer valleys)
+		case LandType_Hills:
+			baseCost = 2.0 // Moderately difficult
+		case LandType_Plateaus:
+			baseCost = 1.5 // Somewhat difficult
+		case LandType_Mountains:
+			// Mountains are hard but not impossible
+			if Map[y][x].altitude > 1.3 {
+				baseCost = 10.0 // Very difficult (high peaks)
+			} else {
+				baseCost = 5.0 // Difficult but passable (lower mountains)
+			}
+		case LandType_Coastal:
+			baseCost = 1.1 // Slightly harder than plains
+		default:
+			baseCost = 1.0
+		}
+
+		// Modify costs for specific features animals might prefer or avoid
+		if Map[y][x].hasGrove {
+			baseCost *= 0.9 // Animals like cover
+		}
+		if Map[y][x].hasMeadow {
+			baseCost *= 0.9 // Animals like food
+		}
+		if Map[y][x].hasRocks {
+			baseCost *= 1.3 // Animals avoid rocky areas
+		}
+
+		// Add some randomness (animals don't always take perfect paths)
+		baseCost *= 0.9 + rng.Float64()*0.2
+
+		return baseCost
+	}
+
+	// A* pathfinding algorithm
+	type Node struct {
+		x, y int
+		g, f float64 // g = cost from start, f = g + heuristic
+	}
+
+	openSet := make(map[string]Node)
+	closedSet := make(map[string]bool)
+
+	// Add start node
+	startNode := Node{
+		x: startX,
+		y: startY,
+		g: 0,
+		f: heuristic(startX, startY, targetX, targetY),
+	}
+	openSet[nodeKey(startX, startY)] = startNode
+
+	// Define previous nodes to reconstruct path
+	cameFrom := make(map[string]struct{ x, y int })
+
+	// A* main loop
+	for len(openSet) > 0 {
+		// Find node with lowest f in open set
+		var current Node
+		lowestF := math.Inf(1)
+		for _, node := range openSet {
+			if node.f < lowestF {
+				lowestF = node.f
+				current = node
+			}
+		}
+
+		// Remove current from open set
+		delete(openSet, nodeKey(current.x, current.y))
+
+		// Check if we reached the target
+		if current.x == targetX && current.y == targetY {
+			// Reconstruct path
+			path := make([]struct{ x, y int }, 0)
+			x, y := current.x, current.y
+			for {
+				path = append(path, struct{ x, y int }{x, y})
+				prev, exists := cameFrom[nodeKey(x, y)]
+				if !exists {
+					break
+				}
+				x, y = prev.x, prev.y
+			}
+
+			// Reverse path (from start to target)
+			for i, j := 0, len(path)-1; i < j; i, j = i+1, j-1 {
+				path[i], path[j] = path[j], path[i]
+			}
+
+			return path
+		}
+
+		// Mark current as processed
+		closedSet[nodeKey(current.x, current.y)] = true
+
+		// Check neighbors
+		for dy := -1; dy <= 1; dy++ {
+			for dx := -1; dx <= 1; dx++ {
+				if dx == 0 && dy == 0 {
+					continue
+				}
+
+				nx, ny := current.x+dx, current.y+dy
+
+				// Skip if out of bounds
+				if nx < 0 || nx >= MapWidth || ny < 0 || ny >= MapHeight {
+					continue
+				}
+
+				// Skip if already processed
+				if closedSet[nodeKey(nx, ny)] {
+					continue
+				}
+
+				// Get terrain cost
+				terrainCost := getTerrainCost(nx, ny)
+				if math.IsInf(terrainCost, 1) {
+					continue // Impassable
+				}
+
+				// Calculate g score (cost from start)
+				// Diagonal movement costs more
+				moveCost := terrainCost
+				if dx != 0 && dy != 0 {
+					moveCost *= 1.414 // sqrt(2)
+				}
+
+				tentativeG := current.g + moveCost
+
+				neighbor, exists := openSet[nodeKey(nx, ny)]
+				if !exists {
+					// New node
+					neighbor = Node{
+						x: nx,
+						y: ny,
+						g: tentativeG,
+						f: tentativeG + heuristic(nx, ny, targetX, targetY),
+					}
+					openSet[nodeKey(nx, ny)] = neighbor
+					cameFrom[nodeKey(nx, ny)] = struct{ x, y int }{current.x, current.y}
+				} else if tentativeG < neighbor.g {
+					// Better path found
+					neighbor.g = tentativeG
+					neighbor.f = tentativeG + heuristic(nx, ny, targetX, targetY)
+					openSet[nodeKey(nx, ny)] = neighbor
+					cameFrom[nodeKey(nx, ny)] = struct{ x, y int }{current.x, current.y}
+				}
+			}
+		}
+	}
+
+	// No path found
+	return nil
+}
+
+// Helper functions for A* pathfinding
+func nodeKey(x, y int) string {
+	return fmt.Sprintf("%d,%d", x, y)
+}
+
+func heuristic(x1, y1, x2, y2 int) float64 {
+	// Manhattan distance
+	return float64(abs(x1-x2) + abs(y1-y2))
+}
+
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
 }

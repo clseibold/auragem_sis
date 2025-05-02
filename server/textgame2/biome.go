@@ -25,7 +25,7 @@ const (
 	Biome_ExtremeDesert
 
 	// Uncategorized
-	Biome_Grassland
+	Biome_Grassland // Prarie, Steppe, Savanna, and Pampas
 	Biome_Max
 )
 

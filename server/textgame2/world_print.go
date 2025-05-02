@@ -184,22 +184,6 @@ func PrintWorldMap(request *sis.Request) {
 	}
 
 	request.PlainText("\nLegend:\n")
-	request.PlainText("o : Small pond (contained within a tile)\n")
-	request.PlainText(". : Small stream (width contained within a tile)\n")
-	request.PlainText("⊕ : Spring\n")
-	request.PlainText("⊗ : Spring with stream\n")
-	request.PlainText("⊙ : Spring with pond\n")
-	request.PlainText("≈ : Marsh (soggy ground)\n")
-	request.PlainText("⊛ : Marsh with pond\n")
-
-	request.Gemini("Υ : Grove of trees\n")
-	request.Gemini("⁎ : Flower meadow\n")
-	request.Gemini("⌿ : Scrubland\n")
-	request.Gemini("◊ : Rock outcroppings\n")
-	request.Gemini("□ : Salt flat\n")
-	request.Gemini("∴ : Seasonal flood area\n")
-	request.Gemini("- : Game trail\n")
-
 	request.PlainText(" ~: Water (lake/river)\n")
 	request.PlainText(" (space): Plains\n")
 	request.PlainText(" +: Hills\n")
@@ -209,6 +193,25 @@ func PrintWorldMap(request *sis.Request) {
 	request.PlainText(" ▲: Mountains\n")
 	request.PlainText(" c: Coastal\n")
 	request.PlainText(" d: Sand Dunes\n")
+	request.PlainText("\n")
+
+	request.PlainText("o : Small pond (contained within a tile)\n")
+	request.PlainText(". : Small stream (width contained within a tile)\n")
+	request.PlainText("⊕ : Spring\n")
+	request.PlainText("⊗ : Spring with stream\n")
+	request.PlainText("⊙ : Spring with pond\n")
+	request.PlainText("≈ : Marsh (soggy ground)\n")
+	request.PlainText("⊛ : Marsh with pond\n")
+	request.PlainText("\n")
+
+	request.Gemini("Υ : Grove of trees\n")
+	request.Gemini("⁎ : Flower meadow\n")
+	request.Gemini("⌿ : Scrubland\n")
+	request.Gemini("◊ : Rock outcroppings\n")
+	request.Gemini("□ : Salt flat\n")
+	request.Gemini("∴ : Seasonal flood area\n")
+	request.Gemini("- : Game trail\n")
+	request.PlainText("\n")
 
 	request.PlainText("\nLand Type Distribution:\n")
 	request.Gemini("| Land Type  | Count | Percentage |\n")
