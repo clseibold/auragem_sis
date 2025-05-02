@@ -171,6 +171,8 @@ func PrintWorldMap(request *sis.Request) {
 					request.PlainText(" 5|") // Mountain
 				} else if altitude >= 0.7 { // Hills?
 					request.PlainText(" 7|")
+				} else if altitude >= 0.4 {
+					request.PlainText(" 6|")
 				} else {
 					request.PlainText(" 1|") // Plains and hills
 				}
@@ -220,6 +222,8 @@ func PrintWorldMap(request *sis.Request) {
 					request.PlainText(" 5|") // Mountain
 				} else if altitude >= 0.7 { // Hills?
 					request.PlainText(" 7|")
+				} else if altitude >= 0.4 {
+					request.PlainText(" 6|")
 				} else {
 					request.PlainText(" 1|") // Plains and hills
 				}
@@ -481,6 +485,7 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 			// Lower threshold to extend mountain influence
 			if heightFactor > 0.02 {
 				// Apply a smoothstep-like function for gradual addition near edges
+				// The denominator of the blendFactor determines where mountains "end". Higher values = more distinct mountain boundaries.
 				blendFactor := math.Min(1.0, (heightFactor-0.02)/0.10)
 				finalHeight += mountainHeight * blendFactor
 			}
