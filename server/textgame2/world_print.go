@@ -81,7 +81,7 @@ func PrintWorldMap(request *sis.Request) {
 				case LandType_Water:
 					request.PlainText(" ~|")
 				case LandType_Mountains:
-					request.PlainText(" A|") // Mountain
+					request.PlainText(" ▲|") // Mountain
 				case LandType_Plateaus:
 					request.PlainText(" ≡|") // Plateau
 				case LandType_Hills:
@@ -145,7 +145,7 @@ func PrintWorldMap(request *sis.Request) {
 				if altitude <= 0 {
 					request.PlainText(" ~|") // Water
 				} else if altitude >= 1 {
-					request.PlainText(" A|") // Mountain
+					request.PlainText(" ▲|") // Mountain
 				} else if altitude >= 0.5 { // Hills?
 					request.PlainText(" ∩|")
 				} else if altitude >= 0.3 {
@@ -168,7 +168,7 @@ func PrintWorldMap(request *sis.Request) {
 	request.Gemini("- ∩: Hills\n")
 	request.Gemini("- ⌄: Valleys\n")
 	request.Gemini("- ≡: Plateaus\n")
-	request.Gemini("- A: Mountains\n")
+	request.Gemini("- ▲: Mountains\n")
 	request.Gemini("- c: Coastal\n")
 	request.Gemini("- d: Sand Dunes\n")
 }
@@ -254,7 +254,7 @@ func debugLandTypes(request *sis.Request) {
 			case LandType_Plateaus:
 				symbol = "≡"
 			case LandType_Mountains:
-				symbol = "A"
+				symbol = "▲"
 			case LandType_Coastal:
 				symbol = "c"
 			case LandType_SandDunes:
@@ -276,7 +276,7 @@ func debugLandTypes(request *sis.Request) {
 	request.Gemini("- ∩: Hills\n")
 	request.Gemini("- ⌄: Valleys\n")
 	request.Gemini("- ≡: Plateaus\n")
-	request.Gemini("- A: Mountains\n")
+	request.Gemini("- ▲: Mountains\n")
 	request.Gemini("- c: Coastal\n")
 	request.Gemini("- d: Sand Dunes\n")
 }
