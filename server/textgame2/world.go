@@ -375,22 +375,18 @@ func getMapLowestAndHighestPoints() (Tile, Tile) {
 
 	return lowest, highest
 }
-
 func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
-	// perlin.NewPerlin(alpha, beta, n, seed)
-	// NewPerlin creates new Perlin noise generator In what follows “alpha” is the weight when the sum is formed. Typically it is 2, As this approaches 1 the function is noisier. “beta” is the harmonic scaling/spacing, typically 2, n is the number of iterations and seed is the math.rand seed value to use.
-	//perlin := perlin.NewPerlin(1.5, 4, 3, seed)
+	// Base terrain with Perlin noise
 	perlin := perlin.NewPerlin(2.0, 2.5, 3, seed)
 
-	// perlin.Noise2D generates 2-dimensional perlin noise value given an x and y.
-	// Base terrain with multiple octaves to create natural variability
-	// Using larger divisors to create broader terrain features
+	// Generate base terrain with gentle hills
 	baseHeight := perlin.Noise2D(float64(x)/(MapWidth*0.4), float64(y)/(MapHeight*0.4)) * 0.6
 	baseHeight += perlin.Noise2D(float64(x)/(MapWidth*0.1), float64(y)/(MapHeight*0.1)) * 0.15
-	baseHeight += 0.2 // Offset for water level
+	baseHeight += 0.2 // Baseline offset
 
-	// Mountain ranges - at regional scale we want elongated ranges, not isolated peaks, but keep is more controlled
 	finalHeight := baseHeight
+
+	// For each mountain peak, generate a highly elongated range
 	for _, peak := range peaks {
 		peakX := peak.peakX
 		peakY := peak.peakY
@@ -412,15 +408,13 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 		// 1 = perfectly aligned, 0 = perpendicular
 		angleAlignment := math.Abs(math.Cos(pointAngle - rangeDirection))
 
-		// Create extreme stretching factor:
-		// - Along the range direction: very little distance penalty (large stretch)
-		// - Perpendicular to range: very high distance penalty (small stretch)
-		stretchMinimum := 0.5 //0.15 // Controls width (smaller = narrower)
-		stretchMaximum := 8.0 // Controls length (larger = longer)
+		// Create extreme stretching factor with gentler transition
+		stretchMinimum := 0.15 // Controls width (smaller = narrower)
+		stretchMaximum := 8.0  // Controls length (larger = longer)
 
 		// Calculate stretch factor with extreme bias for elongation
-		// Using power function to create more pronounced difference
-		stretchFactor := stretchMinimum + (stretchMaximum-stretchMinimum)*math.Pow(angleAlignment, 3)
+		// Using a gentler power function (squared instead of cubed)
+		stretchFactor := stretchMinimum + (stretchMaximum-stretchMinimum)*math.Pow(angleAlignment, 2)
 
 		// Apply the stretch factor to create a modified distance
 		modifiedDistance := distance / stretchFactor
@@ -433,40 +427,61 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 		lengthwiseDistance := math.Abs(alignedX)
 		crosswiseDistance := math.Abs(alignedY)
 
-		// Maximum dimensions for the range
-		maxLengthwise := 15.0 // Maximum tiles along range direction
-		maxCrosswise := 2.5   // Maximum half-width (total width ~4 tiles)
+		// Extended maximum dimensions for smoother falloff
+		// Inner bounds = hard constraints, outer bounds = falloff zone
+		innerLengthwise := 15.0 // Core range length
+		outerLengthwise := 18.0 // Extended falloff zone
+		innerCrosswise := 2.0   // Core range half-width
+		outerCrosswise := 3.5   // Extended falloff zone
 
-		// Only apply mountain height if within our bounds
-		if lengthwiseDistance <= maxLengthwise && crosswiseDistance <= maxCrosswise {
-			// Different falloff rates in different directions
-			// Use both the stretched distance and the dimensional constraints
+		// Only process points within the extended range boundaries
+		if lengthwiseDistance <= outerLengthwise && crosswiseDistance <= outerCrosswise {
+			// Distance-based falloff with much gentler decay
+			// Increase the denominator to make the falloff more gradual
+			distanceFactor := math.Exp(-math.Pow(modifiedDistance, 1.7) / 12.0)
 
-			// Distance-based falloff using modified (stretched) distance
-			distanceFactor := math.Exp(-math.Pow(modifiedDistance, 2) / 8.0)
+			// Dimension-based falloff - calculate based on position relative to inner/outer bounds
+			var widthFactor, lengthFactor float64
 
-			// Dimensional constraints (normalized 0-1 within bounds)
-			normalizedLength := lengthwiseDistance / maxLengthwise
-			normalizedWidth := crosswiseDistance / maxCrosswise
+			// Width falloff calculation
+			if crosswiseDistance <= innerCrosswise {
+				// Inside the core width - minimal falloff
+				widthFactor = 1.0 - 0.2*(crosswiseDistance/innerCrosswise)
+			} else {
+				// In the extended width falloff zone
+				widthPosition := (crosswiseDistance - innerCrosswise) / (outerCrosswise - innerCrosswise)
+				// Use a gentler falloff function (square root for less steep decline)
+				widthFactor = 0.8 * (1.0 - math.Sqrt(widthPosition))
+			}
 
-			// Dimension-based falloff - steeper for width, gentler for length
-			widthFactor := 1.0 - math.Pow(normalizedWidth, 1.0)
-			lengthFactor := 1.0 - math.Pow(normalizedLength, 0.7)
+			// Length falloff calculation
+			if lengthwiseDistance <= innerLengthwise {
+				// Inside the core length - very minimal falloff
+				lengthFactor = 1.0 - 0.3*(lengthwiseDistance/innerLengthwise)
+			} else {
+				// In the extended length falloff zone
+				lengthPosition := (lengthwiseDistance - innerLengthwise) / (outerLengthwise - innerLengthwise)
+				// Use a gentler falloff function
+				lengthFactor = 0.7 * (1.0 - math.Pow(lengthPosition, 0.7))
+			}
 
-			// Combine all factors - both distance and dimensional constraints
-			// This creates the stretched mountain shape while enforcing bounds
-			heightFactor := distanceFactor * widthFactor * lengthFactor
+			// Combine all factors with emphasis on maintaining height
+			// Use a weighted average that prioritizes the highest values
+			heightFactor := math.Max(distanceFactor, 0.7*widthFactor*lengthFactor)
 
 			// Apply some noise along the range for varied peaks
-			heightVariation := perlin.Noise2D(float64(x+peakX)/10, float64(y+peakY)/10) * 0.3
+			heightVariation := perlin.Noise2D(float64(x+peakX)/12, float64(y+peakY)/12) * 0.25
 
-			// Ensure mountain height is substantial
+			// Ensure mountain height is substantial with gentler threshold
 			baseHeight := 1.8
 			mountainHeight := baseHeight * heightFactor * (1.0 + heightVariation)
 
-			// Only add significant height if the factor is substantial
-			if heightFactor > 0.05 {
-				finalHeight += mountainHeight
+			// More gradual cutoff for adding height
+			// Lower threshold to extend mountain influence
+			if heightFactor > 0.02 {
+				// Apply a smoothstep-like function for gradual addition near edges
+				blendFactor := math.Min(1.0, (heightFactor-0.02)/0.10)
+				finalHeight += mountainHeight * blendFactor
 			}
 		}
 	}
