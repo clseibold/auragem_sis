@@ -2064,15 +2064,16 @@ func generateFloodAreas(seed int64) {
 	rng := rand.New(rand.NewSource(seed + 3333))
 
 	// Parameters for flood areas
-	floodAreaCount := 4 + rng.Intn(3) // 4-6 flood regions
+	floodAreaCount := 2 + rng.Intn(2) // 2-3 flood regions
 
 	// Track all water sources (rivers, lakes, streams)
 	var waterSources []struct{ x, y int }
 
 	for y := 0; y < MapHeight; y++ {
 		for x := 0; x < MapWidth; x++ {
-			if Map[y][x].altitude <= 0 || // Major water bodies
-				Map[y][x].hasStream { // Streams
+			// Only include major water bodies (no streams)
+			// Seasonal floods typically come from larger bodies of water
+			if Map[y][x].altitude <= 0 { // Only major water bodies
 				waterSources = append(waterSources, struct{ x, y int }{x, y})
 			}
 		}
@@ -2105,8 +2106,32 @@ func generateFloodAreas(seed int64) {
 
 		checkedTiles[y][x] = true
 
+		// Skip if this water tile doesn't have enough adjacent water tiles
+		// This ensures floods only come from substantial water bodies
+		adjacentWaterCount := 0
+		for dy := -1; dy <= 1; dy++ {
+			for dx := -1; dx <= 1; dx++ {
+				if dx == 0 && dy == 0 {
+					continue
+				}
+
+				nx, ny := x+dx, y+dy
+				if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
+					Map[ny][nx].altitude <= 0 { // Adjacent water
+					adjacentWaterCount++
+				}
+			}
+		}
+
+		// Require at least 3 adjacent water tiles
+		// This means floods only start from water "edges" not single water tiles
+		if adjacentWaterCount < 3 {
+			continue // Not a substantial enough water body
+		}
+
 		// Flood regions can only form from water sources near low-lying land
 		hasLowLand := false
+		hasVeryLowLand := false
 
 		// Check if this water source has adjacent low-lying land
 		for dy := -1; dy <= 1; dy++ {
@@ -2118,15 +2143,15 @@ func generateFloodAreas(seed int64) {
 					Map[ny][nx].landType != LandType_Mountains &&
 					Map[ny][nx].landType != LandType_Plateaus {
 					hasLowLand = true
-					break
+
+					if Map[ny][nx].altitude < 0.15 {
+						hasVeryLowLand = true
+					}
 				}
-			}
-			if hasLowLand {
-				break
 			}
 		}
 
-		if !hasLowLand {
+		if !hasVeryLowLand {
 			continue // This water source isn't suitable for flooding
 		}
 
@@ -2139,9 +2164,9 @@ func generateFloodAreas(seed int64) {
 			for _, tile := range floodTiles {
 				Map[tile.y][tile.x].hasFloodArea = true
 
-				// Mark adjacent tiles as checked to avoid too-close flood regions
-				for dy := -2; dy <= 2; dy++ {
-					for dx := -2; dx <= 2; dx++ {
+				// Mark a wide radius as checked to avoid too-close flood regions
+				for dy := -4; dy <= 4; dy++ {
+					for dx := -4; dx <= 4; dx++ {
 						nx, ny := tile.x+dx, tile.y+dy
 						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
 							checkedTiles[ny][nx] = true
@@ -2171,7 +2196,7 @@ func generateConnectedFloodRegion(waterX, waterY int, rng *rand.Rand) []struct{ 
 
 	processed[waterY][waterX] = true
 
-	maxDistance := 8 + rng.Intn(5) // 8-12 tiles maximum flood distance
+	maxDistance := 5 + rng.Intn(7) // 8-12 tiles maximum flood distance
 
 	// Process queue
 	for len(queue) > 0 {
@@ -2219,12 +2244,19 @@ func generateConnectedFloodRegion(waterX, waterY int, rng *rand.Rand) []struct{ 
 			!Map[current.y][current.x].hasSaltFlat { // Salt flats form in areas that DON'T flood
 
 			// The likelihood of flooding decreases with elevation and distance
-			floodChance := 1.0 - (Map[current.y][current.x].altitude/0.3)*0.7 -
-				(float64(current.distance)/float64(maxDistance))*0.3
+			baseChance := 0.8
+			elevationEffect := 0.9
+			distanceEffect := 0.5
+			floodChance := baseChance - (Map[current.y][current.x].altitude/0.3)*elevationEffect - (float64(current.distance)/float64(maxDistance))*distanceEffect
 
 			// Additional factor: valleys are more likely to flood
 			if Map[current.y][current.x].landType == LandType_Valleys {
 				floodChance += 0.2
+			}
+
+			// Steep falloff at the edges
+			if float64(current.distance) > float64(maxDistance)*0.7 {
+				floodChance *= 0.5 // Flood probability drops sharply at edges
 			}
 
 			// Apply randomness
