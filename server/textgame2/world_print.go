@@ -76,30 +76,38 @@ func PrintWorldMap(request *sis.Request) {
 			if showValues {
 				request.PlainText(fmt.Sprintf("%+.2f|", Map[y][x].altitude))
 			} else {
-				// altitude := Map[y][x].altitude
+				// Prefix
+				if Map[y][x].hasPond {
+					request.PlainText("o")
+				} else if Map[y][x].hasStream {
+					request.PlainText(".")
+				} else {
+					request.PlainText(" ")
+				}
+
 				switch Map[y][x].landType {
 				case LandType_Water:
-					request.PlainText("  |")
+					request.PlainText("~|")
 				case LandType_Mountains:
-					request.PlainText(" ▲|") // Mountain
+					request.PlainText("▲|") // Mountain
 				case LandType_Plateaus:
-					request.PlainText(" ≡|") // Plateau
+					request.PlainText("≡|") // Plateau
 				case LandType_Hills:
 					if Map[y][x].altitude >= 0.8 {
-						request.PlainText(" n|") // High hills/foothills
+						request.PlainText("n|") // High hills/foothills
 					} else {
-						request.PlainText(" +|") // Regular hills
+						request.PlainText("+|") // Regular hills
 					}
 				case LandType_Valleys:
-					request.PlainText(" ⌄|") // Valley
+					request.PlainText("⌄|") // Valley
 				case LandType_Coastal:
-					request.PlainText(" c|") // Coastal
+					request.PlainText("c|") // Coastal
 				case LandType_Plains:
-					request.PlainText(" ·|") // Plains
+					request.PlainText(" |") // Plains
 				case LandType_SandDunes:
-					request.PlainText(" s|") // Sand Dunes
+					request.PlainText("s|") // Sand Dunes
 				default:
-					request.PlainText(" ·|") // Default plains
+					request.PlainText(" |") // Default plains
 				}
 			}
 		}
@@ -142,16 +150,17 @@ func PrintWorldMap(request *sis.Request) {
 				request.PlainText(fmt.Sprintf("%+.2f|", MapPerlin[y][x].altitude))
 			} else {
 				altitude := MapPerlin[y][x].altitude
+				request.PlainText(" ") // Prefix
 				if altitude <= 0 {
-					request.PlainText("  |") // Water
+					request.PlainText("~|") // Water
 				} else if altitude >= 1 {
-					request.PlainText(" ▲|") // Mountain
+					request.PlainText("▲|") // Mountain
 				} else if altitude >= 0.8 { // Foothills
-					request.PlainText(" n|")
+					request.PlainText("n|")
 				} else if altitude >= 0.3 {
-					request.PlainText(" +|")
+					request.PlainText("+|")
 				} else {
-					request.PlainText(" ·|") // Plains
+					request.PlainText(" |") // Plains
 				}
 			}
 		}
@@ -160,18 +169,20 @@ func PrintWorldMap(request *sis.Request) {
 			request.PlainText("\n")
 		}
 	}
-	request.Gemini("```\n")
 
-	request.Gemini("Legend:\n")
-	request.Gemini("- (space): Water\n")
-	request.Gemini("- ·: Plains\n")
-	request.Gemini("- +: Hills\n")
-	request.Gemini("- n: Foothills\n")
-	request.Gemini("- ⌄: Valleys\n")
-	request.Gemini("- ≡: Plateaus\n")
-	request.Gemini("- ▲: Mountains\n")
-	request.Gemini("- c: Coastal\n")
-	request.Gemini("- d: Sand Dunes\n")
+	request.PlainText("\nLegend:\n")
+	request.PlainText("- ~: Water (lake/river)\n")
+	request.PlainText("o: small pond\n")
+	request.PlainText(".: small stream\n")
+	request.PlainText("(space): Plains\n")
+	request.PlainText("+: Hills\n")
+	request.PlainText("n: Foothills\n")
+	request.PlainText("⌄: Valleys\n")
+	request.PlainText("≡: Plateaus\n")
+	request.PlainText("▲: Mountains\n")
+	request.PlainText("c: Coastal\n")
+	request.PlainText("d: Sand Dunes\n")
+	request.PlainText("```\n")
 }
 
 func debugLandTypes(request *sis.Request) {
@@ -245,9 +256,9 @@ func debugLandTypes(request *sis.Request) {
 
 			switch Map[y][x].landType {
 			case LandType_Water:
-				symbol = " "
+				symbol = "~"
 			case LandType_Plains:
-				symbol = "·"
+				symbol = " "
 			case LandType_Hills:
 				symbol = "+"
 			case LandType_Valleys:
@@ -264,21 +275,30 @@ func debugLandTypes(request *sis.Request) {
 				symbol = "?"
 			}
 
-			request.PlainText(" %s|", symbol)
+			// Prefix
+			if Map[y][x].hasPond {
+				request.PlainText("o")
+			} else if Map[y][x].hasStream {
+				request.PlainText(".")
+			} else {
+				request.PlainText(" ")
+			}
+			request.PlainText("%s|", symbol)
 		}
 		request.PlainText("\n")
 	}
 
+	request.PlainText("\nLegend:\n")
+	request.PlainText("- ~: Water (lake/river)\n")
+	request.PlainText("o: small pond\n")
+	request.PlainText(".: small stream\n")
+	request.PlainText("(space): Plains\n")
+	request.PlainText("+: Hills\n")
+	request.PlainText("n: Foothills\n")
+	request.PlainText("⌄: Valleys\n")
+	request.PlainText("≡: Plateaus\n")
+	request.PlainText("▲: Mountains\n")
+	request.PlainText("c: Coastal\n")
+	request.PlainText("d: Sand Dunes\n")
 	request.Gemini("```\n")
-
-	request.Gemini("Legend:\n")
-	request.Gemini("- (space): Water\n")
-	request.Gemini("- ·: Plains\n")
-	request.Gemini("- +: Hills\n")
-	request.Gemini("- +: Foothills\n")
-	request.Gemini("- ⌄: Valleys\n")
-	request.Gemini("- ≡: Plateaus\n")
-	request.Gemini("- ▲: Mountains\n")
-	request.Gemini("- c: Coastal\n")
-	request.Gemini("- d: Sand Dunes\n")
 }

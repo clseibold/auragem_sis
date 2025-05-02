@@ -22,9 +22,11 @@ var MapPerlin [MapHeight][MapWidth]Tile
 
 // Each tile of the world map represents a 10 square kilometer region.
 type Tile struct {
-	altitude float64
-	biome    Biome
-	landType LandType
+	altitude  float64
+	biome     Biome
+	landType  LandType
+	hasStream bool
+	hasPond   bool
 }
 
 type Peak struct {
@@ -60,6 +62,9 @@ func generateWorldMap() {
 	// Generate rivers flowing from high to low elevation
 	generateRivers(seed)
 
+	// Generate small-scale water features
+	generateSmallWaterFeatures(seed)
+
 	// Identify valleys
 	identifyValleys()
 
@@ -88,7 +93,7 @@ func generateMapMountainPeaks(rand *rand.Rand) []Peak {
 	// Place remaining peaks ensuring they have enough separation
 	for i := 1; i < 4; i++ { // Try to place 3 more peaks
 		// Make multiple attempts to find a suitable position
-		for attempt := 0; attempt < 20; attempt++ {
+		for range 20 {
 			candidateX := minX + rand.Intn(maxX-minX)
 			candidateY := minY + rand.Intn(maxY-minY)
 
@@ -922,6 +927,162 @@ func traceRiverPath(startX, startY int, rng *rand.Rand, riverTiles [MapHeight][M
 
 	// Return an empty path if it's too short
 	return []struct{ x, y int }{}
+}
+
+func generateSmallWaterFeatures(seed int64) {
+	rng := rand.New(rand.NewSource(seed + 5552))
+
+	// Parameters for small water features
+	smallRiverCount := 10 + rng.Intn(8) // 10-17 small rivers
+	smallPondCount := 6 + rng.Intn(5)   // 6-10 small ponds
+
+	// Track where we've already placed water features
+	var waterFeaturePlaced [MapHeight][MapWidth]bool
+
+	// Mark existing water and adjacent tiles as unavailable
+	for y := 0; y < MapHeight; y++ {
+		for x := 0; x < MapWidth; x++ {
+			if Map[y][x].altitude <= 0 { // Water tiles
+				waterFeaturePlaced[y][x] = true
+
+				// Mark adjacent tiles as unavailable too
+				for dy := -1; dy <= 1; dy++ {
+					for dx := -1; dx <= 1; dx++ {
+						nx, ny := x+dx, y+dy
+						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
+							waterFeaturePlaced[ny][nx] = true
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// 1. Generate small ponds
+	pondsGenerated := 0
+	for attempts := 0; attempts < 200 && pondsGenerated < smallPondCount; attempts++ {
+		// Choose a random location
+		x := rng.Intn(MapWidth)
+		y := rng.Intn(MapHeight)
+
+		// Check if this is a suitable location for a pond
+		if !waterFeaturePlaced[y][x] &&
+			Map[y][x].altitude > 0.05 && Map[y][x].altitude < 0.5 &&
+			Map[y][x].landType != LandType_Mountains &&
+			Map[y][x].landType != LandType_Plateaus {
+
+			// Set the pond flag
+			Map[y][x].hasPond = true
+
+			// Mark as placed to avoid overlaps
+			waterFeaturePlaced[y][x] = true
+			pondsGenerated++
+		}
+	}
+
+	// 2. Generate small rivers (streams)
+	streamsGenerated := 0
+	for attempts := 0; attempts < 200 && streamsGenerated < smallRiverCount; attempts++ {
+		// Choose a random location for the stream source (slightly higher ground)
+		x := rng.Intn(MapWidth)
+		y := rng.Intn(MapHeight)
+
+		// Check if this is a suitable location for a stream source
+		if !waterFeaturePlaced[y][x] &&
+			Map[y][x].altitude > 0.3 && Map[y][x].altitude < 0.8 &&
+			Map[y][x].landType != LandType_Mountains &&
+			Map[y][x].landType != LandType_Plateaus {
+
+			// Trace a short path downhill
+			streamPath := traceSmallStreamPath(x, y, rng, waterFeaturePlaced)
+
+			// If we found a valid path of appropriate length
+			if len(streamPath) >= 2 && len(streamPath) <= 5 {
+				// Apply the stream to the map
+				for _, point := range streamPath {
+					sx, sy := point.x, point.y
+
+					// Set the stream flag
+					Map[sy][sx].hasStream = true
+
+					// Mark as placed to avoid overlaps
+					waterFeaturePlaced[sy][sx] = true
+				}
+
+				streamsGenerated++
+			}
+		}
+	}
+}
+
+// Helper function to trace a small stream path
+func traceSmallStreamPath(startX, startY int, rng *rand.Rand, occupied [MapHeight][MapWidth]bool) []struct{ x, y int } {
+	path := make([]struct{ x, y int }, 0, 5)
+	path = append(path, struct{ x, y int }{startX, startY})
+
+	x, y := startX, startY
+	currentAltitude := Map[y][x].altitude
+
+	// Maximum length for small streams
+	maxLength := 5
+
+	// Trace a short path downhill
+	for len(path) < maxLength {
+		// Find the lowest unoccupied neighbor
+		lowestX, lowestY := -1, -1
+		lowestAlt := currentAltitude
+
+		for dy := -1; dy <= 1; dy++ {
+			for dx := -1; dx <= 1; dx++ {
+				if dx == 0 && dy == 0 {
+					continue
+				}
+
+				nx, ny := x+dx, y+dy
+
+				// Check bounds
+				if nx < 0 || nx >= MapWidth || ny < 0 || ny >= MapHeight {
+					continue
+				}
+
+				// Skip if already occupied or too high
+				if occupied[ny][nx] || Map[ny][nx].altitude >= currentAltitude {
+					continue
+				}
+
+				// Check if this is the lowest neighbor so far
+				if Map[ny][nx].altitude < lowestAlt {
+					lowestAlt = Map[ny][nx].altitude
+					lowestX = nx
+					lowestY = ny
+				}
+			}
+		}
+
+		// If we couldn't find a lower neighbor, stop
+		if lowestX == -1 {
+			break
+		}
+
+		// Move to the lowest neighbor
+		x, y = lowestX, lowestY
+		currentAltitude = Map[y][x].altitude
+
+		// Add to path
+		path = append(path, struct{ x, y int }{x, y})
+
+		// If we reached water, stop
+		if Map[y][x].altitude <= 0 {
+			break
+		}
+
+		// Random chance to end stream early (creates springs, seeps, etc.)
+		if rng.Float64() < 0.2 {
+			break
+		}
+	}
+
+	return path
 }
 
 // | Terrain Type | Altitude Range | Display |
