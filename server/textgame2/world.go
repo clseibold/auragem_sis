@@ -532,8 +532,8 @@ func createWaterBodies(seed int64) {
 	secondaryWaterThreshold := -0.60 // Threshold for secondary water features
 	maxElevationForWater := 0.35
 
-	for y := 0; y < MapHeight; y++ {
-		for x := 0; x < MapWidth; x++ {
+	for y := range MapHeight {
+		for x := range MapWidth {
 			// Skip existing water and mountains
 			if Map[y][x].altitude <= 0 || Map[y][x].altitude >= 0.9 {
 				continue
@@ -554,8 +554,8 @@ func createWaterBodies(seed int64) {
 	}
 
 	// Second pass - add secondary water features
-	for y := 0; y < MapHeight; y++ {
-		for x := 0; x < MapWidth; x++ {
+	for y := range MapHeight {
+		for x := range MapWidth {
 			// Skip existing water and mountains
 			if Map[y][x].altitude <= 0 || Map[y][x].altitude >= 0.9 {
 				continue
@@ -610,8 +610,8 @@ func createWaterBodies(seed int64) {
 	}
 
 	// Apply the water expansion
-	for y := 0; y < MapHeight; y++ {
-		for x := 0; x < MapWidth; x++ {
+	for y := range MapHeight {
+		for x := range MapWidth {
 			if waterExpansion[y][x] {
 				Map[y][x].altitude = -0.05
 				Map[y][x].landType = LandType_Water

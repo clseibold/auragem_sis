@@ -95,11 +95,11 @@ func PrintWorldMap(request *sis.Request) {
 				case LandType_Coastal:
 					request.PlainText(" c|") // Coastal
 				case LandType_Plains:
-					request.PlainText(" ~|") // Plains
+					request.PlainText(" ·|") // Plains
 				case LandType_SandDunes:
 					request.PlainText(" s|") // Sand Dunes
 				default:
-					request.PlainText(" ~|") // Default plains
+					request.PlainText(" ·|") // Default plains
 				}
 			}
 		}
@@ -151,7 +151,7 @@ func PrintWorldMap(request *sis.Request) {
 				} else if altitude >= 0.3 {
 					request.PlainText(" ∩|")
 				} else {
-					request.PlainText(" ~|") // Plains
+					request.PlainText(" ·|") // Plains
 				}
 			}
 		}
@@ -164,7 +164,7 @@ func PrintWorldMap(request *sis.Request) {
 
 	request.Gemini("Legend:\n")
 	request.Gemini("- (space): Water\n")
-	request.Gemini("- ~: Plains\n")
+	request.Gemini("- ·: Plains\n")
 	request.Gemini("- ∩: Hills\n")
 	request.Gemini("- ⌄: Valleys\n")
 	request.Gemini("- ≡: Plateaus\n")
@@ -246,7 +246,7 @@ func debugLandTypes(request *sis.Request) {
 			case LandType_Water:
 				symbol = " "
 			case LandType_Plains:
-				symbol = "~"
+				symbol = "·"
 			case LandType_Hills:
 				symbol = "∩"
 			case LandType_Valleys:
@@ -272,7 +272,7 @@ func debugLandTypes(request *sis.Request) {
 
 	request.Gemini("Legend:\n")
 	request.Gemini("- (space): Water\n")
-	request.Gemini("- ~: Plains\n")
+	request.Gemini("- ·: Plains\n")
 	request.Gemini("- ∩: Hills\n")
 	request.Gemini("- ⌄: Valleys\n")
 	request.Gemini("- ≡: Plateaus\n")
