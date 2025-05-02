@@ -15,6 +15,7 @@ const MapNumberOfMountainPeaks = 3
 
 var MapPeaks []Peak
 var Map [MapHeight][MapWidth]Tile
+var MapPerlin [MapHeight][MapWidth]Tile
 
 type Tile struct {
 	altitude float64
@@ -40,8 +41,9 @@ func generateWorldMap() {
 
 	for y := 0; y < MapHeight; y++ {
 		for x := 0; x < MapWidth; x++ {
-			altitude := generateHeight(MapPeaks, x, y, 1)
+			perlinAltitude, altitude := generateHeight(MapPeaks, x, y, 1)
 			Map[y][x] = Tile{altitude: altitude}
+			MapPerlin[y][x] = Tile{altitude: perlinAltitude}
 		}
 	}
 }
@@ -54,16 +56,16 @@ func PrintWorldMap(request *sis.Request) {
 	}
 	request.PlainText("\n\n")
 	for y := 0; y < MapHeight; y++ {
-		request.Gemini("|")
+		request.PlainText("|")
 		for x := 0; x < MapWidth; x++ {
-			request.PlainText(fmt.Sprintf("%.2f|", Map[y][x].altitude))
+			request.PlainText(fmt.Sprintf("%.2f|", MapPerlin[y][x].altitude))
 		}
-		request.PlainText("\n")
+		request.PlainText("\n\n")
 	}
 	request.Gemini("```\n")
 }
 
-func generateHeight(peaks []Peak, x int, y int, seed int64) float64 {
+func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 	perlin := perlin.NewPerlin(2, 2, 3, seed)
 
 	baseHeight := (perlin.Noise2D(float64(x), float64(y)) + 1) * 0.5 // Scale to [0, 1]
@@ -87,5 +89,5 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) float64 {
 		finalHeight += mountainHeight
 	}
 
-	return finalHeight
+	return baseHeight, finalHeight
 }
