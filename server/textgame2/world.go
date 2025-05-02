@@ -227,7 +227,7 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 		if distance < maxMountainInfluence {
 			// Create directional bias for elongated ranges
 			// Each peak gets a random direction for its range
-			rangeDirection := (float64(peakX*peakY+int(seed)) % 360) * math.Pi / 180
+			rangeDirection := (math.Mod(float64(peakX*peakY+int(seed)), 360)) * math.Pi / 180
 
 			// Vector from peak to current point
 			dirX := float64(x - peakX)
