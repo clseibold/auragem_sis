@@ -565,19 +565,24 @@ func identifyCoastalAreas() {
 	}
 }
 
-// Add this function to create additional water bodies
 func createWaterBodies(seed int64) {
+	rng := rand.New(rand.NewSource(seed))
+
 	// Generate water bodies using separate noise
 	waterNoise := perlin.NewPerlin(2.2, 2.0, 2, seed+789)
-
-	// Use a second noise field for more varied water patterns
 	secondaryWaterNoise := perlin.NewPerlin(1.8, 2.5, 2, seed+367)
+	detailNoise := perlin.NewPerlin(3.0, 1.5, 2, seed+921)
 
-	// Parameters for water body generation
-	mainWaterThreshold := -0.50      // -0.55      // less negative = more water
-	secondaryWaterThreshold := -0.60 // Threshold for secondary water features
-	maxElevationForWater := 0.35
+	// CHANGED: Parameters for water generation
+	largeWaterThreshold := -0.60  // Raised from -0.65 (more frequent)
+	mediumWaterThreshold := -0.53 // New intermediate size water bodies
+	smallWaterThreshold := -0.48  // New small water bodies
+	maxElevationForWater := 0.35  // Keep the same
 
+	// ADDED: Track water bodies to maintain proper spacing
+	var waterTiles [MapHeight][MapWidth]bool
+
+	// First pass - create smaller, more numerous water bodies
 	for y := range MapHeight {
 		for x := range MapWidth {
 			// Skip existing water and mountains
@@ -588,82 +593,162 @@ func createWaterBodies(seed int64) {
 			// Generate water body noise
 			waterValue := waterNoise.Noise2D(float64(x)/(MapWidth*0.25), float64(y)/(MapHeight*0.25))
 
-			// Create water where the noise is strongly negative and terrain is low
-			if waterValue < mainWaterThreshold && Map[y][x].altitude < maxElevationForWater {
-				// Depress terrain below water level
-				// Depress terrain below water level - deeper water for stronger noise values
-				waterDepth := math.Min(-0.1, waterValue*0.15)
-				Map[y][x].altitude = waterDepth
-				Map[y][x].landType = LandType_Water
+			// ADDED: Detail noise to break up water edges
+			detailValue := detailNoise.Noise2D(float64(x)/(MapWidth*0.05), float64(y)/(MapHeight*0.05)) * 0.1
+
+			// CHANGED: Different sizes of water bodies
+			if waterValue < largeWaterThreshold && Map[y][x].altitude < maxElevationForWater {
+				// Check spacing from existing water bodies
+				tooClose := false
+				searchRadius := 3 // Spacing for large bodies
+
+				// Skip this check for the first few water bodies
+				if countWaterTiles(waterTiles) > 5 {
+					for dy := -searchRadius; dy <= searchRadius; dy++ {
+						for dx := -searchRadius; dx <= searchRadius; dx++ {
+							nx, ny := x+dx, y+dy
+							if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
+								waterTiles[ny][nx] {
+								tooClose = true
+								break
+							}
+						}
+						if tooClose {
+							break
+						}
+					}
+				}
+
+				if !tooClose {
+					// Large water body
+					waterDepth := math.Min(-0.1, waterValue*0.15)
+					Map[y][x].altitude = waterDepth
+					Map[y][x].landType = LandType_Water
+					waterTiles[y][x] = true
+
+					// ADDED: Generate a small cluster of water around large bodies
+					// But limit the size with a strict radius check
+					maxRadius := 1 + rng.Intn(2) // 1-2 tile radius max
+
+					for dy := -maxRadius; dy <= maxRadius; dy++ {
+						for dx := -maxRadius; dx <= maxRadius; dx++ {
+							// Skip center tile
+							if dx == 0 && dy == 0 {
+								continue
+							}
+
+							// Calculate distance for circular lakes
+							dist := math.Sqrt(float64(dx*dx + dy*dy))
+							if dist > float64(maxRadius) {
+								continue // Outside the radius
+							}
+
+							nx, ny := x+dx, y+dy
+							if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
+								Map[ny][nx].altitude > 0 && // Not already water
+								Map[ny][nx].altitude < maxElevationForWater {
+
+								// Add detail noise for natural shorelines
+								edgeNoise := detailNoise.Noise2D(float64(nx)/(MapWidth*0.08),
+									float64(ny)/(MapHeight*0.08)) * 0.15
+
+								// Higher chance to become water closer to center
+								waterChance := 0.8 - (dist/float64(maxRadius))*0.5 + edgeNoise
+
+								if rng.Float64() < waterChance {
+									// Slightly shallower at edges
+									edgeDepth := waterDepth * (1.0 - dist/float64(maxRadius+1))
+									Map[ny][nx].altitude = edgeDepth
+									Map[ny][nx].landType = LandType_Water
+									waterTiles[ny][nx] = true
+								}
+							}
+						}
+					}
+				}
+			} else if waterValue < mediumWaterThreshold && Map[y][x].altitude < maxElevationForWater {
+				// Medium water bodies (ponds)
+				// Check spacing
+				tooClose := false
+				searchRadius := 2 // Smaller spacing for medium bodies
+
+				for dy := -searchRadius; dy <= searchRadius; dy++ {
+					for dx := -searchRadius; dx <= searchRadius; dx++ {
+						nx, ny := x+dx, y+dy
+						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
+							waterTiles[ny][nx] {
+							tooClose = true
+							break
+						}
+					}
+					if tooClose {
+						break
+					}
+				}
+
+				if !tooClose {
+					// Medium water body - just a single tile
+					Map[y][x].altitude = -0.08 + detailValue
+					Map[y][x].landType = LandType_Water
+					waterTiles[y][x] = true
+				}
 			}
 		}
 	}
 
-	// Second pass - add secondary water features
-	for y := range MapHeight {
-		for x := range MapWidth {
-			// Skip existing water and mountains
+	// Second pass - add very small water bodies (ponds)
+	for y := 0; y < MapHeight; y++ {
+		for x := 0; x < MapWidth; x++ {
+			// Skip existing water and higher terrain
 			if Map[y][x].altitude <= 0 || Map[y][x].altitude >= 0.9 {
 				continue
 			}
 
 			// Generate secondary water noise
-			secondaryWater := secondaryWaterNoise.Noise2D(float64(x)/(MapWidth*0.15), float64(y)/(MapHeight*0.15))
+			secondaryWater := secondaryWaterNoise.Noise2D(float64(x)/(MapWidth*0.15),
+				float64(y)/(MapHeight*0.15))
 
-			// Add small lakes and ponds where secondary noise is very negative and terrain is very low
-			if secondaryWater < secondaryWaterThreshold && Map[y][x].altitude < 0.25 {
-				Map[y][x].altitude = -0.05
-				Map[y][x].landType = LandType_Water
-			}
-		}
-	}
+			// Add small ponds where secondary noise is very negative and terrain is low
+			if secondaryWater < smallWaterThreshold && Map[y][x].altitude < 0.25 {
+				// Check spacing
+				tooClose := false
+				searchRadius := 1 // Smallest spacing for small bodies
 
-	// Third pass - expand existing water bodies slightly to create more natural shapes
-	var waterExpansion [MapHeight][MapWidth]bool
-
-	// Identify tiles adjacent to water that could become water
-	for y := 1; y < MapHeight-1; y++ {
-		for x := 1; x < MapWidth-1; x++ {
-			// Skip existing water and higher terrain
-			if Map[y][x].altitude <= 0 || Map[y][x].altitude >= 0.3 {
-				continue
-			}
-
-			// Count adjacent water tiles
-			waterNeighbors := 0
-			for dy := -1; dy <= 1; dy++ {
-				for dx := -1; dx <= 1; dx++ {
-					if dx == 0 && dy == 0 {
-						continue
+				for dy := -searchRadius; dy <= searchRadius; dy++ {
+					for dx := -searchRadius; dx <= searchRadius; dx++ {
+						nx, ny := x+dx, y+dy
+						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
+							waterTiles[ny][nx] {
+							tooClose = true
+							break
+						}
 					}
-
-					nx, ny := x+dx, y+dy
-					if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight && Map[ny][nx].altitude <= 0 {
-						waterNeighbors++
+					if tooClose {
+						break
 					}
 				}
-			}
 
-			// Mark low-lying tiles with water neighbors for potential expansion
-			if waterNeighbors >= 2 && Map[y][x].altitude < 0.2 {
-				// Use a noise value to make expansion more natural and varied
-				noiseVal := waterNoise.Noise2D(float64(x+30)/(MapWidth*0.1), float64(y+30)/(MapHeight*0.1))
-				if noiseVal < 0.2 {
-					waterExpansion[y][x] = true
+				if !tooClose {
+					// Just a single-tile pond
+					Map[y][x].altitude = -0.05
+					Map[y][x].landType = LandType_Water
+					waterTiles[y][x] = true
 				}
 			}
 		}
 	}
+}
 
-	// Apply the water expansion
-	for y := range MapHeight {
-		for x := range MapWidth {
-			if waterExpansion[y][x] {
-				Map[y][x].altitude = -0.05
-				Map[y][x].landType = LandType_Water
+func countWaterTiles(waterTiles [MapHeight][MapWidth]bool) int {
+	count := 0
+	for y := 0; y < MapHeight; y++ {
+		for x := 0; x < MapWidth; x++ {
+			if waterTiles[y][x] {
+				count++
 			}
 		}
 	}
+	return count
 }
 
 func generateRivers(seed int64) {
