@@ -567,10 +567,10 @@ func createWaterBodies(seed int64) {
 	waterNoise := perlin.NewPerlin(2.2, 2.0, 2, seed+789)
 	detailNoise := perlin.NewPerlin(3.0, 1.5, 2, seed+921)
 
-	// CHANGED: Parameters for water generation
-	largeWaterThreshold := -0.60  // Raised from -0.65 (more frequent)
-	mediumWaterThreshold := -0.53 // New intermediate size water bodies
-	maxElevationForWater := 0.35
+	// Parameters for water generation
+	largeWaterThreshold := -0.53  // -0.60
+	mediumWaterThreshold := -0.47 // -0.53
+	maxElevationForWater := 0.4   // 0.35
 
 	// Track water bodies to maintain proper spacing
 	var waterTiles [MapHeight][MapWidth]bool
@@ -596,7 +596,7 @@ func createWaterBodies(seed int64) {
 				searchRadius := 3 // Spacing for large bodies
 
 				// Skip this check for the first few water bodies
-				if countWaterTiles(waterTiles) > 5 {
+				if countWaterTiles(waterTiles) > 12 {
 					for dy := -searchRadius; dy <= searchRadius; dy++ {
 						for dx := -searchRadius; dx <= searchRadius; dx++ {
 							nx, ny := x+dx, y+dy
@@ -646,7 +646,7 @@ func createWaterBodies(seed int64) {
 									float64(ny)/(MapHeight*0.08)) * 0.15
 
 								// Higher chance to become water closer to center
-								waterChance := 0.8 - (dist/float64(maxRadius))*0.5 + edgeNoise
+								waterChance := 0.85 - (dist/float64(maxRadius))*0.4 + edgeNoise
 
 								if rng.Float64() < waterChance {
 									// Slightly shallower at edges
