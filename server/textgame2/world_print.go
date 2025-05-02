@@ -6,7 +6,7 @@ import (
 	sis "gitlab.com/sis-suite/smallnetinformationservices"
 )
 
-const divider = "┋"
+const divider = ":"
 
 func PrintWorldMap(request *sis.Request) {
 	showValues := false
