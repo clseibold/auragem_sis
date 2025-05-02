@@ -411,8 +411,8 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 		// Create extreme stretching factor:
 		// - Along the range direction: very little distance penalty (large stretch)
 		// - Perpendicular to range: very high distance penalty (small stretch)
-		stretchMinimum := 0.15 // Controls width (smaller = narrower)
-		stretchMaximum := 8.0  // Controls length (larger = longer)
+		stretchMinimum := 0.5 //0.15 // Controls width (smaller = narrower)
+		stretchMaximum := 8.0 // Controls length (larger = longer)
 
 		// Calculate stretch factor with extreme bias for elongation
 		// Using power function to create more pronounced difference
