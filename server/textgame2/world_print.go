@@ -170,7 +170,7 @@ func PrintWorldMap(request *sis.Request) {
 					}
 				case LandType_Valleys:
 					if tile.isDesert {
-						request.PlainText(" ⌣|")
+						request.PlainText("V")
 					} else {
 						request.PlainText("⌄") // Valley
 					}
