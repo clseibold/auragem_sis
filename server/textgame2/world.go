@@ -208,7 +208,7 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 
 	// Create a mountain peak effect
 	finalHeight := height
-	var sigma float64 = 1 // Width of peak, larger means mountains affect more points farther away from the peak
+	var sigma float64 = 0.75 // Width of peak, larger means mountains affect more points farther away from the peak
 	for _, peak := range peaks {
 		peakX := peak.peakX
 		peakY := peak.peakY
