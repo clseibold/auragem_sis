@@ -487,7 +487,7 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 			heightVariation := perlin.Noise2D(float64(x+peakX)/10, float64(y+peakY)/10) * 0.2
 
 			// Ensure mountain height is substantial with gentler threshold
-			baseHeight := 0.9 // NOTE: Base Mountain Height! Lower this if peaks are too high!
+			baseHeight := 1.0 // NOTE: Base Mountain Height! Lower this if peaks are too high!
 			mountainHeight := baseHeight * heightFactor * (1.0 + heightVariation)
 
 			// More gradual cutoff for adding height
