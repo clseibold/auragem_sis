@@ -79,7 +79,7 @@ func PrintWorldMap(request *sis.Request) {
 				// altitude := Map[y][x].altitude
 				switch Map[y][x].landType {
 				case LandType_Water:
-					request.PlainText(" ~|")
+					request.PlainText("  |")
 				case LandType_Mountains:
 					request.PlainText(" ▲|") // Mountain
 				case LandType_Plateaus:
@@ -95,11 +95,11 @@ func PrintWorldMap(request *sis.Request) {
 				case LandType_Coastal:
 					request.PlainText(" c|") // Coastal
 				case LandType_Plains:
-					request.PlainText("  |") // Plains
+					request.PlainText(" ~|") // Plains
 				case LandType_SandDunes:
 					request.PlainText(" s|") // Sand Dunes
 				default:
-					request.PlainText("  |") // Default plains
+					request.PlainText(" ~|") // Default plains
 				}
 			}
 		}
@@ -143,7 +143,7 @@ func PrintWorldMap(request *sis.Request) {
 			} else {
 				altitude := MapPerlin[y][x].altitude
 				if altitude <= 0 {
-					request.PlainText(" ~|") // Water
+					request.PlainText("  |") // Water
 				} else if altitude >= 1 {
 					request.PlainText(" ▲|") // Mountain
 				} else if altitude >= 0.5 { // Hills?
@@ -151,7 +151,7 @@ func PrintWorldMap(request *sis.Request) {
 				} else if altitude >= 0.3 {
 					request.PlainText(" ∩|")
 				} else {
-					request.PlainText("  |") // Plains
+					request.PlainText(" ~|") // Plains
 				}
 			}
 		}
@@ -163,8 +163,8 @@ func PrintWorldMap(request *sis.Request) {
 	request.Gemini("```\n")
 
 	request.Gemini("Legend:\n")
-	request.Gemini("- ~: Water\n")
-	request.Gemini("- (space): Plains\n")
+	request.Gemini("- (space): Water\n")
+	request.Gemini("- ~: Plains\n")
 	request.Gemini("- ∩: Hills\n")
 	request.Gemini("- ⌄: Valleys\n")
 	request.Gemini("- ≡: Plateaus\n")
@@ -244,9 +244,9 @@ func debugLandTypes(request *sis.Request) {
 
 			switch Map[y][x].landType {
 			case LandType_Water:
-				symbol = "~"
-			case LandType_Plains:
 				symbol = " "
+			case LandType_Plains:
+				symbol = "~"
 			case LandType_Hills:
 				symbol = "∩"
 			case LandType_Valleys:
@@ -271,8 +271,8 @@ func debugLandTypes(request *sis.Request) {
 	request.Gemini("```\n")
 
 	request.Gemini("Legend:\n")
-	request.Gemini("- ~: Water\n")
-	request.Gemini("- (space): Plains\n")
+	request.Gemini("- (space): Water\n")
+	request.Gemini("- ~: Plains\n")
 	request.Gemini("- ∩: Hills\n")
 	request.Gemini("- ⌄: Valleys\n")
 	request.Gemini("- ≡: Plateaus\n")

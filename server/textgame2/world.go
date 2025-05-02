@@ -524,6 +524,14 @@ func createWaterBodies(seed int64) {
 	// Generate water bodies using separate noise
 	waterNoise := perlin.NewPerlin(2.2, 2.0, 2, seed+789)
 
+	// Use a second noise field for more varied water patterns
+	secondaryWaterNoise := perlin.NewPerlin(1.8, 2.5, 2, seed+367)
+
+	// Parameters for water body generation
+	mainWaterThreshold := -0.55      // less negative = more water
+	secondaryWaterThreshold := -0.60 // Threshold for secondary water features
+	maxElevationForWater := 0.35
+
 	for y := 0; y < MapHeight; y++ {
 		for x := 0; x < MapWidth; x++ {
 			// Skip existing water and mountains
@@ -535,11 +543,159 @@ func createWaterBodies(seed int64) {
 			waterValue := waterNoise.Noise2D(float64(x)/(MapWidth*0.25), float64(y)/(MapHeight*0.25))
 
 			// Create water where the noise is strongly negative and terrain is low
-			if waterValue < -0.65 && Map[y][x].altitude < 0.3 {
+			if waterValue < mainWaterThreshold && Map[y][x].altitude < maxElevationForWater {
 				// Depress terrain below water level
-				Map[y][x].altitude = -0.1
+				// Depress terrain below water level - deeper water for stronger noise values
+				waterDepth := math.Min(-0.1, waterValue*0.15)
+				Map[y][x].altitude = waterDepth
 				Map[y][x].landType = LandType_Water
 			}
+		}
+	}
+
+	// Second pass - add secondary water features
+	for y := 0; y < MapHeight; y++ {
+		for x := 0; x < MapWidth; x++ {
+			// Skip existing water and mountains
+			if Map[y][x].altitude <= 0 || Map[y][x].altitude >= 0.9 {
+				continue
+			}
+
+			// Generate secondary water noise
+			secondaryWater := secondaryWaterNoise.Noise2D(float64(x)/(MapWidth*0.15), float64(y)/(MapHeight*0.15))
+
+			// Add small lakes and ponds where secondary noise is very negative and terrain is very low
+			if secondaryWater < secondaryWaterThreshold && Map[y][x].altitude < 0.25 {
+				Map[y][x].altitude = -0.05
+				Map[y][x].landType = LandType_Water
+			}
+		}
+	}
+
+	// Third pass - expand existing water bodies slightly to create more natural shapes
+	var waterExpansion [MapHeight][MapWidth]bool
+
+	// Identify tiles adjacent to water that could become water
+	for y := 1; y < MapHeight-1; y++ {
+		for x := 1; x < MapWidth-1; x++ {
+			// Skip existing water and higher terrain
+			if Map[y][x].altitude <= 0 || Map[y][x].altitude >= 0.3 {
+				continue
+			}
+
+			// Count adjacent water tiles
+			waterNeighbors := 0
+			for dy := -1; dy <= 1; dy++ {
+				for dx := -1; dx <= 1; dx++ {
+					if dx == 0 && dy == 0 {
+						continue
+					}
+
+					nx, ny := x+dx, y+dy
+					if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight && Map[ny][nx].altitude <= 0 {
+						waterNeighbors++
+					}
+				}
+			}
+
+			// Mark low-lying tiles with water neighbors for potential expansion
+			if waterNeighbors >= 2 && Map[y][x].altitude < 0.2 {
+				// Use a noise value to make expansion more natural and varied
+				noiseVal := waterNoise.Noise2D(float64(x+30)/(MapWidth*0.1), float64(y+30)/(MapHeight*0.1))
+				if noiseVal < 0.2 {
+					waterExpansion[y][x] = true
+				}
+			}
+		}
+	}
+
+	// Apply the water expansion
+	for y := 0; y < MapHeight; y++ {
+		for x := 0; x < MapWidth; x++ {
+			if waterExpansion[y][x] {
+				Map[y][x].altitude = -0.05
+				Map[y][x].landType = LandType_Water
+			}
+		}
+	}
+
+	// Add rivers (simplified approach)
+	// Starting from some water bodies, trace paths to lower terrain
+	riverSources := 0
+	maxRivers := 4 // Limit the number of river attempts
+
+	// Find potential river sources
+	for y := 1; y < MapHeight-1 && riverSources < maxRivers; y++ {
+		for x := 1; x < MapWidth-1 && riverSources < maxRivers; x++ {
+			// Look for water tiles that are not at map edges
+			if Map[y][x].landType == LandType_Water &&
+				x > 2 && x < MapWidth-2 && y > 2 && y < MapHeight-2 {
+
+				// Start a river from this source
+				createRiver(x, y, seed+int64(riverSources))
+				riverSources++
+			}
+		}
+	}
+}
+
+func createRiver(startX, startY int, seed int64) {
+	// Simple river creation - just trace a path downhill
+	x, y := startX, startY
+
+	// Use a noise function to make river path less predictable
+	riverNoise := perlin.NewPerlin(1.5, 2.0, 2, seed)
+
+	// Maximum river length
+	maxLength := 10
+
+	for i := 0; i < maxLength; i++ {
+		// Find a good direction to flow
+		bestDirection := -1
+		lowestElevation := Map[y][x].altitude
+
+		// Try 8 possible directions
+		directions := []struct{ dx, dy int }{
+			{-1, -1}, {0, -1}, {1, -1},
+			{-1, 0}, {1, 0},
+			{-1, 1}, {0, 1}, {1, 1},
+		}
+
+		for dir, d := range directions {
+			nx, ny := x+d.dx, y+d.dy
+
+			// Skip if out of bounds
+			if nx < 0 || nx >= MapWidth || ny < 0 || ny >= MapHeight {
+				continue
+			}
+
+			// Add some noise to the elevation to make river path more natural
+			noiseVal := riverNoise.Noise2D(float64(nx)/10, float64(ny)/10) * 0.1
+			adjustedElevation := Map[ny][nx].altitude + noiseVal
+
+			// Find the lowest adjacent elevation that isn't already water
+			if adjustedElevation < lowestElevation && Map[ny][nx].altitude > 0 {
+				lowestElevation = adjustedElevation
+				bestDirection = dir
+			}
+		}
+
+		// If we can't find a lower point, end the river
+		if bestDirection == -1 {
+			break
+		}
+
+		// Move to the chosen direction
+		x += directions[bestDirection].dx
+		y += directions[bestDirection].dy
+
+		// Make this point water
+		Map[y][x].altitude = -0.05
+		Map[y][x].landType = LandType_Water
+
+		// If we reach existing water, end the river
+		if Map[y][x].altitude <= 0 {
+			break
 		}
 	}
 }
