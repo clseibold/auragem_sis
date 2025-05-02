@@ -298,7 +298,7 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 
 		// Hard distance cutoff for mountains - if beyond the range's influence, contribute nothing
 		// This ensures ranges are exactly as long as we want them
-		maxLengthwise := 15.0 // Maximum tiles along range direction
+		maxLengthwise := 10.0 // Maximum tiles along range direction
 		maxCrosswise := 4.0   // Maximum tiles perpendicular to range direction
 
 		// Calculate distance components along and perpendicular to range direction
@@ -311,7 +311,7 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 			// Very steep falloff perpendicular to range direction
 			// Much gentler falloff along range direction
 			sigmaPerpendicular := 1.2 // Controls width falloff (smaller = steeper sides)
-			sigmaParallel := 6.0      // Controls length falloff (larger = more gradual along range)
+			sigmaParallel := 5.0      // Controls length falloff (larger = more gradual along range)
 
 			// Calculate height contribution with different falloff rates in different directions
 			perpFactor := math.Exp(-math.Pow(perpRangeComponent, 2) / (2 * math.Pow(sigmaPerpendicular, 2)))
