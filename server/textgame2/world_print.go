@@ -133,8 +133,8 @@ func PrintWorldMap(request *sis.Request) {
 					request.PlainText("□")
 				} else if tile.hasFloodArea {
 					request.PlainText("∴")
-				} else if tile.hasGameTrail {
-					request.PlainText("-")
+					//} else if tile.hasGameTrail {
+					// request.PlainText("-")
 				} else {
 					request.PlainText(" ")
 				}
