@@ -21,6 +21,7 @@ var MapPeaks []Peak
 var Map [MapHeight][MapWidth]Tile
 var MapPerlin [MapHeight][MapWidth]Tile
 
+// Each tile of the world map represents a 10 square kilometer region.
 type Tile struct {
 	altitude float64
 	biome    Biome
@@ -45,6 +46,8 @@ func generateWorldMap() {
 			MapPerlin[y][x] = Tile{altitude: perlinAltitude}
 		}
 	}
+
+	generatePlateaus(seed)
 }
 
 func generateMapMountainPeaks(rand *rand.Rand) []Peak {
@@ -168,9 +171,13 @@ func PrintWorldMap(request *sis.Request) {
 					request.PlainText(" ~|") // Water
 				} else if altitude >= 1 {
 					request.PlainText(" A|") // Mountain
-				} else if altitude >= 0.7 { // Hills?
-					request.PlainText(" n|")
-				} else if altitude >= 0.4 {
+				} else if altitude >= 0.5 { // Hills and plateaus
+					if Map[y][x].landType == LandType_Plateaus {
+						request.PlainText(" =|")
+					} else {
+						request.PlainText(" n|")
+					}
+				} else if altitude >= 0.3 { // Hills
 					request.PlainText(" +|")
 				} else {
 					request.PlainText("  |") // Plains
@@ -220,9 +227,13 @@ func PrintWorldMap(request *sis.Request) {
 					request.PlainText(" ~|") // Water
 				} else if altitude >= 1 {
 					request.PlainText(" A|") // Mountain
-				} else if altitude >= 0.7 { // Hills?
-					request.PlainText(" n|")
-				} else if altitude >= 0.4 {
+				} else if altitude >= 0.5 { // Hills?
+					if Map[y][x].landType == LandType_Plateaus {
+						request.PlainText(" =|")
+					} else {
+						request.PlainText(" n|")
+					}
+				} else if altitude >= 0.3 {
 					request.PlainText(" +|")
 				} else {
 					request.PlainText("  |") // Plains
@@ -507,4 +518,124 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 	}
 
 	return baseHeight, finalHeight
+}
+
+func generatePlateaus(seed int64) {
+	// Create a separate Perlin noise generator for plateau locations
+	plateauNoise := perlin.NewPerlin(1.8, 3.0, 2, seed+42)
+
+	// Parameters for plateau generation
+	plateauThreshold := 0.58       // Higher value = fewer plateaus
+	plateauHeightBase := 0.65      // Base elevation for plateaus (higher than hills)
+	plateauHeightVariation := 0.15 // How much elevation varies between plateaus
+	plateauFlatness := 0.85        // How flat plateaus are (higher = flatter)
+
+	// First pass - identify potential plateau regions
+	potentialPlateaus := 0
+	for y := 0; y < MapHeight; y++ {
+		for x := 0; x < MapWidth; x++ {
+			// Skip areas that are too low (water) or mountains
+			// Also skip areas that are already too high (near mountains)
+			if Map[y][x].altitude <= 0.25 || Map[y][x].altitude >= 0.9 {
+				continue
+			}
+
+			// Use noise to determine plateau locations
+			plateauValue := plateauNoise.Noise2D(float64(x)/(MapWidth*0.2), float64(y)/(MapHeight*0.2))
+
+			if plateauValue > plateauThreshold {
+				potentialPlateaus++
+			}
+		}
+	}
+
+	// If we have enough potential plateau regions, create them
+	if potentialPlateaus > 0 {
+		// Each plateau region gets a slightly different target height
+		heightNoise := perlin.NewPerlin(2.5, 2.0, 2, seed+84)
+
+		// Second pass - apply plateau heights
+		for y := 0; y < MapHeight; y++ {
+			for x := 0; x < MapWidth; x++ {
+				// Skip areas that are too low (water) or near mountains
+				if Map[y][x].altitude <= 0.25 || Map[y][x].altitude >= 0.9 {
+					continue
+				}
+
+				// Use the same noise function to find plateau regions
+				plateauValue := plateauNoise.Noise2D(float64(x)/(MapWidth*0.2), float64(y)/(MapHeight*0.2))
+
+				if plateauValue > plateauThreshold {
+					// Determine the target height for this plateau region
+					regionHeight := heightNoise.Noise2D(float64(x)/(MapWidth*0.6), float64(y)/(MapHeight*0.6))
+
+					// Calculate plateau height - varying between plateaus but flat within each
+					// Ensure plateaus are higher than hills (0.5-0.8 range)
+					plateauHeight := plateauHeightBase + regionHeight*plateauHeightVariation
+
+					// Blend between original height and plateau height
+					blendStrength := (plateauValue - plateauThreshold) * 3.0
+					blendStrength = math.Min(blendStrength, plateauFlatness)
+
+					// Calculate the new height as a blend between original and plateau
+					newHeight := Map[y][x].altitude*(1-blendStrength) + plateauHeight*blendStrength
+
+					// Ensure plateau remains in proper range
+					if newHeight > 0.9 {
+						newHeight = 0.9 // Cap plateau height below mountains
+					}
+
+					// Apply the new height
+					Map[y][x].altitude = newHeight
+					Map[y][x].landType = LandType_Plateaus
+				}
+			}
+		}
+
+		// Smooth plateau edges (keeping the same code from before)
+		var tempMap [MapHeight][MapWidth]float64
+		for y := 0; y < MapHeight; y++ {
+			for x := 0; x < MapWidth; x++ {
+				tempMap[y][x] = Map[y][x].altitude
+			}
+		}
+
+		// Apply edge smoothing
+		for y := 1; y < MapHeight-1; y++ {
+			for x := 1; x < MapWidth-1; x++ {
+				plateauValue := plateauNoise.Noise2D(float64(x)/(MapWidth*0.2), float64(y)/(MapHeight*0.2))
+				if math.Abs(plateauValue-plateauThreshold) > 0.1 {
+					continue
+				}
+
+				// Calculate average height of neighbors
+				sum := 0.0
+				count := 0
+
+				for dy := -1; dy <= 1; dy++ {
+					for dx := -1; dx <= 1; dx++ {
+						if dx == 0 && dy == 0 {
+							continue
+						}
+
+						nx, ny := x+dx, y+dy
+						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
+							sum += tempMap[ny][nx]
+							count++
+						}
+					}
+				}
+
+				if count > 0 {
+					avgHeight := sum / float64(count)
+
+					// Blend between current height and average height at plateau edges
+					edgeBlend := 1.0 - math.Abs(plateauValue-plateauThreshold)*10.0
+					edgeBlend = math.Max(0.0, math.Min(0.5, edgeBlend))
+
+					Map[y][x].altitude = tempMap[y][x]*(1-edgeBlend) + avgHeight*edgeBlend
+				}
+			}
+		}
+	}
 }
