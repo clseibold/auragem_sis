@@ -184,8 +184,8 @@ func debugLandTypes(request *sis.Request) {
 	// Count land types
 	landTypeCounts := make(map[LandType]int)
 
-	for y := 0; y < MapHeight; y++ {
-		for x := 0; x < MapWidth; x++ {
+	for y := range MapHeight {
+		for x := range MapWidth {
 			landTypeCounts[Map[y][x].landType]++
 		}
 	}
@@ -207,6 +207,7 @@ func debugLandTypes(request *sis.Request) {
 		LandType_Plateaus,
 		LandType_Mountains,
 		LandType_Coastal,
+		LandType_SandDunes,
 	}
 
 	landTypeNames := map[LandType]string{
@@ -223,7 +224,7 @@ func debugLandTypes(request *sis.Request) {
 	for _, lt := range landTypes {
 		count := landTypeCounts[lt]
 		percentage := float64(count) / float64(totalTiles) * 100.0
-		request.Gemini(fmt.Sprintf("| %s | %d | %.2f%% |\n", landTypeNames[lt], count, percentage))
+		request.Gemini(fmt.Sprintf("| %-9s | %-5d | %-10.2f%% |\n", landTypeNames[lt], count, percentage))
 	}
 	request.Gemini("```\n")
 
@@ -232,15 +233,15 @@ func debugLandTypes(request *sis.Request) {
 
 	// Print map header
 	request.PlainText("|  |")
-	for x := 0; x < MapWidth; x++ {
+	for x := range MapWidth {
 		request.PlainText("%2d|", x)
 	}
 	request.PlainText("\n")
 
 	// Print the map
-	for y := 0; y < MapHeight; y++ {
+	for y := range MapHeight {
 		request.PlainText("|%2d|", y)
-		for x := 0; x < MapWidth; x++ {
+		for x := range MapWidth {
 			var symbol string
 
 			switch Map[y][x].landType {
