@@ -25,8 +25,10 @@ type Tile struct {
 	altitude  float64
 	biome     Biome
 	landType  LandType
-	hasStream bool
-	hasPond   bool
+	hasStream bool // Contains a small stream/creek within the tile
+	hasPond   bool // Contains a small pond within the tile
+	hasSpring bool // Contains a natural spring (water source)
+	hasMarsh  bool // Contains a marshy area (soggy ground)
 }
 
 type Peak struct {
@@ -62,7 +64,7 @@ func generateWorldMap() {
 	// Generate rivers flowing from high to low elevation
 	generateRivers(seed)
 
-	// Generate small-scale water features
+	// Generate small-scale water features (ponds, streams, springs, and marshes)
 	generateSmallWaterFeatures(seed)
 
 	// Identify valleys
@@ -933,15 +935,17 @@ func generateSmallWaterFeatures(seed int64) {
 	rng := rand.New(rand.NewSource(seed + 5552))
 
 	// Parameters for small water features
+	springCount := 8 + rng.Intn(5)      // 8-12 springs
+	marshCount := 12 + rng.Intn(8)      // 12-19 marshes
 	smallRiverCount := 10 + rng.Intn(8) // 10-17 small rivers
-	smallPondCount := 6 + rng.Intn(5)   // 6-10 small ponds
+	smallPondCount := 10 + rng.Intn(5)  // 10-14 small ponds
 
 	// Track where we've already placed water features
 	var waterFeaturePlaced [MapHeight][MapWidth]bool
 
 	// Mark existing water and adjacent tiles as unavailable
-	for y := 0; y < MapHeight; y++ {
-		for x := 0; x < MapWidth; x++ {
+	for y := range MapHeight {
+		for x := range MapWidth {
 			if Map[y][x].altitude <= 0 { // Water tiles
 				waterFeaturePlaced[y][x] = true
 
@@ -958,8 +962,259 @@ func generateSmallWaterFeatures(seed int64) {
 		}
 	}
 
-	// 1. Generate small ponds
+	// 1. Generate springs first (they can be sources for other features)
+	springsGenerated := 0
+	var springLocations []struct{ x, y int }
+
+	for attempts := 0; attempts < 200 && springsGenerated < springCount; attempts++ {
+		// Springs often form at specific geological interfaces
+		// Typically at hillsides, mountain bases, or where permeable rock meets impermeable layers
+
+		// Try to find a location at the base of higher elevation
+		x := rng.Intn(MapWidth-2) + 1
+		y := rng.Intn(MapHeight-2) + 1
+
+		// Good spring locations: hillsides, mountain bases, or plateau edges
+		isGoodSpringLocation := false
+		hasHigherNeighbor := false
+		baseElevation := Map[y][x].altitude
+
+		// Check if we have higher terrain nearby (spring source)
+		for dy := -1; dy <= 1; dy++ {
+			for dx := -1; dx <= 1; dx++ {
+				if dx == 0 && dy == 0 {
+					continue
+				}
+
+				nx, ny := x+dx, y+dy
+				if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
+					// Springs tend to form where there's a significant elevation change
+					elevationDiff := Map[ny][nx].altitude - baseElevation
+					if elevationDiff > 0.25 {
+						hasHigherNeighbor = true
+						break
+					}
+				}
+			}
+			if hasHigherNeighbor {
+				break
+			}
+		}
+
+		// Check if this is a suitable location for a spring
+		if !waterFeaturePlaced[y][x] &&
+			baseElevation > 0.25 && baseElevation < 0.85 &&
+			hasHigherNeighbor &&
+			Map[y][x].landType != LandType_Mountains &&
+			Map[y][x].landType != LandType_Water {
+
+			isGoodSpringLocation = true
+
+			// Extra check: favor locations at the edge of plateaus or hills
+			if Map[y][x].landType == LandType_Hills ||
+				Map[y][x].landType == LandType_Plateaus {
+				// Higher chance to place springs here
+				if rng.Float64() < 0.8 {
+					isGoodSpringLocation = true
+				}
+			}
+
+			// Check if we're near (but not at) the foot of a mountain
+			nearMountain := false
+			for dy := -2; dy <= 2; dy++ {
+				for dx := -2; dx <= 2; dx++ {
+					if dx == 0 && dy == 0 {
+						continue
+					}
+
+					nx, ny := x+dx, y+dy
+					if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
+						if Map[ny][nx].landType == LandType_Mountains {
+							nearMountain = true
+							break
+						}
+					}
+				}
+				if nearMountain {
+					break
+				}
+			}
+
+			// Higher chance to place springs near mountains
+			if nearMountain {
+				isGoodSpringLocation = rng.Float64() < 0.7
+			}
+		}
+
+		if isGoodSpringLocation {
+			// Set the spring flag
+			Map[y][x].hasSpring = true
+
+			// Mark as placed to avoid overlaps
+			waterFeaturePlaced[y][x] = true
+
+			// Save location for potential use as source of streams/ponds
+			springLocations = append(springLocations, struct{ x, y int }{x, y})
+
+			springsGenerated++
+		}
+	}
+
+	// 2. Generate marshes (soggy areas)
+	marshesGenerated := 0
+
+	for attempts := 0; attempts < 200 && marshesGenerated < marshCount; attempts++ {
+		// Marshes typically form in low-lying areas with poor drainage
+		// Or areas with high water tables (near rivers/streams)
+
+		// Try to find a location for a marsh
+		x := rng.Intn(MapWidth-2) + 1
+		y := rng.Intn(MapHeight-2) + 1
+
+		// Good marsh locations: low-lying areas, near water, flat terrain
+		isGoodMarshLocation := false
+		elevation := Map[y][x].altitude
+
+		// Check if we're near water or in a low-lying area
+		nearWater := false
+		for dy := -3; dy <= 3; dy++ {
+			for dx := -3; dx <= 3; dx++ {
+				nx, ny := x+dx, y+dy
+				if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
+					if Map[ny][nx].altitude <= 0 { // Water nearby
+						nearWater = true
+						break
+					}
+				}
+			}
+			if nearWater {
+				break
+			}
+		}
+
+		// Calculate how flat the terrain is
+		isFlat := true
+		for dy := -1; dy <= 1; dy++ {
+			for dx := -1; dx <= 1; dx++ {
+				if dx == 0 && dy == 0 {
+					continue
+				}
+
+				nx, ny := x+dx, y+dy
+				if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
+					if math.Abs(Map[ny][nx].altitude-elevation) > 0.1 {
+						isFlat = false
+						break
+					}
+				}
+			}
+			if !isFlat {
+				break
+			}
+		}
+
+		// Check if this is a suitable location for a marsh
+		if !waterFeaturePlaced[y][x] &&
+			elevation > 0.05 && elevation < 0.4 && // Low-lying areas
+			Map[y][x].landType != LandType_Mountains &&
+			Map[y][x].landType != LandType_Plateaus {
+
+			// Higher chance in flat and low areas, especially near water
+			if isFlat {
+				isGoodMarshLocation = true
+
+				if nearWater {
+					// Much higher chance near water
+					isGoodMarshLocation = rng.Float64() < 0.8
+				} else {
+					// Lower chance away from water
+					isGoodMarshLocation = rng.Float64() < 0.4
+				}
+			}
+
+			// Special case: near a spring
+			nearSpring := false
+			for dy := -2; dy <= 2; dy++ {
+				for dx := -2; dx <= 2; dx++ {
+					nx, ny := x+dx, y+dy
+					if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
+						if Map[ny][nx].hasSpring {
+							nearSpring = true
+							break
+						}
+					}
+				}
+				if nearSpring {
+					break
+				}
+			}
+
+			// Higher chance to place marshes near springs
+			if nearSpring {
+				isGoodMarshLocation = rng.Float64() < 0.7
+			}
+		}
+
+		if isGoodMarshLocation {
+			// Set the marsh flag
+			Map[y][x].hasMarsh = true
+
+			// Mark as placed to avoid overlaps
+			waterFeaturePlaced[y][x] = true
+
+			marshesGenerated++
+		}
+	}
+
+	// 3. Generate small ponds (some from springs)
 	pondsGenerated := 0
+
+	// First try to place some ponds at springs
+	if len(springLocations) > 0 && smallPondCount > 0 {
+		// Shuffle spring locations
+		for i := len(springLocations) - 1; i > 0; i-- {
+			j := rng.Intn(i + 1)
+			springLocations[i], springLocations[j] = springLocations[j], springLocations[i]
+		}
+
+		// Try to create ponds at some springs
+		maxSpringPonds := min(len(springLocations), smallPondCount/2)
+		for i := 0; i < maxSpringPonds; i++ {
+			springX, springY := springLocations[i].x, springLocations[i].y
+
+			// Find a suitable nearby location for the pond
+			pondPlaced := false
+			for dy := -1; dy <= 1; dy++ {
+				for dx := -1; dx <= 1; dx++ {
+					// Skip the spring tile itself
+					if dx == 0 && dy == 0 {
+						continue
+					}
+
+					nx, ny := springX+dx, springY+dy
+					if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
+						if !waterFeaturePlaced[ny][nx] &&
+							Map[ny][nx].altitude > 0.05 && Map[ny][nx].altitude < 0.6 &&
+							Map[ny][nx].landType != LandType_Mountains &&
+							Map[ny][nx].landType != LandType_Plateaus {
+
+							// Place a pond here
+							Map[ny][nx].hasPond = true
+							waterFeaturePlaced[ny][nx] = true
+							pondPlaced = true
+							pondsGenerated++
+							break
+						}
+					}
+				}
+				if pondPlaced {
+					break
+				}
+			}
+		}
+	}
+
+	// Generate remaining ponds in suitable locations
 	for attempts := 0; attempts < 200 && pondsGenerated < smallPondCount; attempts++ {
 		// Choose a random location
 		x := rng.Intn(MapWidth)
@@ -971,19 +1226,83 @@ func generateSmallWaterFeatures(seed int64) {
 			Map[y][x].landType != LandType_Mountains &&
 			Map[y][x].landType != LandType_Plateaus {
 
-			// Set the pond flag
-			Map[y][x].hasPond = true
+			// Higher chance in valleys or near marshes
+			placePond := false
 
-			// Mark as placed to avoid overlaps
-			waterFeaturePlaced[y][x] = true
-			pondsGenerated++
+			if Map[y][x].landType == LandType_Valleys {
+				placePond = rng.Float64() < 0.7 // High chance in valleys
+			} else {
+				// Check if near a marsh
+				nearMarsh := false
+				for dy := -2; dy <= 2; dy++ {
+					for dx := -2; dx <= 2; dx++ {
+						nx, ny := x+dx, y+dy
+						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
+							if Map[ny][nx].hasMarsh {
+								nearMarsh = true
+								break
+							}
+						}
+					}
+					if nearMarsh {
+						break
+					}
+				}
+
+				if nearMarsh {
+					placePond = rng.Float64() < 0.6 // Good chance near marshes
+				} else {
+					placePond = rng.Float64() < 0.3 // Lower chance elsewhere
+				}
+			}
+
+			if placePond {
+				// Set the pond flag
+				Map[y][x].hasPond = true
+
+				// Mark as placed to avoid overlaps
+				waterFeaturePlaced[y][x] = true
+				pondsGenerated++
+			}
 		}
 	}
 
-	// 2. Generate small rivers (streams)
+	// 4. Generate small rivers (streams)
 	streamsGenerated := 0
+
+	// First try to place some streams starting from springs
+	for _, spring := range springLocations {
+		// Limit the number of streams
+		if streamsGenerated >= smallRiverCount {
+			break
+		}
+
+		// Only some springs form streams
+		if rng.Float64() < 0.7 {
+			// Trace a path downhill from the spring
+			streamPath := traceSmallStreamPath(spring.x, spring.y, rng, waterFeaturePlaced)
+
+			// If we found a valid path of appropriate length
+			if len(streamPath) >= 2 && len(streamPath) <= 5 {
+				// Apply the stream to the map
+				for _, point := range streamPath {
+					sx, sy := point.x, point.y
+
+					// Set the stream flag
+					Map[sy][sx].hasStream = true
+
+					// Mark as placed to avoid overlaps
+					waterFeaturePlaced[sy][sx] = true
+				}
+
+				streamsGenerated++
+			}
+		}
+	}
+
+	// Generate remaining streams in suitable locations
 	for attempts := 0; attempts < 200 && streamsGenerated < smallRiverCount; attempts++ {
-		// Choose a random location for the stream source (slightly higher ground)
+		// Choose a random location for the stream source
 		x := rng.Intn(MapWidth)
 		y := rng.Intn(MapHeight)
 

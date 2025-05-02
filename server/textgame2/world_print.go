@@ -20,12 +20,18 @@ func PrintWorldMap(request *sis.Request) {
 		/*} else if query == "mountains" { // OUTDATED and broken
 		debugMountainDimensions(request)
 		return*/
-	} else if query == "landtypes" {
-		debugLandTypes(request)
-		return
 	} else if query == "withnumbers" {
 		divider = globalDivider
 		noNumbers = false
+	}
+
+	// Count land types for land type distribution chart
+	landTypeCounts := make(map[LandType]int)
+
+	for y := range MapHeight {
+		for x := range MapWidth {
+			landTypeCounts[Map[y][x].landType]++
+		}
 	}
 
 	request.Heading(1, "World Map")
@@ -37,7 +43,6 @@ func PrintWorldMap(request *sis.Request) {
 			request.Link("/world-map", "Show Without Map Numbers")
 		}
 		request.Link("/world-map?values", "Show Values")
-		request.Link("/world-map?landtypes", "Show Land Types")
 	} else {
 		if noNumbers {
 			request.Link("/world-map?withnumbers", "Show With Map Numbers")
@@ -45,7 +50,6 @@ func PrintWorldMap(request *sis.Request) {
 			request.Link("/world-map", "Show Without Map Numbers")
 		}
 		request.Link("/world-map", "Show Terrain")
-		request.Link("/world-map?landtypes", "Show Land Types")
 	}
 	request.Gemini("\n")
 
@@ -101,14 +105,24 @@ func PrintWorldMap(request *sis.Request) {
 			if showValues {
 				request.PlainText(fmt.Sprintf("%+.2f"+divider, Map[y][x].altitude))
 			} else {
+				tile := &Map[y][x]
 				// Prefix
-				if Map[y][x].hasPond {
+				if tile.hasSpring && tile.hasPond {
+					request.PlainText("⊙")
+				} else if tile.hasSpring {
+					request.PlainText("⊕")
+				} else if tile.hasMarsh && tile.hasPond {
+					request.PlainText("⊛")
+				} else if tile.hasPond {
 					request.PlainText("o")
-				} else if Map[y][x].hasStream {
+				} else if tile.hasMarsh {
+					request.PlainText("≈")
+				} else if tile.hasStream {
 					request.PlainText(".")
 				} else {
 					request.PlainText(" ")
 				}
+				// TODO: Spring with Stream?
 
 				switch Map[y][x].landType {
 				case LandType_Water:
@@ -154,83 +168,15 @@ func PrintWorldMap(request *sis.Request) {
 		}
 	}
 
-	/*
-		request.PlainText("\nBase Perlin Noise:\n")
-		for y := range MapHeight {
-			// Heading/Top border
-			if y == 0 && !noNumbers {
-				if showValues {
-					request.PlainText(divider + "     " + divider)
-				} else {
-					request.PlainText(divider + "  " + divider)
-				}
-				for x := range MapWidth {
-					if showValues {
-						request.PlainText(fmt.Sprintf("%5d"+divider, x))
-					} else {
-						request.PlainText(fmt.Sprintf("%2d"+divider, x))
-					}
-				}
-				request.PlainText("\n")
-				if showValues {
-					request.PlainText("\n")
-				}
-			} else if y == 0 && noNumbers {
-				request.PlainText(strings.Repeat("-", (MapWidth+2)*3))
-				request.PlainText("\n")
-			}
-
-			if !noNumbers {
-				if showValues {
-					request.PlainText(divider+"%5d"+divider, y)
-				} else {
-					request.PlainText(divider+"%2d"+divider, y)
-				}
-			} else { // Left Border
-				request.PlainText("|")
-			}
-			for x := range MapWidth {
-				if showValues {
-					request.PlainText(fmt.Sprintf("%+.2f"+divider, MapPerlin[y][x].altitude))
-				} else {
-					altitude := MapPerlin[y][x].altitude
-					request.PlainText(" ") // Prefix
-					if altitude <= 0 {
-						request.PlainText("~") // Water
-					} else if altitude >= 1 {
-						request.PlainText("▲") // Mountain
-					} else if altitude >= 0.8 { // Foothills
-						request.PlainText("n")
-					} else if altitude >= 0.3 {
-						request.PlainText("+")
-					} else {
-						request.PlainText(" ") // Plains
-					}
-					request.PlainText(divider)
-				}
-			}
-
-			if noNumbers { // Right Border
-				request.PlainText("|")
-			}
-
-			request.PlainText("\n")
-			if showValues {
-				request.PlainText("\n")
-			}
-
-			// Bottom border
-			if noNumbers && y == MapWidth-1 {
-				request.PlainText(strings.Repeat("-", (MapWidth+2)*3))
-				request.PlainText("\n")
-			}
-		}
-	*/
-
 	request.PlainText("\nLegend:\n")
+	request.PlainText("o : Small pond (contained within a tile)\n")
+	request.PlainText(". : Small stream (width contained within a tile)\n")
+	request.PlainText("⊕ : Spring\n")
+	request.PlainText("⊙ : Spring with pond\n")
+	request.PlainText("≈ : Marsh (soggy ground)\n")
+	request.PlainText("⊛ : Marsh with pond\n")
+
 	request.PlainText(" ~: Water (lake/river)\n")
-	request.PlainText("o : small pond\n")
-	request.PlainText(". : small stream\n")
 	request.PlainText(" (space): Plains\n")
 	request.PlainText(" +: Hills\n")
 	request.PlainText(" n: Foothills\n")
@@ -239,31 +185,10 @@ func PrintWorldMap(request *sis.Request) {
 	request.PlainText(" ▲: Mountains\n")
 	request.PlainText(" c: Coastal\n")
 	request.PlainText(" d: Sand Dunes\n")
-	request.PlainText("```\n")
-}
 
-func debugLandTypes(request *sis.Request) {
-	divider := globalDivider
-
-	request.Heading(1, "Land Types Map")
-	request.Gemini("\n")
-	request.Link("/world-map/", "Back to World Map")
-	request.Gemini("\n")
-
-	// Count land types
-	landTypeCounts := make(map[LandType]int)
-
-	for y := range MapHeight {
-		for x := range MapWidth {
-			landTypeCounts[Map[y][x].landType]++
-		}
-	}
-
-	// Print land type statistics
-	request.Gemini("## Land Type Distribution\n\n")
-	request.Gemini("```\n")
-	request.Gemini("| Land Type | Count | Percentage |\n")
-	request.Gemini("|-----------|-------|------------|\n")
+	request.PlainText("\nLand Type Distribution:\n")
+	request.Gemini("| Land Type  | Count | Percentage |\n")
+	request.Gemini("|------------|-------|------------|\n")
 
 	totalTiles := MapWidth * MapHeight
 
@@ -293,71 +218,7 @@ func debugLandTypes(request *sis.Request) {
 	for _, lt := range landTypes {
 		count := landTypeCounts[lt]
 		percentage := float64(count) / float64(totalTiles) * 100.0
-		request.Gemini(fmt.Sprintf("| %-9s | %-5d | %-10.2f%% |\n", landTypeNames[lt], count, percentage))
+		request.Gemini(fmt.Sprintf("| %-10s | %-5d | %-9.2f%% |\n", landTypeNames[lt], count, percentage))
 	}
-	request.Gemini("```\n")
-
-	request.Gemini("\n## Land Types Map\n\n")
-	request.Gemini("```\n")
-
-	// Print map header
-	request.PlainText("|  |")
-	for x := range MapWidth {
-		request.PlainText("%2d"+divider, x)
-	}
-	request.PlainText("\n")
-
-	// Print the map
-	for y := range MapHeight {
-		request.PlainText(divider+"%2d"+divider, y)
-		for x := range MapWidth {
-			var symbol string
-
-			switch Map[y][x].landType {
-			case LandType_Water:
-				symbol = "~"
-			case LandType_Plains:
-				symbol = " "
-			case LandType_Hills:
-				symbol = "+"
-			case LandType_Valleys:
-				symbol = "⌄"
-			case LandType_Plateaus:
-				symbol = "≡"
-			case LandType_Mountains:
-				symbol = "▲"
-			case LandType_Coastal:
-				symbol = "c"
-			case LandType_SandDunes:
-				symbol = "d"
-			default:
-				symbol = "?"
-			}
-
-			// Prefix
-			if Map[y][x].hasPond {
-				request.PlainText("o")
-			} else if Map[y][x].hasStream {
-				request.PlainText(".")
-			} else {
-				request.PlainText(" ")
-			}
-			request.PlainText("%s"+divider, symbol)
-		}
-		request.PlainText("\n")
-	}
-
-	request.PlainText("\nLegend:\n")
-	request.PlainText(" ~: Water (lake/river)\n")
-	request.PlainText("o : small pond\n")
-	request.PlainText(". : small stream\n")
-	request.PlainText(" (space): Plains\n")
-	request.PlainText(" +: Hills\n")
-	request.PlainText(" n: Foothills\n")
-	request.PlainText(" ⌄: Valleys\n")
-	request.PlainText(" ≡: Plateaus\n")
-	request.PlainText(" ▲: Mountains\n")
-	request.PlainText(" c: Coastal\n")
-	request.PlainText(" d: Sand Dunes\n")
-	request.Gemini("```\n")
+	request.PlainText("```\n")
 }
