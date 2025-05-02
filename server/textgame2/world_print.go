@@ -88,7 +88,7 @@ func PrintWorldMap(request *sis.Request) {
 					if Map[y][x].altitude >= 0.8 {
 						request.PlainText(" n|") // High hills/foothills
 					} else {
-						request.PlainText(" ∩|") // Regular hills
+						request.PlainText(" +|") // Regular hills
 					}
 				case LandType_Valleys:
 					request.PlainText(" ⌄|") // Valley
@@ -146,10 +146,10 @@ func PrintWorldMap(request *sis.Request) {
 					request.PlainText("  |") // Water
 				} else if altitude >= 1 {
 					request.PlainText(" ▲|") // Mountain
-				} else if altitude >= 0.5 { // Hills?
-					request.PlainText(" ∩|")
+				} else if altitude >= 0.8 { // Foothills
+					request.PlainText(" n|")
 				} else if altitude >= 0.3 {
-					request.PlainText(" ∩|")
+					request.PlainText(" +|")
 				} else {
 					request.PlainText(" ·|") // Plains
 				}
@@ -165,7 +165,8 @@ func PrintWorldMap(request *sis.Request) {
 	request.Gemini("Legend:\n")
 	request.Gemini("- (space): Water\n")
 	request.Gemini("- ·: Plains\n")
-	request.Gemini("- ∩: Hills\n")
+	request.Gemini("- +: Hills\n")
+	request.Gemini("- n: Foothills\n")
 	request.Gemini("- ⌄: Valleys\n")
 	request.Gemini("- ≡: Plateaus\n")
 	request.Gemini("- ▲: Mountains\n")
@@ -248,7 +249,7 @@ func debugLandTypes(request *sis.Request) {
 			case LandType_Plains:
 				symbol = "·"
 			case LandType_Hills:
-				symbol = "∩"
+				symbol = "+"
 			case LandType_Valleys:
 				symbol = "⌄"
 			case LandType_Plateaus:
@@ -273,7 +274,8 @@ func debugLandTypes(request *sis.Request) {
 	request.Gemini("Legend:\n")
 	request.Gemini("- (space): Water\n")
 	request.Gemini("- ·: Plains\n")
-	request.Gemini("- ∩: Hills\n")
+	request.Gemini("- +: Hills\n")
+	request.Gemini("- +: Foothills\n")
 	request.Gemini("- ⌄: Valleys\n")
 	request.Gemini("- ≡: Plateaus\n")
 	request.Gemini("- ▲: Mountains\n")

@@ -47,7 +47,7 @@ func generateWorldMap() {
 		}
 	}
 
-	// Create additional water bodies to reach ~2% water coverage
+	// Create additional water bodies
 	createWaterBodies(seed)
 
 	// Assign basic land types based on altitude
@@ -55,6 +55,9 @@ func generateWorldMap() {
 
 	// Generate plateaus (this will set LandType_Plateaus)
 	generatePlateaus(seed)
+
+	// Generate rivers flowing from high to low elevation
+	generateRivers(seed)
 
 	// Identify valleys
 	identifyValleys()
@@ -618,86 +621,251 @@ func createWaterBodies(seed int64) {
 			}
 		}
 	}
+}
+func generateRivers(seed int64) {
+	// Initialize random source for river generation
+	rng := rand.New(rand.NewSource(seed + 12345))
 
-	// Add rivers (simplified approach)
-	// Starting from some water bodies, trace paths to lower terrain
-	riverSources := 0
-	maxRivers := 4 // Limit the number of river attempts
+	// Parameters for river generation
+	numberOfRivers := 4 + rng.Intn(3) // 4-6 rivers
+	minRiverLength := 5               // Minimum tiles a river should span
+	maxRiverLength := 25              // Maximum river length (to prevent infinite loops)
+	minElevationStart := 0.6          // Rivers start in higher elevations
 
-	// Find potential river sources
-	for y := 1; y < MapHeight-1 && riverSources < maxRivers; y++ {
-		for x := 1; x < MapWidth-1 && riverSources < maxRivers; x++ {
-			// Look for water tiles that are not at map edges
-			if Map[y][x].landType == LandType_Water &&
-				x > 2 && x < MapWidth-2 && y > 2 && y < MapHeight-2 {
+	// Store river paths to visualize them in debug mode if needed
+	riverPaths := make([][]struct{ x, y int }, 0, numberOfRivers)
 
-				// Start a river from this source
-				createRiver(x, y, seed+int64(riverSources))
-				riverSources++
+	// Track tiles that already have rivers to avoid overlaps
+	var riverTiles [MapHeight][MapWidth]bool
+
+	// Generate each river
+	for r := 0; r < numberOfRivers; r++ {
+		// Find a good starting point - preferably in hills or mountains
+		var startX, startY int
+		var foundStart bool
+
+		// Try multiple times to find a good starting point
+		for attempts := 0; attempts < 100; attempts++ {
+			// Choose a random high point
+			candidateX := rng.Intn(MapWidth)
+			candidateY := rng.Intn(MapHeight)
+
+			// Check if this point is suitable for a river source
+			if Map[candidateY][candidateX].altitude >= minElevationStart &&
+				Map[candidateY][candidateX].altitude < 0.95 &&
+				!riverTiles[candidateY][candidateX] {
+
+				// Check if we have room to flow downhill
+				hasLowerNeighbor := false
+				for dy := -1; dy <= 1; dy++ {
+					for dx := -1; dx <= 1; dx++ {
+						if dx == 0 && dy == 0 {
+							continue
+						}
+
+						nx, ny := candidateX+dx, candidateY+dy
+						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
+							Map[ny][nx].altitude < Map[candidateY][candidateX].altitude {
+							hasLowerNeighbor = true
+							break
+						}
+					}
+					if hasLowerNeighbor {
+						break
+					}
+				}
+
+				// If we can flow downhill, use this starting point
+				if hasLowerNeighbor {
+					startX, startY = candidateX, candidateY
+					foundStart = true
+					break
+				}
+			}
+		}
+
+		// If we couldn't find a good starting point, skip this river
+		if !foundStart {
+			continue
+		}
+
+		// Generate a new river from this starting point
+		river := traceRiverPath(startX, startY, rng, riverTiles, minRiverLength, maxRiverLength)
+
+		// Only apply rivers that meet the minimum length requirement
+		if len(river) >= minRiverLength {
+			riverPaths = append(riverPaths, river)
+
+			// Apply the river to the map
+			for _, point := range river {
+				x, y := point.x, point.y
+
+				// Mark as river tile
+				riverTiles[y][x] = true
+
+				// Make this point water
+				Map[y][x].altitude = -0.05
+				Map[y][x].landType = LandType_Water
+
+				// Slightly lower adjacent terrain to create river valleys
+				for dy := -1; dy <= 1; dy++ {
+					for dx := -1; dx <= 1; dx++ {
+						if dx == 0 && dy == 0 {
+							continue
+						}
+
+						nx, ny := x+dx, y+dy
+						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
+							Map[ny][nx].altitude > 0 && Map[ny][nx].altitude < 0.9 {
+							// Create subtle river valley
+							Map[ny][nx].altitude -= 0.05
+							if Map[ny][nx].altitude < 0.05 {
+								Map[ny][nx].altitude = 0.05
+							}
+						}
+					}
+				}
 			}
 		}
 	}
 }
 
-func createRiver(startX, startY int, seed int64) {
-	// Simple river creation - just trace a path downhill
+// Trace a river path from the starting point to a low point or existing water
+func traceRiverPath(startX, startY int, rng *rand.Rand, riverTiles [MapHeight][MapWidth]bool, minLength, maxLength int) []struct{ x, y int } {
+	// River path
+	path := make([]struct{ x, y int }, 0, maxLength)
+	path = append(path, struct{ x, y int }{startX, startY})
+
+	// Current position
 	x, y := startX, startY
 
-	// Use a noise function to make river path less predictable
-	riverNoise := perlin.NewPerlin(1.5, 2.0, 2, seed)
+	// Noise for adding natural meandering to river flow
+	flowNoise := perlin.NewPerlin(1.5, 2.0, 2, rng.Int63())
 
-	// Maximum river length
-	maxLength := 10
-
-	for i := 0; i < maxLength; i++ {
-		// Find a good direction to flow
-		bestDirection := -1
-		lowestElevation := Map[y][x].altitude
-
-		// Try 8 possible directions
-		directions := []struct{ dx, dy int }{
-			{-1, -1}, {0, -1}, {1, -1},
-			{-1, 0}, {1, 0},
-			{-1, 1}, {0, 1}, {1, 1},
+	// Keep flowing downhill until we reach water or can't flow further
+	for len(path) < maxLength {
+		// Determine possible flow directions
+		type flowOption struct {
+			x, y      int
+			elevation float64
+			distance  float64 // Distance from ideal flow direction
 		}
 
-		for dir, d := range directions {
-			nx, ny := x+d.dx, y+d.dy
+		options := make([]flowOption, 0, 8)
 
-			// Skip if out of bounds
-			if nx < 0 || nx >= MapWidth || ny < 0 || ny >= MapHeight {
-				continue
+		// Current elevation
+		currentElevation := Map[y][x].altitude
+
+		// Calculate flow direction based on overall slope and existing path
+		// This helps rivers maintain a consistent direction
+		flowDirX, flowDirY := 0.0, 0.0
+
+		// Look at the last few points in the path to determine trend
+		pathLength := len(path)
+		lookback := 5
+		if pathLength > lookback {
+			for i := 1; i <= lookback; i++ {
+				prevPoint := path[pathLength-i]
+				flowDirX += float64(x - prevPoint.x)
+				flowDirY += float64(y - prevPoint.y)
 			}
 
-			// Add some noise to the elevation to make river path more natural
-			noiseVal := riverNoise.Noise2D(float64(nx)/10, float64(ny)/10) * 0.1
-			adjustedElevation := Map[ny][nx].altitude + noiseVal
-
-			// Find the lowest adjacent elevation that isn't already water
-			if adjustedElevation < lowestElevation && Map[ny][nx].altitude > 0 {
-				lowestElevation = adjustedElevation
-				bestDirection = dir
+			// Normalize the flow direction
+			magnitude := math.Sqrt(flowDirX*flowDirX + flowDirY*flowDirY)
+			if magnitude > 0 {
+				flowDirX /= magnitude
+				flowDirY /= magnitude
 			}
 		}
 
-		// If we can't find a lower point, end the river
-		if bestDirection == -1 {
+		// Check all 8 neighbors
+		for dy := -1; dy <= 1; dy++ {
+			for dx := -1; dx <= 1; dx++ {
+				if dx == 0 && dy == 0 {
+					continue
+				}
+
+				nx, ny := x+dx, y+dy
+
+				// Skip if out of bounds
+				if nx < 0 || nx >= MapWidth || ny < 0 || ny >= MapHeight {
+					continue
+				}
+
+				// Skip if already a river (to avoid loops) unless it's a water body
+				if riverTiles[ny][nx] && Map[ny][nx].altitude > -0.1 {
+					continue
+				}
+
+				// Check elevation - must be lower or water
+				neighborElevation := Map[ny][nx].altitude
+				if neighborElevation < currentElevation || neighborElevation <= 0 {
+					// Calculate how well this direction aligns with the current flow trend
+					// Higher alignment = more natural meandering
+					alignment := 1.0
+					if pathLength > lookback {
+						dotProduct := flowDirX*float64(dx) + flowDirY*float64(dy)
+						alignment = (dotProduct + 1.0) / 2.0 // Scale from [-1,1] to [0,1]
+					}
+
+					// Add noise to make the flow more natural
+					noiseValue := flowNoise.Noise2D(float64(nx)/10.0, float64(ny)/10.0)
+
+					// Calculate elevation difference including noise and flow alignment
+					elevationDiff := currentElevation - neighborElevation
+					flowScore := elevationDiff + noiseValue*0.1 + alignment*0.2
+
+					options = append(options, flowOption{
+						x:         nx,
+						y:         ny,
+						elevation: neighborElevation,
+						distance:  flowScore,
+					})
+				}
+			}
+		}
+
+		// If no downhill options, we've reached a local minimum
+		if len(options) == 0 {
 			break
 		}
 
-		// Move to the chosen direction
-		x += directions[bestDirection].dx
-		y += directions[bestDirection].dy
+		// Choose the best option, favoring steeper descent and flow alignment
+		bestOption := options[0]
+		for _, option := range options {
+			if option.distance > bestOption.distance {
+				bestOption = option
+			}
+		}
 
-		// Make this point water
-		Map[y][x].altitude = -0.05
-		Map[y][x].landType = LandType_Water
+		// Move to the next point
+		x, y = bestOption.x, bestOption.y
+		path = append(path, struct{ x, y int }{x, y})
 
-		// If we reach existing water, end the river
+		// If we've reached a water body or existing river, we're done
 		if Map[y][x].altitude <= 0 {
+			// We reached water, the river is complete
+			// Return the path only if it meets our minimum length requirement
+			// or if the path is already quite long despite not reaching water
+			if len(path) >= minLength {
+				return path
+			}
 			break
 		}
 	}
+
+	// At this point, we've either:
+	// 1. Reached the max length limit
+	// 2. Reached a local minimum with no way down
+	// 3. Reached water but the path was too short
+
+	// Only return the path if it meets the minimum length requirement
+	if len(path) >= minLength {
+		return path
+	}
+
+	// Return an empty path if it's too short
+	return []struct{ x, y int }{}
 }
 
 // | Terrain Type | Altitude Range | Display |

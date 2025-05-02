@@ -36,8 +36,8 @@ const (
 	LandType_Hills LandType = iota // If altitude is >= 0.8, then they are foothills (next to mountains)
 	// LandType_Foothills          // Near mountains
 	LandType_Mountains
-	LandType_Plains // Plains that are next to rivers (floodplains) have most fertile soil and are where civilizations often started.
-	LandType_Valleys
+	LandType_Plains   // Plains that are next to rivers (floodplains) have most fertile soil and are where civilizations often started.
+	LandType_Valleys  // Valleys between higher altitudes, near mountains, and river valleys.
 	LandType_Plateaus // Rivers can cut through plateaus to create canyons and gorges. Plateaus can also be formed by volcanic activity.
 	LandType_Coastal  // TODO: Implies next to water/sea?
 	LandType_Water
