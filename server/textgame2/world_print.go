@@ -324,8 +324,8 @@ func PrintWorldMap(request *sis.Request) {
 	}
 
 	request.PlainText("\nLand Feature Distribution:\n")
-	request.Gemini("| Land Type  | Count | Percentage |\n")
-	request.Gemini("|------------|-------|------------|\n")
+	request.Gemini("| Land Feature         | Count | Percentage |\n")
+	request.Gemini("|----------------------|-------|------------|\n")
 
 	landFeatureNames := [12]string{
 		"Deserts",
