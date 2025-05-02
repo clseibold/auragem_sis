@@ -60,13 +60,13 @@ func PrintWorldMap(request *sis.Request) {
 func generateHeight(peaks []Peak, x int, y int, seed int64) float64 {
 	perlin := perlin.NewPerlin(2, 2, 3, seed)
 
-	baseHeight := perlin.Noise2D(float64(x), float64(y))
+	baseHeight := (perlin.Noise2D(float64(x), float64(y)) + 1) * 0.5 // Scale to [0, 1]
 	heightFactor := float64(1)
 	height := baseHeight * heightFactor
 
 	// Create a mountain peak effect
 	finalHeight := height
-	var sigma float64 = 1 // Width of peak
+	var sigma float64 = 0.5 // Width of peak
 	for _, peak := range peaks {
 		peakX := peak.peakX
 		peakY := peak.peakY
