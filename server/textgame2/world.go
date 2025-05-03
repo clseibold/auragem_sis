@@ -3114,13 +3114,23 @@ func generateClimate(seed int64) {
 
 			// Altitude impact on temperature (higher = colder)
 			altitude := Map[y][x].altitude
-			altitudeTemp := 0.0
+			var baseTemp float64
+
 			if altitude <= 0 {
 				// Water bodies maintain more stable temperatures
-				altitudeTemp = 0.6
+				// Use latitude temperature with minor adjustment for water
+				baseTemp = latitudeTemp*0.9 + 0.1
 			} else {
 				// Temperature decreases with elevation
-				altitudeTemp = math.Max(0, 1.0-altitude*0.8)
+				// Apply altitude reduction directly to latitude temperature
+				// The lapse rate effect (approximately -0.65°C per 100m)
+				altitudeReduction := altitude * 0.5 // Scale factor to match our 0-1 scale
+
+				// Ensure reduction doesn't make temperature negative on our scale
+				altitudeReduction = math.Min(altitudeReduction, latitudeTemp*0.8)
+
+				// Apply reduction to latitude temperature
+				baseTemp = latitudeTemp - altitudeReduction
 			}
 
 			// Global temperature variation from noise
@@ -3129,9 +3139,8 @@ func generateClimate(seed int64) {
 			// Local temperature variation
 			localTemp := (localVariationNoise.Noise2D(float64(x)/(MapWidth*0.1), float64(y)/(MapHeight*0.1)) + 1) / 6
 
-			// Calculate base annual temperature (0.0 to 1.0 scale)
-			baseTemp := (latitudeTemp*0.8 + altitudeTemp*0.2 + tempVariation*0.2) / 1.2 // Test out a new calculation for this
-			// baseTemp := (latitudeTemp*0.6 + altitudeTemp*0.3 + tempVariation*0.3) / 1.2
+			// Apply noise variations to base temperature
+			baseTemp = baseTemp*0.8 + tempVariation*0.2
 			baseTemp += localTemp - 0.08 // Adjust range slightly
 
 			// 2. BASE ANNUAL RAINFALL CALCULATION
