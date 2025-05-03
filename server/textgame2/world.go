@@ -253,7 +253,7 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 	smallerHills := perlin.Noise2D(float64(x)/(MapWidth*0.5), float64(y)/(MapHeight*0.5)) * 0.25
 	//plateaus := perlin.Noise2D(float64(x)/(MapWidth*))
 
-	baseHeight := 0.2 + (plains * 0.4) + (hills * 0.4) + (smallerHills * 0.2) //+ (plateaus * 0.1)
+	baseHeight := 0.2 + plains + (hills * 0.6) + (smallerHills * 0.4)
 
 	// Adjust mid-range heights to create more distinct plains/hills separation
 	// This will help spread out hills more evenly
