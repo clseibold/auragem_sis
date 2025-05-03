@@ -110,9 +110,12 @@ func (c *Context) DesignDocument(request *sis.Request) {
 
 func (c *Context) ExploreWorld(request *sis.Request) {
 	xy, _ := request.Query()
+	if xy == "" {
+		xy = "25,25"
+	}
 	parts := strings.Split(xy, ",")
-	x, _ := strconv.Atoi(parts[0])
-	y, _ := strconv.Atoi(parts[1])
+	x, _ := strconv.Atoi(strings.TrimSpace(parts[0]))
+	y, _ := strconv.Atoi(strings.TrimSpace(parts[1]))
 
 	tile := &Map[y][x]
 
