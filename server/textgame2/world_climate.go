@@ -5,6 +5,8 @@ import (
 	"math"
 )
 
+// TODO: Should the climate generation be more accurate by generating cloud and wind paths?
+
 // Climate tracks seasonal variations in temperature and rainfall
 type Climate struct {
 	// Temperature for each season (0.0 = very cold, 1.0 = very hot)

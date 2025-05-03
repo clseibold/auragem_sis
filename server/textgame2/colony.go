@@ -2,6 +2,7 @@ package textgame2
 
 import (
 	"fmt"
+	"math/rand"
 )
 
 // TODO: Buildings and Agents should have a number of ticks that they've been working/turned on for when we switch to production
@@ -14,6 +15,7 @@ var beginnerResourceCounts = [Resource_Max]uint{
 type Colony struct {
 	// TODO: agents are array-of-structs atm. Potentially turn into struct of arrays later. Each agent is a state machine?
 	context        *Context
+	tileLocation   TileLocation
 	name           string
 	agents         []Agent
 	resourceCounts [Resource_Max]uint // Current resources in storage
@@ -33,6 +35,65 @@ type Colony struct {
 func NewColony(context *Context, name string, initialPopulationSize uint) *Colony {
 	colony := new(Colony)
 	colony.context = context
+
+	// Find a suitable tile with a warm or temperate biome for the colony
+	foundSuitableTile := false
+	for attempts := 0; attempts < 100 && !foundSuitableTile; attempts++ {
+		// Try random locations until we find a suitable one
+		x := context.rng.Intn(MapWidth)
+		y := context.rng.Intn(MapHeight)
+
+		// Get the tile at this location
+		tile := &Map[y][x]
+
+		// Skip water tiles and extreme environments
+		if tile.altitude <= 0 || tile.biome == Biome_IceSheet ||
+			tile.biome == Biome_SeaIce || tile.biome == Biome_ExtremeDesert {
+			continue
+		}
+
+		// Check if it's a warm or temperate biome
+		isWarmBiome := tile.biome == Biome_TropicalRainforest ||
+			tile.biome == Biome_TropicalSeasonalForest ||
+			tile.biome == Biome_TropicalMontaneForest ||
+			tile.biome == Biome_TropicalMoistForest ||
+			tile.biome == Biome_TropicalEvergreenForest ||
+			tile.biome == Biome_Savanna ||
+			tile.biome == Biome_TropicalSwampForest ||
+			tile.biome == Biome_TropicalSwamp ||
+			tile.biome == Biome_Mangrove
+
+		isTemperateBiome := tile.biome == Biome_TemperateDeciduousForest ||
+			tile.biome == Biome_TemperateMixedForest ||
+			tile.biome == Biome_TemperateRainforest ||
+			tile.biome == Biome_TemperateConiferousForest ||
+			tile.biome == Biome_TemperateSwamp ||
+			tile.biome == Biome_CypressSwamp ||
+			tile.biome == Biome_MangroveSwamp ||
+			tile.biome == Biome_Pampas ||
+			tile.biome == Biome_Veld ||
+			tile.biome == Biome_Prairie ||
+			tile.biome == Biome_TemperateFen
+
+		if isWarmBiome || isTemperateBiome {
+			colony.tileLocation = TileLocation{X: x, Y: y}
+			foundSuitableTile = true
+		}
+	}
+
+	// If we didn't find a suitable tile after multiple attempts, just pick a non-water tile
+	if !foundSuitableTile {
+		for {
+			x := rand.Intn(MapWidth)
+			y := rand.Intn(MapHeight)
+
+			if Map[y][x].altitude > 0 {
+				colony.tileLocation = TileLocation{X: x, Y: y}
+				break
+			}
+		}
+	}
+
 	colony.name = name
 	colony.agents = make([]Agent, initialPopulationSize)
 	colony.resourceCounts = beginnerResourceCounts

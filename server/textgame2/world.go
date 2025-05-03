@@ -32,6 +32,11 @@ var MapPeaks []Peak
 var Map [MapHeight][MapWidth]Tile
 var MapPerlin [MapHeight][MapWidth]Tile
 
+type TileLocation struct {
+	X int
+	Y int
+}
+
 // Each tile of the world map represents a 10 square kilometer region.
 type Tile struct {
 	altitude float64

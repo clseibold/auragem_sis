@@ -670,7 +670,7 @@ func assignBiomes() {
 
 	// Final smoothing pass to create more coherent biome regions
 	// This is optional but creates more natural-looking transitions
-	smoothBiomes()
+	//smoothBiomes()
 }
 
 // smoothBiomes performs a biome smoothing pass to create more coherent regions

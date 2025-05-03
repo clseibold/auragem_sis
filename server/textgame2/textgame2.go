@@ -101,6 +101,10 @@ func (colony *Colony) ColonyPage(request *sis.Request) {
 	request.Heading(1, colony.name)
 	request.Gemini("\n")
 
+	// Tile Description
+	request.Gemini(GetTileDescription(colony.tileLocation.X, colony.tileLocation.Y) + "\n")
+	request.Gemini("\n")
+
 	// Water and Food consumption per person
 
 	unemployedAgents := 0
