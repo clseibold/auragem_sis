@@ -65,6 +65,9 @@ type Tile struct {
 	hasGameTrail bool // Contains animal paths/trails
 	hasFloodArea bool // Contains area that seasonally floods
 	hasSaltFlat  bool // Contains a small salt flat or mineral deposit
+
+	// TODO: Permafrost - arctic and subarctic regions that are close to the poles that have a layer of permanently frozen ground that contains soil and organic material. They happen when a region's average annual temperature is 0 Celsius or below for two consecutive years. The very top layer (active layer) of the permafrost melts in summer, but the lower layer remains frozen. It occurs with the following soil types: silty, or clayey soils, which both can retain moisture. Permafrost can occur in various biomes, including tundra, boreal forests, and some mountainous regions. The melting of the active layer in summer can form wetlands, lakes, and other hydrology features during summer.
+	// TODO: The southern pole on earth has an ice sheet layered on top of landmass. They form from the accumulation of snow and ice over time.
 }
 
 // Helper methods to get temperature for a specific season

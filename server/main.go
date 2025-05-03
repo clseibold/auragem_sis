@@ -228,6 +228,7 @@ func setupAuraGem(context *sis.SISContext, chatContext *chat.ChatContext, aurare
 
 	textGame2Context := textgame2.NewContext()
 	textGame2Context.Attach(geminiServer.Group("/textgame2/"))
+	textGame2Context.Attach(geminiServer.Group("/biomebound/"))
 	textGame2Context.Start()
 
 	// Proxies

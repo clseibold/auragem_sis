@@ -69,7 +69,7 @@ func (c *Context) Attach(s sis.ServeMux) {
 }
 
 func (c *Context) Homepage(request *sis.Request) {
-	request.Heading(1, "Colony-Management Simulation Game")
+	request.Heading(1, "Biomebound: Colony Stratum")
 	request.Gemini("\n")
 	request.Link("/about/", "About")
 	request.Link("/test/", "Test Colony")
@@ -80,7 +80,7 @@ func (c *Context) Homepage(request *sis.Request) {
 func (c *Context) About(request *sis.Request) {
 	request.Heading(1, "About Game")
 	request.Gemini(`
-This is an MMO colony-management survival game written primarily for Gemini.
+Biomebound is an MMO colony-management survival game written primarily for Gemini.
 
 Four in-game days equals one real-time day.
 

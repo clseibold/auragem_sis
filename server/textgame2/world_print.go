@@ -239,7 +239,7 @@ func PrintWorldMap(request *sis.Request) {
 	// Count land types, land features, and biomes for distribution charts
 	landTypeCounts := make(map[LandType]int)
 	landFeatureCounts := make([]int, 12)
-	biomeCounts := make(map[Biome]int)
+	biomeCounts := make(map[Biome]int, Biome_Max)
 
 	for y := range MapHeight {
 		for x := range MapWidth {

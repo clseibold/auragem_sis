@@ -2,6 +2,10 @@ package textgame2
 
 import "math"
 
+// TODO: Tropical Evergreen Forest, Savanna, Steppe, and Hot Deserts need to be more frequent
+// Boreal Forests and Temperate Deciduous Forests are slightly too frequent.
+// Ocean/Lake tiles are also extremely low compared to earth.
+
 type Biome uint8
 
 const (
