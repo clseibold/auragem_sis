@@ -713,9 +713,9 @@ func createWaterBodies(seed int64) {
 	detailNoise := perlin.NewPerlin(3.0, 1.5, 2, seed+921)
 
 	// Parameters for water generation
-	largeWaterThreshold := -0.47  // -0.60
-	mediumWaterThreshold := -0.40 // -0.53
-	maxElevationForWater := 0.4   // 0.35
+	largeWaterThreshold := -0.40 // -0.60
+	// mediumWaterThreshold := -0.40 // -0.53
+	maxElevationForWater := 0.4 // 0.35
 
 	// Track water bodies to maintain proper spacing
 	var waterTiles [MapHeight][MapWidth]bool
@@ -732,7 +732,7 @@ func createWaterBodies(seed int64) {
 			waterValue := waterNoise.Noise2D(float64(x)/(MapWidth*0.25), float64(y)/(MapHeight*0.25))
 
 			// Detail noise to break up water edges
-			detailValue := detailNoise.Noise2D(float64(x)/(MapWidth*0.05), float64(y)/(MapHeight*0.05)) * 0.1
+			// detailValue := detailNoise.Noise2D(float64(x)/(MapWidth*0.05), float64(y)/(MapHeight*0.05)) * 0.1
 
 			// Different sizes of water bodies
 			if waterValue < largeWaterThreshold && Map[y][x].altitude < maxElevationForWater {
@@ -804,7 +804,7 @@ func createWaterBodies(seed int64) {
 						}
 					}
 				}
-			} else if waterValue < mediumWaterThreshold && Map[y][x].altitude < maxElevationForWater {
+			} /*else if waterValue < mediumWaterThreshold && Map[y][x].altitude < maxElevationForWater {
 				// Medium water bodies (ponds)
 				// Check spacing
 				tooClose := false
@@ -830,7 +830,7 @@ func createWaterBodies(seed int64) {
 					Map[y][x].landType = LandType_Water
 					waterTiles[y][x] = true
 				}
-			}
+			}*/
 		}
 	}
 }
