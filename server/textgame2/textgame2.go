@@ -154,19 +154,19 @@ func (c *Context) ExploreWorld(request *sis.Request) {
 	if y+1 < MapHeight {
 		down := &Map[y+1][x]
 		if down.landType != LandType_Water {
-			request.Link(fmt.Sprintf("/explore/?%d,%d", x, y+1), fmt.Sprintf("Go Up (%s)", landTypeNames[down.landType]))
+			request.Link(fmt.Sprintf("/explore/?%d,%d", x, y+1), fmt.Sprintf("Go Down (%s)", landTypeNames[down.landType]))
 		}
 	}
 	if x-1 >= 0 {
 		left := &Map[y][x-1]
 		if left.landType != LandType_Water {
-			request.Link(fmt.Sprintf("/explore/?%d,%d", x-1, y), fmt.Sprintf("Go Up (%s)", landTypeNames[left.landType]))
+			request.Link(fmt.Sprintf("/explore/?%d,%d", x-1, y), fmt.Sprintf("Go Left (%s)", landTypeNames[left.landType]))
 		}
 	}
 	if x+1 < MapWidth {
 		right := &Map[y][x+1]
 		if right.landType != LandType_Water {
-			request.Link(fmt.Sprintf("/explore/?%d,%d", x+1, y), fmt.Sprintf("Go Up (%s)", landTypeNames[right.landType]))
+			request.Link(fmt.Sprintf("/explore/?%d,%d", x+1, y), fmt.Sprintf("Go Right (%s)", landTypeNames[right.landType]))
 		}
 	}
 }
