@@ -25,58 +25,6 @@ func PrintWorldMap(request *sis.Request) {
 		noNumbers = false
 	}
 
-	// Count land types for land type distribution chart
-	landTypeCounts := make(map[LandType]int)
-	landFeatureCounts := make([]int, 12)
-
-	for y := range MapHeight {
-		for x := range MapWidth {
-			tile := &Map[y][x]
-			landTypeCounts[tile.landType]++
-
-			if tile.isDesert {
-				landFeatureCounts[0]++
-			}
-
-			// Water features
-			if tile.hasStream {
-				landFeatureCounts[1]++
-			}
-			if tile.hasPond {
-				landFeatureCounts[2]++
-			}
-			if tile.hasSpring {
-				landFeatureCounts[3]++
-			}
-			if tile.hasMarsh {
-				landFeatureCounts[4]++
-			}
-
-			// Plains features
-			if tile.hasGrove {
-				landFeatureCounts[5]++
-			}
-			if tile.hasMeadow {
-				landFeatureCounts[6]++
-			}
-			if tile.hasScrub {
-				landFeatureCounts[7]++
-			}
-			if tile.hasRocks {
-				landFeatureCounts[8]++
-			}
-			if tile.hasGameTrail {
-				landFeatureCounts[9]++
-			}
-			if tile.hasFloodArea {
-				landFeatureCounts[10]++
-			}
-			if tile.hasSaltFlat {
-				landFeatureCounts[11]++
-			}
-		}
-	}
-
 	request.Heading(1, "World Map")
 	request.Gemini("\n")
 	if !showValues {
@@ -288,6 +236,61 @@ func PrintWorldMap(request *sis.Request) {
 	request.Gemini("- : Game trail\n")
 	request.PlainText("\n")
 
+	// Count land types, land features, and biomes for distribution charts
+	landTypeCounts := make(map[LandType]int)
+	landFeatureCounts := make([]int, 12)
+	biomeCounts := make(map[Biome]int)
+
+	for y := range MapHeight {
+		for x := range MapWidth {
+			tile := &Map[y][x]
+			landTypeCounts[tile.landType]++
+
+			if tile.isDesert {
+				landFeatureCounts[0]++
+			}
+
+			// Water features
+			if tile.hasStream {
+				landFeatureCounts[1]++
+			}
+			if tile.hasPond {
+				landFeatureCounts[2]++
+			}
+			if tile.hasSpring {
+				landFeatureCounts[3]++
+			}
+			if tile.hasMarsh {
+				landFeatureCounts[4]++
+			}
+
+			// Plains features
+			if tile.hasGrove {
+				landFeatureCounts[5]++
+			}
+			if tile.hasMeadow {
+				landFeatureCounts[6]++
+			}
+			if tile.hasScrub {
+				landFeatureCounts[7]++
+			}
+			if tile.hasRocks {
+				landFeatureCounts[8]++
+			}
+			if tile.hasGameTrail {
+				landFeatureCounts[9]++
+			}
+			if tile.hasFloodArea {
+				landFeatureCounts[10]++
+			}
+			if tile.hasSaltFlat {
+				landFeatureCounts[11]++
+			}
+
+			biomeCounts[tile.biome]++
+		}
+	}
+
 	request.PlainText("\nLand Type Distribution:\n")
 	request.Gemini("| Land Type  | Count | Percentage |\n")
 	request.Gemini("|------------|-------|------------|\n")
@@ -323,10 +326,7 @@ func PrintWorldMap(request *sis.Request) {
 		request.Gemini(fmt.Sprintf("| %-10s | %-5d | %-9.2f%% |\n", landTypeNames[lt], count, percentage))
 	}
 
-	request.PlainText("\nLand Feature Distribution:\n")
-	request.Gemini("| Land Feature         | Count | Percentage |\n")
-	request.Gemini("|----------------------|-------|------------|\n")
-
+	// Land Feature Counts
 	landFeatureNames := [12]string{
 		"Deserts",
 		"Streams",
@@ -342,9 +342,80 @@ func PrintWorldMap(request *sis.Request) {
 		"Salt Flats",
 	}
 
+	request.PlainText("\nLand Feature Distribution:\n")
+	request.Gemini("| Land Feature         | Count | Percentage |\n")
+	request.Gemini("|----------------------|-------|------------|\n")
+
 	for i, fcount := range landFeatureCounts {
 		percentage := float64(fcount) / float64(totalTiles) * 100.0
 		request.Gemini(fmt.Sprintf("| %-20s | %-5d | %-9.2f%% |\n", landFeatureNames[i], fcount, percentage))
+	}
+
+	// Biome counts
+	biomeNames := [Biome_Max]string{
+		// Warm biomes
+		"Tropical Rainforest",
+		"Tropical Seasonal Forest",
+		"Tropical Montane Forest",
+		"Tropical Moist Forest",
+		"Tropical Evergreen Forest",
+		"Savanna",
+		"Tropical Swamp Forest",
+		"Tropical Swamp",
+		"Mangrove",
+
+		// Temperate biomes
+		"Temperate Deciduous Forest",
+		"Temperate Mixed Forest",
+		"Temperate Rainforest",
+		"Temperate Coniferous Forest",
+		"Temperate Swamp",
+		"Cypress Swamp",
+		"Mangrove Swamp",
+		"Pampas",
+		"Veld",
+		"Prairie",
+		"Temperate Fen",
+
+		// Cold biomes
+		"Boreal Forest",
+		"Alpine",
+		"Tundra",
+		"Steppe",
+		"Cold Bog",
+		"Cold Fen",
+		"Cold Desert",
+		"Ice Sheet",
+		"Sea Ice",
+
+		// Semi-arid biomes
+		"Sagebrush Steppe",
+		"Matorral",
+
+		// Hot biomes
+		"Mediterranean Shrubland",
+		"Fynbos",
+		"Desert Shrubland",
+		"Hot Desert",
+		"Extreme Desert",
+
+		// Water biomes
+		"Ocean",
+		"Lake",
+		"River",
+	}
+
+	request.PlainText("\nBiome Distribution:\n")
+	request.Gemini("| Biome Type               | Count | Percentage |\n")
+	request.Gemini("|--------------------------|-------|------------|\n")
+
+	// Print biome counts in order
+	for biome := Biome(0); biome < Biome_Max; biome++ {
+		count := biomeCounts[biome]
+		if count > 0 {
+			percentage := float64(count) / float64(totalTiles) * 100.0
+			request.Gemini(fmt.Sprintf("| %-24s | %-5d | %-9.2f%% |\n", biomeNames[biome], count, percentage))
+		}
 	}
 
 	request.PlainText("```\n")
