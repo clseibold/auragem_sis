@@ -27,9 +27,10 @@ func TicksToInGameDuration(ticks int) time.Duration {
 
 type Context struct {
 	// previousTickTime time.Time
-	inGameTime  time.Time
-	ticker      *time.Ticker
-	firstColony *Colony
+	inGameTime   time.Time
+	ticker       *time.Ticker
+	firstColony  *Colony
+	secondColony *Colony
 }
 
 func NewContext() *Context {
@@ -38,7 +39,8 @@ func NewContext() *Context {
 
 	context := new(Context)
 	context.ticker = time.NewTicker(TickRealTimeDuration)
-	context.firstColony = NewColony(context, "Test Colony", 6)
+	context.firstColony = NewColony(context, "Test Colony", 6, true)
+	context.secondColony = NewColony(context, "Second Test Colony", 6, false)
 	context.inGameTime = time.Date(0, 0, 0, 8, 0, 0, 0, time.UTC)
 	return context
 }
@@ -52,6 +54,7 @@ func (c *Context) SimulationLoop() {
 		<-c.ticker.C
 		c.inGameTime = c.inGameTime.Add(TicksToInGameDuration(1))
 		c.firstColony.Tick()
+		c.secondColony.Tick()
 	}
 }
 
@@ -66,6 +69,12 @@ func (c *Context) Attach(s sis.ServeMux) {
 	group.AddRoute("/resource_zone/:id/", c.firstColony.ResourceZonePage)
 	group.AddRoute("/resource_zone/:id/add_worker", c.firstColony.AddWorkerPage)
 	group.AddRoute("/resource_zone/:id/remove_worker", c.firstColony.RemoveWorkerPage)
+
+	group2 := s.Group("/second-test/")
+	group2.AddRoute("/", c.secondColony.ColonyPage)
+	group2.AddRoute("/resource_zone/:id/", c.secondColony.ResourceZonePage)
+	group2.AddRoute("/resource_zone/:id/add_worker", c.secondColony.AddWorkerPage)
+	group2.AddRoute("/resource_zone/:id/remove_worker", c.secondColony.RemoveWorkerPage)
 }
 
 func (c *Context) Homepage(request *sis.Request) {
@@ -73,6 +82,7 @@ func (c *Context) Homepage(request *sis.Request) {
 	request.Gemini("\n")
 	request.Link("/about/", "About")
 	request.Link("/test/", "Test Colony")
+	request.Link("/second-test/", "Second Test Colony")
 	request.Gemini("\n")
 	request.Link("/world-map/", "World Map")
 }

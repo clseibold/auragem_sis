@@ -31,18 +31,18 @@ type Colony struct {
 	// resourceProducers [Resource_Max]*Node
 }
 
-func NewColony(context *Context, name string, initialPopulationSize uint) *Colony {
-	colony := new(Colony)
-	colony.context = context
-
+func FindBeginnerTileLocation() (tileLocation TileLocation) {
 	// Find a suitable tile with a warm or temperate biome for the colony
-	// foundSuitableTile := false
+	foundSuitableTile := false
 
 	// Iterate through every tile in the map instead of random attempts
-	/*for y := 0; y < MapHeight && !foundSuitableTile; y++ {
+	for y := 0; y < MapHeight && !foundSuitableTile; y++ {
 		for x := 0; x < MapWidth && !foundSuitableTile; x++ {
 			// Get the tile at this location
 			tile := &Map[y][x]
+			if tile.occupied {
+				continue
+			}
 
 			// Skip water tiles and extreme environments
 			if tile.altitude <= 0 || tile.biome == Biome_IceSheet ||
@@ -74,7 +74,7 @@ func NewColony(context *Context, name string, initialPopulationSize uint) *Colon
 				tile.biome == Biome_TemperateFen
 
 			if isWarmBiome || isTemperateBiome {
-				colony.tileLocation = TileLocation{X: x, Y: y}
+				tileLocation = TileLocation{X: x, Y: y}
 				foundSuitableTile = true
 			}
 		}
@@ -84,8 +84,11 @@ func NewColony(context *Context, name string, initialPopulationSize uint) *Colon
 	if !foundSuitableTile {
 		for y := range MapHeight {
 			for x := range MapWidth {
+				if Map[y][x].occupied {
+					continue
+				}
 				if Map[y][x].altitude > 0 {
-					colony.tileLocation = TileLocation{X: x, Y: y}
+					tileLocation = TileLocation{X: x, Y: y}
 					foundSuitableTile = true
 					break
 				}
@@ -94,9 +97,19 @@ func NewColony(context *Context, name string, initialPopulationSize uint) *Colon
 				break
 			}
 		}
-		}*/
+	}
 
-	colony.tileLocation = TileLocation{X: 5, Y: 0}
+	return tileLocation
+}
+
+func NewColony(context *Context, name string, initialPopulationSize uint, first bool) *Colony {
+	colony := new(Colony)
+	colony.context = context
+	if first {
+		colony.tileLocation = TileLocation{X: 5, Y: 0}
+	} else {
+		colony.tileLocation = FindBeginnerTileLocation()
+	}
 	colony.name = name
 	colony.agents = make([]Agent, initialPopulationSize)
 	colony.resourceCounts = beginnerResourceCounts
@@ -122,7 +135,7 @@ func NewColony(context *Context, name string, initialPopulationSize uint) *Colon
 		a.food = 100
 		a.health = 100
 		a.state = AgentState_Idle
-		a.stress = 20 // 20% stress from starting a new colony off with nothing
+		a.stress = 20 // 20% stress from starting a new colony off with nothing // TODO: Change this value also based on the chosen tile biome.
 		a.familyID = i
 		a.assignedZone = -1
 	}
