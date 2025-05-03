@@ -370,7 +370,7 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 }
 
 // Do this before generating plateaus and other terrain, but after generating base terrain with mountains.
-func assignLandTypes() {
+/*func assignLandTypes() {
 	// Assign land types based on altitude and other characteristics
 	for y := range MapHeight {
 		for x := range MapWidth {
@@ -397,9 +397,102 @@ func assignLandTypes() {
 				// Plains for low elevation
 				Map[y][x].landType = LandType_Plains
 			}
+		}
+	}
+}*/
 
-			// Additional terrain analysis (checking for valleys, etc.)
-			// could be added here
+func assignLandTypes() {
+	// First calculate terrain slopes to identify flat vs. hilly areas
+	var slopes [MapHeight][MapWidth]float64
+
+	// Calculate terrain slope for each tile
+	for y := 1; y < MapHeight-1; y++ {
+		for x := 1; x < MapWidth-1; x++ {
+			// Skip water tiles
+			if Map[y][x].altitude <= 0 {
+				continue
+			}
+
+			// Calculate average height difference with neighbors
+			maxDiff := 0.0
+
+			for dy := -1; dy <= 1; dy++ {
+				for dx := -1; dx <= 1; dx++ {
+					if dx == 0 && dy == 0 {
+						continue
+					}
+
+					nx, ny := x+dx, y+dy
+					if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
+						diff := math.Abs(Map[y][x].altitude - Map[ny][nx].altitude)
+						if diff > maxDiff {
+							maxDiff = diff
+						}
+					}
+				}
+			}
+
+			slopes[y][x] = maxDiff
+		}
+	}
+
+	// Define slope thresholds
+	flatThreshold := 0.06 // Max slope for "flat" terrain
+	hillThreshold := 0.15 // Max slope for hills
+
+	// Assign land types based on altitude and slope
+	for y := range MapHeight {
+		for x := range MapWidth {
+			altitude := Map[y][x].altitude
+			slope := slopes[y][x]
+
+			// First, assign basic land types based on altitude
+			if altitude <= 0.0 {
+				// Water features
+				Map[y][x].landType = LandType_Water
+			} else if altitude >= 1.0 {
+				// Mountain terrain
+				Map[y][x].landType = LandType_Mountains
+			} else if altitude >= 0.8 && altitude < 1.0 {
+				// Check if this is a foothill (near mountains)
+				nearMountain := false
+
+				// Look for mountains in vicinity
+				for dy := -3; dy <= 3; dy++ {
+					for dx := -3; dx <= 3; dx++ {
+						nx, ny := x+dx, y+dy
+						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight {
+							if Map[ny][nx].altitude >= 1.0 {
+								nearMountain = true
+								break
+							}
+						}
+					}
+					if nearMountain {
+						break
+					}
+				}
+
+				if nearMountain {
+					// Foothills - high terrain near mountains
+					Map[y][x].landType = LandType_Hills
+				} else {
+					// High terrain but not near mountains - could be plateau later
+					Map[y][x].landType = LandType_Hills
+				}
+			} else {
+				// For mid to low elevation (0.0-0.8), use slope to determine
+				if slope <= flatThreshold {
+					// Flat terrain = plains
+					Map[y][x].landType = LandType_Plains
+				} else if slope <= hillThreshold || altitude > 0.5 {
+					// Moderate slopes or higher elevation = hills
+					Map[y][x].landType = LandType_Hills
+				} else {
+					// Default to plains for other cases
+					Map[y][x].landType = LandType_Plains
+				}
+			}
 		}
 	}
 }
