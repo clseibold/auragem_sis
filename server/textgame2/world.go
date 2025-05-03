@@ -484,6 +484,7 @@ func assignLandTypes() {
 				// For mid to low elevation (0.0-0.8), use slope to determine
 				if slope <= flatThreshold {
 					// Flat terrain = plains
+					fmt.Printf("Found flat terrain under flatThreshold. (%d, %d)\n", x, y)
 					Map[y][x].landType = LandType_Plains
 				} else if slope <= hillThreshold || altitude > 0.5 {
 					// Moderate slopes or higher elevation = hills
