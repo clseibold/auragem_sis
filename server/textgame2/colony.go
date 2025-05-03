@@ -82,8 +82,8 @@ func NewColony(context *Context, name string, initialPopulationSize uint) *Colon
 
 	// If we didn't find a suitable tile after checking the entire map, just pick a non-water tile
 	if !foundSuitableTile {
-		for y := 0; y < MapHeight; y++ {
-			for x := 0; x < MapWidth; x++ {
+		for y := range MapHeight {
+			for x := range MapWidth {
 				if Map[y][x].altitude > 0 {
 					colony.tileLocation = TileLocation{X: x, Y: y}
 					foundSuitableTile = true
