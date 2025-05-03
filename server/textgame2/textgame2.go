@@ -125,6 +125,7 @@ func (colony *Colony) ColonyPage(request *sis.Request) {
 		request.Gemini(fmt.Sprintf("Date & Time:  %s (Free Time)\n", colony.context.inGameTime.Format(time.TimeOnly)))
 	}
 	request.Gemini(fmt.Sprintf("Map Location: (%d, %d)\n", colony.tileLocation.X, colony.tileLocation.Y))
+	request.Gemini(fmt.Sprintf("Avg Temp:     %.1f°C (%f)\n", ConvertTemperature(Map[colony.tileLocation.Y][colony.tileLocation.X].climate.avgTemp).Celsius, Map[colony.tileLocation.Y][colony.tileLocation.X].climate.avgTemp))
 	request.Gemini(fmt.Sprintf("Population:   %d (%d unemployed)\n", len(colony.agents), unemployedAgents))
 	request.Gemini(fmt.Sprintf("Food:         %d (%+.2f/workday)\n", colony.resourceCounts[Resource_Berries], math.Ceil(colony.currentProduction[Resource_Berries]-colony.currentConsumption[Resource_Berries])*TicksPerInGameWorkDay)) // TODO: Count *all* food sources
 	request.Gemini(fmt.Sprintf("Water:        %d (+0/workday)\n", colony.resourceCounts[Resource_Water]))
