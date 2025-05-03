@@ -501,7 +501,7 @@ func generatePlateaus(seed int64) {
 		for x := range MapWidth {
 			// Skip areas that are too low (water) or mountains
 			// Also skip areas that are already too high (near mountains)
-			if Map[y][x].altitude <= 0.25 || Map[y][x].altitude >= 0.9 {
+			if Map[y][x].altitude <= 0.25 || Map[y][x].altitude >= 0.9 || Map[y][x].landType == LandType_Water {
 				continue
 			}
 
@@ -523,7 +523,7 @@ func generatePlateaus(seed int64) {
 		for y := range MapHeight {
 			for x := range MapWidth {
 				// Skip areas that are too low (water) or near mountains
-				if Map[y][x].altitude <= 0.25 || Map[y][x].altitude >= 0.9 {
+				if Map[y][x].altitude <= 0.25 || Map[y][x].altitude >= 0.9 || Map[y][x].landType == LandType_Water {
 					continue
 				}
 
