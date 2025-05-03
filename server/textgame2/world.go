@@ -3130,7 +3130,7 @@ func generateClimate(seed int64) {
 			localTemp := (localVariationNoise.Noise2D(float64(x)/(MapWidth*0.1), float64(y)/(MapHeight*0.1)) + 1) / 6
 
 			// Calculate base annual temperature (0.0 to 1.0 scale)
-			baseTemp := (latitudeTemp*0.6 + altitudeTemp*0.4 + tempVariation*0.2) / 1.2 // Test out a new calculation for this
+			baseTemp := (latitudeTemp*0.7 + altitudeTemp*0.3 + tempVariation*0.2) / 1.2 // Test out a new calculation for this
 			// baseTemp := (latitudeTemp*0.6 + altitudeTemp*0.3 + tempVariation*0.3) / 1.2
 			baseTemp += localTemp - 0.08 // Adjust range slightly
 
