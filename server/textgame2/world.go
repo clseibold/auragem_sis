@@ -180,6 +180,9 @@ func generateMapMountainPeaks(rand *rand.Rand) []Peak {
 
 	// Place remaining peaks ensuring they have enough separation
 	for i := 1; i < 4; i++ { // Try to place 3 more peaks
+		if i == 4 && rand.Intn(100) <= 20 { // 20% chance of skipping 4th mountain peak.
+			continue
+		}
 		// Make multiple attempts to find a suitable position
 		for range 20 {
 			candidateX := minX + rand.Intn(maxX-minX)

@@ -45,20 +45,7 @@ func PrintWorldMap(request *sis.Request) {
 	request.Gemini("\n")
 
 	request.Gemini("```\n")
-	// Print the peaks
-	request.PlainText("Peaks: ")
-	for _, peak := range MapPeaks {
-		request.PlainText("(%d, %d) ", peak.peakX, peak.peakY)
-	}
-	request.PlainText("\n")
-
-	// Print the lowest and highest tiles
-	request.PlainText("\nLowest and Highest Altitudes on Map with Mountain Peaks:\n")
-	lowest, highest := getMapLowestAndHighestPoints()
-	request.PlainText("Lowest Tile Altitude: %+.2f\n", lowest.altitude)
-	request.PlainText("Highest Tile Altitude: %+.2f\n", highest.altitude)
-
-	request.PlainText("\nWith Full Terrain Generation:\n")
+	request.PlainText("\nWorld Map:\n")
 	for y := range MapHeight {
 		// Heading/Top border
 		if y == 0 && !noNumbers {
@@ -115,7 +102,7 @@ func PrintWorldMap(request *sis.Request) {
 				} else if tile.hasGrove {
 					request.PlainText("Υ")
 				} else if tile.hasMeadow {
-					request.PlainText("⁎")
+					request.PlainText("*")
 				} else if tile.hasScrub {
 					request.PlainText("⌿")
 				} else if tile.hasRocks {
@@ -228,13 +215,25 @@ func PrintWorldMap(request *sis.Request) {
 	request.PlainText("\n")
 
 	request.Gemini("Υ : Grove of trees\n")
-	request.Gemini("⁎ : Flower meadow\n")
+	request.Gemini("* : Flower meadow\n")
 	request.Gemini("⌿ : Scrubland\n")
 	request.Gemini("◊ : Rock outcroppings\n")
 	request.Gemini("□ : Salt flat\n")
 	request.Gemini("∴ : Seasonal flood area\n")
 	request.Gemini("- : Game trail\n")
 	request.PlainText("\n")
+
+	// Print the peaks
+	request.PlainText("\nMountainPeaks: ")
+	for _, peak := range MapPeaks {
+		request.PlainText("(%d, %d) ", peak.peakX, peak.peakY)
+	}
+	request.PlainText("\n")
+
+	// Print the lowest and highest tiles
+	lowest, highest := getMapLowestAndHighestPoints()
+	request.PlainText("Lowest Tile Altitude: %+.2f\n", lowest.altitude)
+	request.PlainText("Highest Tile Altitude: %+.2f\n", highest.altitude)
 
 	// Count land types, land features, and biomes for distribution charts
 	landTypeCounts := make(map[LandType]int)
