@@ -234,13 +234,13 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 	perlin := perlin.NewPerlin(2.0, 2.5, 3, seed)
 
 	// Generate base terrain with gentle hills
-	// baseHeight := perlin.Noise2D(float64(x)/(MapWidth*0.7), float64(y)/(MapHeight*0.7)) * 0.45
-	// secondaryNoise := perlin.Noise2D(float64(x)/(MapWidth*0.18), float64(y)/(MapHeight*0.18)) * 0.1
-	// tertiaryNoise := perlin.Noise2D(float64(x+50)/(MapWidth*0.3), float64(y+50)/(MapHeight*0.3)) * 0.15
+	baseHeight := perlin.Noise2D(float64(x)/(MapWidth*0.7), float64(y)/(MapHeight*0.7)) * 0.45
+	secondaryNoise := perlin.Noise2D(float64(x)/(MapWidth*0.18), float64(y)/(MapHeight*0.18)) * 0.1
+	tertiaryNoise := perlin.Noise2D(float64(x+50)/(MapWidth*0.3), float64(y+50)/(MapHeight*0.3)) * 0.15
 
-	baseHeight := perlin.Noise2D(float64(x)/(MapWidth*0.8), float64(y)/(MapHeight*0.8)) * 0.4
-	secondaryNoise := perlin.Noise2D(float64(x)/(MapWidth*0.25), float64(y)/(MapHeight*0.25)) * 0.08
-	tertiaryNoise := perlin.Noise2D(float64(x+50)/(MapWidth*0.4), float64(y+50)/(MapHeight*0.4)) * 0.12
+	// baseHeight := perlin.Noise2D(float64(x)/(MapWidth*0.8), float64(y)/(MapHeight*0.8)) * 0.4
+	// secondaryNoise := perlin.Noise2D(float64(x)/(MapWidth*0.25), float64(y)/(MapHeight*0.25)) * 0.08
+	// tertiaryNoise := perlin.Noise2D(float64(x+50)/(MapWidth*0.4), float64(y+50)/(MapHeight*0.4)) * 0.12
 	baseHeight += secondaryNoise + tertiaryNoise + 0.2 // With added baseline offset
 
 	// Adjust mid-range heights to create more distinct plains/hills separation
