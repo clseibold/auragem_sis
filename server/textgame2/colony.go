@@ -39,7 +39,7 @@ func NewColony(context *Context, name string, initialPopulationSize uint) *Colon
 	foundSuitableTile := false
 
 	// Iterate through every tile in the map instead of random attempts
-	for y := 0; y < MapHeight && !foundSuitableTile; y++ {
+	/*for y := 0; y < MapHeight && !foundSuitableTile; y++ {
 		for x := 0; x < MapWidth && !foundSuitableTile; x++ {
 			// Get the tile at this location
 			tile := &Map[y][x]
@@ -94,8 +94,9 @@ func NewColony(context *Context, name string, initialPopulationSize uint) *Colon
 				break
 			}
 		}
-	}
+		}*/
 
+	colony.tileLocation = TileLocation{X: 5, Y: 0}
 	colony.name = name
 	colony.agents = make([]Agent, initialPopulationSize)
 	colony.resourceCounts = beginnerResourceCounts
