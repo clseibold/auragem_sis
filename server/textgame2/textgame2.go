@@ -125,7 +125,6 @@ func (colony *Colony) ColonyPage(request *sis.Request) {
 		request.Gemini(fmt.Sprintf("Date & Time:  %s (Free Time)\n", colony.context.inGameTime.Format(time.TimeOnly)))
 	}
 	request.Gemini(fmt.Sprintf("Map Location: (%d, %d)\n", colony.tileLocation.X, colony.tileLocation.Y))
-	request.Gemini(fmt.Sprintf("Avg Temp:     %.1f°C (%f)\n", ConvertTemperature(Map[colony.tileLocation.Y][colony.tileLocation.X].climate.avgTemp).Celsius, Map[colony.tileLocation.Y][colony.tileLocation.X].climate.avgTemp))
 	request.Gemini(fmt.Sprintf("Population:   %d (%d unemployed)\n", len(colony.agents), unemployedAgents))
 	request.Gemini(fmt.Sprintf("Food:         %d (%+.2f/workday)\n", colony.resourceCounts[Resource_Berries], math.Ceil(colony.currentProduction[Resource_Berries]-colony.currentConsumption[Resource_Berries])*TicksPerInGameWorkDay)) // TODO: Count *all* food sources
 	request.Gemini(fmt.Sprintf("Water:        %d (+0/workday)\n", colony.resourceCounts[Resource_Water]))
@@ -135,6 +134,12 @@ func (colony *Colony) ColonyPage(request *sis.Request) {
 	request.Gemini(fmt.Sprintf("Iron:         %d (+0/workday)\n", colony.resourceCounts[Resource_Iron]))
 	// request.Gemini(fmt.Sprintf("Production Factor: %d\n", colony.productionFactor)) // The efficiency of all production in colony
 	// request.Gemini(fmt.Sprintf("Next Update in")) // TODO: Get real-time duration till next building update.
+	request.Gemini("\nClimate Stats:\n")
+	request.Gemini(fmt.Sprintf("Avg Temp:     %.1f°C (%f)\n", ConvertTemperature(Map[colony.tileLocation.Y][colony.tileLocation.X].climate.avgTemp).Celsius, Map[colony.tileLocation.Y][colony.tileLocation.X].climate.avgTemp))
+	request.Gemini(fmt.Sprintf("Avg Winter:   %.1f°C (%f)\n", ConvertTemperature(Map[colony.tileLocation.Y][colony.tileLocation.X].climate.winterTemp).Celsius, Map[colony.tileLocation.Y][colony.tileLocation.X].climate.winterTemp))
+	request.Gemini(fmt.Sprintf("Avg Spring:   %.1f°C (%f)\n", ConvertTemperature(Map[colony.tileLocation.Y][colony.tileLocation.X].climate.springTemp).Celsius, Map[colony.tileLocation.Y][colony.tileLocation.X].climate.springTemp))
+	request.Gemini(fmt.Sprintf("Avg Summer:   %.1f°C (%f)\n", ConvertTemperature(Map[colony.tileLocation.Y][colony.tileLocation.X].climate.summerTemp).Celsius, Map[colony.tileLocation.Y][colony.tileLocation.X].climate.summerTemp))
+	request.Gemini(fmt.Sprintf("Avg Autumn:   %.1f°C (%f)\n", ConvertTemperature(Map[colony.tileLocation.Y][colony.tileLocation.X].climate.fallTemp).Celsius, Map[colony.tileLocation.Y][colony.tileLocation.X].climate.fallTemp))
 	request.Gemini("```\n")
 	request.Gemini("\n")
 
