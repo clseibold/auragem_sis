@@ -752,7 +752,7 @@ func createWaterBodies(seed int64) {
 
 					// Generate a small cluster of water around large bodies
 					// But limit the size with a strict radius check
-					maxRadius := 1 + rng.Intn(2) // 1-2 tile radius max
+					maxRadius := 4 + rng.Intn(2) // 4-5 tile radius max
 
 					for dy := -maxRadius; dy <= maxRadius; dy++ {
 						for dx := -maxRadius; dx <= maxRadius; dx++ {
@@ -794,7 +794,7 @@ func createWaterBodies(seed int64) {
 				// Medium water bodies (ponds)
 				// Check spacing
 				tooClose := false
-				searchRadius := 2 // Smaller spacing for medium bodies
+				searchRadius := 3 // Smaller spacing for medium bodies
 
 				for dy := -searchRadius; dy <= searchRadius; dy++ {
 					for dx := -searchRadius; dx <= searchRadius; dx++ {
