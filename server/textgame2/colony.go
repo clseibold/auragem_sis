@@ -36,7 +36,7 @@ func NewColony(context *Context, name string, initialPopulationSize uint) *Colon
 	colony.context = context
 
 	// Find a suitable tile with a warm or temperate biome for the colony
-	foundSuitableTile := false
+	// foundSuitableTile := false
 
 	// Iterate through every tile in the map instead of random attempts
 	/*for y := 0; y < MapHeight && !foundSuitableTile; y++ {
