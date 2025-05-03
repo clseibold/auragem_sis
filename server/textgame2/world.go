@@ -720,7 +720,18 @@ func createWaterBodies(seed int64) {
 	// Track water bodies to maintain proper spacing
 	var waterTiles [MapHeight][MapWidth]bool
 
+	// Count existing water bodies.
+	for y := range MapHeight {
+		for x := range MapWidth {
+			if Map[y][x].landType == LandType_Water || Map[y][x].altitude <= 0 {
+				waterTiles[y][x] = true
+			}
+		}
+	}
+
 	// First pass - create smaller, more numerous water bodies
+	waterBodyCount := 0
+	maxWaterBodyAdditions := 2
 	for y := range MapHeight {
 		for x := range MapWidth {
 			// Skip existing water and mountains
@@ -738,15 +749,14 @@ func createWaterBodies(seed int64) {
 			if waterValue < largeWaterThreshold && Map[y][x].altitude < maxElevationForWater {
 				// Check spacing from existing water bodies
 				tooClose := false
-				searchRadius := 3 // Spacing for large bodies
+				searchRadius := 10 // Spacing for large bodies
 
 				// Skip this check for the first few water bodies
 				// if countWaterTiles(waterTiles) > 12 {
 				for dy := -searchRadius; dy <= searchRadius; dy++ {
 					for dx := -searchRadius; dx <= searchRadius; dx++ {
 						nx, ny := x+dx, y+dy
-						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
-							waterTiles[ny][nx] {
+						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight && waterTiles[ny][nx] {
 							tooClose = true
 							break
 						}
@@ -757,7 +767,8 @@ func createWaterBodies(seed int64) {
 				}
 				// }
 
-				if !tooClose {
+				if !tooClose && waterBodyCount < maxWaterBodyAdditions {
+					waterBodyCount++
 					// Large water body
 					waterDepth := math.Min(-0.1, waterValue*0.15)
 					Map[y][x].altitude = waterDepth
