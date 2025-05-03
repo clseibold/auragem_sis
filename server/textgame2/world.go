@@ -248,9 +248,9 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 	// baseHeight += secondaryNoise + tertiaryNoise + 0.2 // With added baseline offset
 
 	// Try new method of plains and hills generation using weights
-	plains := perlin.Noise2D(float64(x)/(MapWidth*0.18), float64(y)/(MapHeight*0.18)) * 0.1
-	hills := perlin.Noise2D(float64(x)/(MapWidth*0.7), float64(y)/(MapHeight*0.7)) * 0.5
-	smallerHills := perlin.Noise2D(float64(x)/(MapWidth*0.5), float64(y)/(MapHeight*0.5)) * 0.25
+	plains := perlin.Noise2D(float64(x)/(MapWidth*0.18), float64(y)/(MapHeight*0.18)) * 0.3
+	hills := (perlin.Noise2D(float64(x)/(MapWidth*0.7), float64(y)/(MapHeight*0.7)) + 1) * (0.2 / 2)        // Scale to 0 to 0.5
+	smallerHills := (perlin.Noise2D(float64(x)/(MapWidth*0.5), float64(y)/(MapHeight*0.5)) + 2) * (0.1 / 2) // Scale to 0 to 0.25
 	//plateaus := perlin.Noise2D(float64(x)/(MapWidth*))
 
 	baseHeight := 0.2 + plains + (hills * 0.6) + (smallerHills * 0.4)
