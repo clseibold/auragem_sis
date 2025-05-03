@@ -180,7 +180,7 @@ func generateMapMountainPeaks(rand *rand.Rand) []Peak {
 
 	// Place remaining peaks ensuring they have enough separation
 	for i := 1; i < 4; i++ { // Try to place 3 more peaks
-		if i == 4 && rand.Intn(100) <= 20 { // 20% chance of skipping 4th mountain peak.
+		if i == 3 /*&& rand.Intn(100) <= 20*/ { // 20% chance of skipping 4th mountain peak.
 			continue
 		}
 		// Make multiple attempts to find a suitable position
@@ -374,37 +374,6 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 }
 
 // Do this before generating plateaus and other terrain, but after generating base terrain with mountains.
-/*func assignLandTypes() {
-	// Assign land types based on altitude and other characteristics
-	for y := range MapHeight {
-		for x := range MapWidth {
-			altitude := Map[y][x].altitude
-
-			// First, assign basic land types based on altitude
-			if altitude <= 0.0 {
-				// Water features
-				Map[y][x].landType = LandType_Water
-			} else if altitude >= 1.0 {
-				// Mountain terrain
-				Map[y][x].landType = LandType_Mountains
-			} else if altitude >= 0.8 && altitude < 1.0 {
-				// High terrain / foothills - usually near mountains
-				Map[y][x].landType = LandType_Hills
-			} else if altitude >= 0.5 && altitude < 0.8 {
-				// Default to hills for mid-high elevation
-				// (Will be overridden if it's a plateau)
-				Map[y][x].landType = LandType_Hills
-			} else if altitude >= 0.3 && altitude < 0.5 {
-				// Regular hills
-				Map[y][x].landType = LandType_Hills
-			} else {
-				// Plains for low elevation
-				Map[y][x].landType = LandType_Plains
-			}
-		}
-	}
-}*/
-
 func assignLandTypes() {
 	// First calculate terrain slopes to identify flat vs. hilly areas
 	var slopes [MapHeight][MapWidth]float64
