@@ -6,6 +6,7 @@ import (
 	"math"
 	"path"
 	"strconv"
+	"strings"
 	"time"
 
 	sis "gitlab.com/sis-suite/smallnetinformationservices"
@@ -63,6 +64,7 @@ func (c *Context) Attach(s sis.ServeMux) {
 	s.AddRoute("/about/", c.About)
 	s.AddRoute("/design/", c.DesignDocument)
 	s.AddRoute("/world-map/", PrintWorldMap)
+	s.AddRoute("/explore/", c.ExploreWorld)
 
 	group := s.Group("/test/")
 	group.AddRoute("/", c.firstColony.ColonyPage)
@@ -85,6 +87,7 @@ func (c *Context) Homepage(request *sis.Request) {
 	request.Link("/second-test/", "Second Test Colony")
 	request.Gemini("\n")
 	request.Link("/world-map/", "World Map")
+	request.Link("/explore/?25,25", "Explore World Map")
 }
 
 func (c *Context) About(request *sis.Request) {
@@ -103,6 +106,66 @@ Each colony has a set of resource zones. These are zones of resources that are h
 
 func (c *Context) DesignDocument(request *sis.Request) {
 	request.Gemini(designDocument)
+}
+
+func (c *Context) ExploreWorld(request *sis.Request) {
+	xy, _ := request.Query()
+	parts := strings.Split(xy, ",")
+	x, _ := strconv.Atoi(parts[0])
+	y, _ := strconv.Atoi(parts[1])
+
+	tile := &Map[y][x]
+
+	request.Heading(1, fmt.Sprintf("Explore Map: (%d, %d)", x, y))
+	request.Gemini("\n")
+	request.Gemini(GetTileDescription(x, y) + "\n")
+	request.Gemini("\n")
+
+	request.Gemini("```Statistics\n")
+	request.Gemini("\nClimate Stats:\n")
+	request.Gemini(fmt.Sprintf("Altitude:     %.2f\n", tile.altitude))
+	request.Gemini(fmt.Sprintf("Avg Temp:     %.1f°C (%f)\n", ConvertTemperature(tile.climate.avgTemp).Celsius, tile.climate.avgTemp))
+	request.Gemini(fmt.Sprintf("Avg Winter:   %.1f°C (%f)\n", ConvertTemperature(tile.climate.winterTemp).Celsius, tile.climate.winterTemp))
+	request.Gemini(fmt.Sprintf("Avg Spring:   %.1f°C (%f)\n", ConvertTemperature(tile.climate.springTemp).Celsius, tile.climate.springTemp))
+	request.Gemini(fmt.Sprintf("Avg Summer:   %.1f°C (%f)\n", ConvertTemperature(tile.climate.summerTemp).Celsius, tile.climate.summerTemp))
+	request.Gemini(fmt.Sprintf("Avg Autumn:   %.1f°C (%f)\n", ConvertTemperature(tile.climate.fallTemp).Celsius, tile.climate.fallTemp))
+	request.Gemini("```\n\n")
+
+	landTypeNames := map[LandType]string{
+		LandType_Water:     "Water",
+		LandType_Plains:    "Plains",
+		LandType_Hills:     "Hills",
+		LandType_Valleys:   "Valleys",
+		LandType_Plateaus:  "Plateaus",
+		LandType_Mountains: "Mountains",
+		LandType_Coastal:   "Coastal",
+		LandType_SandDunes: "Sand Dunes",
+	}
+
+	if y-1 >= 0 {
+		up := &Map[y-1][x]
+		if up.landType != LandType_Water {
+			request.Link(fmt.Sprintf("/explore/?%d,%d", x, y-1), fmt.Sprintf("Go Up (%s)", landTypeNames[up.landType]))
+		}
+	}
+	if y+1 < MapHeight {
+		down := &Map[y+1][x]
+		if down.landType != LandType_Water {
+			request.Link(fmt.Sprintf("/explore/?%d,%d", x, y+1), fmt.Sprintf("Go Up (%s)", landTypeNames[down.landType]))
+		}
+	}
+	if x-1 >= 0 {
+		left := &Map[y][x-1]
+		if left.landType != LandType_Water {
+			request.Link(fmt.Sprintf("/explore/?%d,%d", x-1, y), fmt.Sprintf("Go Up (%s)", landTypeNames[left.landType]))
+		}
+	}
+	if x+1 < MapWidth {
+		right := &Map[y][x+1]
+		if right.landType != LandType_Water {
+			request.Link(fmt.Sprintf("/explore/?%d,%d", x+1, y), fmt.Sprintf("Go Up (%s)", landTypeNames[right.landType]))
+		}
+	}
 }
 
 // TODO: When you create a new colony, create a background description of how the people got there.
