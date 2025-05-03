@@ -406,15 +406,15 @@ func PrintWorldMap(request *sis.Request) {
 	}
 
 	request.PlainText("\nBiome Distribution:\n")
-	request.Gemini("| Biome Type               | Count | Percentage |\n")
-	request.Gemini("|--------------------------|-------|------------|\n")
+	request.Gemini("| Biome Type                  | Count | Percentage |\n")
+	request.Gemini("|-----------------------------|-------|------------|\n")
 
 	// Print biome counts in order
 	for biome := Biome(0); biome < Biome_Max; biome++ {
 		count := biomeCounts[biome]
 		if count > 0 {
 			percentage := float64(count) / float64(totalTiles) * 100.0
-			request.Gemini(fmt.Sprintf("| %-24s | %-5d | %-9.2f%% |\n", biomeNames[biome], count, percentage))
+			request.Gemini(fmt.Sprintf("| %-27s | %-5d | %-9.2f%% |\n", biomeNames[biome], count, percentage))
 		}
 	}
 
