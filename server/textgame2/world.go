@@ -234,22 +234,26 @@ func generateHeight(peaks []Peak, x int, y int, seed int64) (float64, float64) {
 	perlin := perlin.NewPerlin(2.0, 2.5, 3, seed)
 
 	// Generate base terrain with gentle hills
-	baseHeight := perlin.Noise2D(float64(x)/(MapWidth*0.7), float64(y)/(MapHeight*0.7)) * 0.45
-	secondaryNoise := perlin.Noise2D(float64(x)/(MapWidth*0.18), float64(y)/(MapHeight*0.18)) * 0.1
-	tertiaryNoise := perlin.Noise2D(float64(x+50)/(MapWidth*0.3), float64(y+50)/(MapHeight*0.3)) * 0.15
+	// baseHeight := perlin.Noise2D(float64(x)/(MapWidth*0.7), float64(y)/(MapHeight*0.7)) * 0.45
+	// secondaryNoise := perlin.Noise2D(float64(x)/(MapWidth*0.18), float64(y)/(MapHeight*0.18)) * 0.1
+	// tertiaryNoise := perlin.Noise2D(float64(x+50)/(MapWidth*0.3), float64(y+50)/(MapHeight*0.3)) * 0.15
 
-	// baseHeight := perlin.Noise2D(float64(x)/(MapWidth*0.8), float64(y)/(MapHeight*0.8)) * 0.4
-	// secondaryNoise := perlin.Noise2D(float64(x)/(MapWidth*0.25), float64(y)/(MapHeight*0.25)) * 0.08
-	// tertiaryNoise := perlin.Noise2D(float64(x+50)/(MapWidth*0.4), float64(y+50)/(MapHeight*0.4)) * 0.12
+	// NOTE: perlin.Noise2D(float64(x)/(MapWidth * scaleFactor), float64(y)/(MapHeight * scaleFactor)) * amplitude
+	baseHeight := perlin.Noise2D(float64(x)/(MapWidth*0.9), float64(y)/(MapHeight*0.9)) * 0.4
+	secondaryNoise := perlin.Noise2D(float64(x)/(MapWidth*0.22), float64(y)/(MapHeight*0.22)) * 0.08
+	tertiaryNoise := perlin.Noise2D(float64(x+50)/(MapWidth*0.35), float64(y+50)/(MapHeight*0.35)) * 0.12
 	baseHeight += secondaryNoise + tertiaryNoise + 0.2 // With added baseline offset
 
 	// Adjust mid-range heights to create more distinct plains/hills separation
 	// This will help spread out hills more evenly
-	if baseHeight > 0.3 && baseHeight < 0.4 {
+	// if baseHeight > 0.3 && baseHeight < 0.4 {
+	if baseHeight > 0.25 && baseHeight < 0.35 {
 		// Create a steeper transition between plains and hills
 		// This makes hills more distinct and better distributed
-		transitionFactor := (baseHeight - 0.3) / 0.1
-		baseHeight = 0.3 + transitionFactor*0.15
+		// transitionFactor := (baseHeight - 0.3) / 0.1
+		transitionFactor := (baseHeight - 0.25) / 0.1
+		// baseHeight = 0.3 + transitionFactor*0.15
+		baseHeight = 0.25 + transitionFactor*0.15
 	}
 
 	finalHeight := baseHeight
@@ -727,21 +731,21 @@ func createWaterBodies(seed int64) {
 				searchRadius := 3 // Spacing for large bodies
 
 				// Skip this check for the first few water bodies
-				if countWaterTiles(waterTiles) > 12 {
-					for dy := -searchRadius; dy <= searchRadius; dy++ {
-						for dx := -searchRadius; dx <= searchRadius; dx++ {
-							nx, ny := x+dx, y+dy
-							if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
-								waterTiles[ny][nx] {
-								tooClose = true
-								break
-							}
-						}
-						if tooClose {
+				// if countWaterTiles(waterTiles) > 12 {
+				for dy := -searchRadius; dy <= searchRadius; dy++ {
+					for dx := -searchRadius; dx <= searchRadius; dx++ {
+						nx, ny := x+dx, y+dy
+						if nx >= 0 && nx < MapWidth && ny >= 0 && ny < MapHeight &&
+							waterTiles[ny][nx] {
+							tooClose = true
 							break
 						}
 					}
+					if tooClose {
+						break
+					}
 				}
+				// }
 
 				if !tooClose {
 					// Large water body
