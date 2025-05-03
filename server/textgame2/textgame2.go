@@ -134,6 +134,7 @@ func (colony *Colony) ColonyPage(request *sis.Request) {
 	request.Gemini(fmt.Sprintf("Iron:         %d (+0/workday)\n", colony.resourceCounts[Resource_Iron]))
 	// request.Gemini(fmt.Sprintf("Production Factor: %d\n", colony.productionFactor)) // The efficiency of all production in colony
 	// request.Gemini(fmt.Sprintf("Next Update in")) // TODO: Get real-time duration till next building update.
+
 	request.Gemini("\nClimate Stats:\n")
 	request.Gemini(fmt.Sprintf("Altitude:     %.2f\n", Map[colony.tileLocation.Y][colony.tileLocation.X].altitude))
 	request.Gemini(fmt.Sprintf("Avg Temp:     %.1f°C (%f)\n", ConvertTemperature(Map[colony.tileLocation.Y][colony.tileLocation.X].climate.avgTemp).Celsius, Map[colony.tileLocation.Y][colony.tileLocation.X].climate.avgTemp))
