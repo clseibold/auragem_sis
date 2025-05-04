@@ -888,3 +888,93 @@ Here's an overview of each tree species from the above list, highlighting their 
     - Sycamore
     - Cottonwood
     - River Birch
+
+## Tree Biome Distribution
+
+| Tree Type              | Number of Biomes | Percentage (%) |
+|------------------------|------------------|----------------|
+| Acacia                 | 3                | 7.69           |
+| Alder                  | 3                | 7.69           |
+| Birch                  | 3                | 7.69           |
+| Bald Cypress           | 3                | 7.69           |
+| Black Mangrove         | 3                | 7.69           |
+| Cottonwood             | 3                | 7.69           |
+| Red Mangrove           | 3                | 7.69           |
+| Willow                 | 3                | 7.69           |
+| Aleppo Pine            | 2                | 5.13           |
+| Black Spruce           | 2                | 5.13           |
+| Buttonwood             | 2                | 5.13           |
+| Cork Oak               | 2                | 5.13           |
+| Cypress                | 2                | 5.13           |
+| Fir                    | 2                | 5.13           |
+| Hemlock                | 2                | 5.13           |
+| Ironwood               | 2                | 5.13           |
+| Juniper                | 2                | 5.13           |
+| Larch                  | 2                | 5.13           |
+| Mesquite               | 2                | 5.13           |
+| Olive Tree             | 2                | 5.13           |
+| Pond Apple             | 2                | 5.13           |
+| Poplar                 | 2                | 5.13           |
+| Spruce                 | 2                | 5.13           |
+| Tamarisk               | 2                | 5.13           |
+| Tamarack (Larch)       | 2                | 5.13           |
+| White Mangrove         | 2                | 5.13           |
+| Baobab                 | 1                | 2.56           |
+| Beech                  | 1                | 2.56           |
+| Black Gum              | 1                | 2.56           |
+| Brazil Nut Tree        | 1                | 2.56           |
+| Camel Thorn Tree       | 1                | 2.56           |
+| Carob Tree             | 1                | 2.56           |
+| Cedar                  | 1                | 2.56           |
+| Cecropia               | 1                | 2.56           |
+| Chestnut               | 1                | 2.56           |
+| Date Palm              | 1                | 2.56           |
+| Dipterocarp Trees      | 1                | 2.56           |
+| Douglas Fir            | 1                | 2.56           |
+| Ebony                  | 1                | 2.56           |
+| Ficus (Fig Trees)      | 1                | 2.56           |
+| Kapok                  | 1                | 2.56           |
+| Karee Tree             | 1                | 2.56           |
+| Mahogany               | 1                | 2.56           |
+| Magnolia               | 1                | 2.56           |
+| Mango Tree             | 1                | 2.56           |
+| Marula Tree            | 1                | 2.56           |
+| Ogeechee Lime          | 1                | 2.56           |
+| Palo Verde             | 1                | 2.56           |
+| Pinyon Pine            | 1                | 2.56           |
+| Podocarpus             | 1                | 2.56           |
+| Protea                 | 1                | 2.56           |
+| Red Alder              | 1                | 2.56           |
+| River Birch            | 1                | 2.56           |
+| Rosewood               | 1                | 2.56           |
+| Rubber Tree            | 1                | 2.56           |
+| Sagebrush              | 1                | 2.56           |
+| Sal Tree               | 1                | 2.56           |
+| Sandalwood             | 1                | 2.56           |
+| Screwbean Mesquite     | 1                | 2.56           |
+| Shepherd’s Tree        | 1                | 2.56           |
+| Silver Tree            | 1                | 2.56           |
+| Sitka Spruce           | 1                | 2.56           |
+| Smoke Tree             | 1                | 2.56           |
+| Stone Pine             | 1                | 2.56           |
+| Sycamore               | 1                | 2.56           |
+| Teak                   | 1                | 2.56           |
+| Tree Ferns             | 1                | 2.56           |
+| Walnut                 | 1                | 2.56           |
+| Water Tupelo           | 1                | 2.56           |
+| Western Hemlock        | 1                | 2.56           |
+| White Cedar            | 1                | 2.56           |
+| Wild Olive             | 1                | 2.56           |
+
+Only one biome has one tree types in them:
+* Biome_BorealForest - Black Spruce
+
+Tundras have limited tree growth, but can have the following species:
+* Black Spruce
+* Siberian Larch
+* Dwarf birch - with adaptation
+* Arctic Willow - with adaptation, only in low-arctic tundra
+
+* Alder - 10 feet
+* Heath/Heathers - only two inches tall, in low arctic tundra, or dwarf heaths in mid-arctic tundra. None in the high-arctic tundra
+* Spruce and Fir in milder parts of tundra
