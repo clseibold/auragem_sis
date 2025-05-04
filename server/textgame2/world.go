@@ -18,6 +18,8 @@ import (
 // | Rough High   | 0.8 - 1.0      | n |
 // | Mountains    | ≥ 1.0          | A |
 
+// TODO: Rivers connecting big lakes, and streams coming off from ponds?
+// TODO: Desert oases.
 // TODO: Canyons, Gorges, Cliffs, Waterfalls, Escarpments, Islands, Caves and Caverns?
 // TODO: Aquifers should be generated *before* rainfall&temp. Rainfall/temp + aquifers should determine the locations of springs.
 // TODO: Assign biomes to each tile given its land type, adjacent biomes, and bodies of water
