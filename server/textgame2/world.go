@@ -3194,7 +3194,7 @@ func generateClimate(seed int64) {
 			if Map[y][x].altitude <= 0 {
 				// Major water body (lake, ocean)
 				waterBodies = append(waterBodies, struct{ x, y int }{x, y})
-			} else if Map[y][x].landType == LandType_Water && Map[y][x].altitude <= 0 {
+			} else if Map[y][x].landType == LandType_Water /*&& Map[y][x].altitude <= 0*/ {
 				// River
 				rivers = append(rivers, struct{ x, y int }{x, y})
 			}
