@@ -88,6 +88,7 @@ func NewColony(context *Context, name string, initialPopulationSize uint, first 
 	} else {
 		colony.tileLocation = FindBeginnerTileLocation()
 	}
+	Map[colony.tileLocation.Y][colony.tileLocation.X].occupied = true
 	colony.name = name
 	colony.agents = make([]Agent, initialPopulationSize)
 	colony.resourceCounts = beginnerResourceCounts
