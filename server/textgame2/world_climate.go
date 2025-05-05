@@ -111,7 +111,8 @@ func GetRainfallDescription(normalizedRain float64) string {
 	} else if normalizedRain < 0.45 {
 		return fmt.Sprintf("Dry (%.0f mm/year)", mmPerYear)
 	} else if normalizedRain < 0.6 {
-		return fmt.Sprintf("Moderate (%.0f mm/year)", mmPerYear)
+		// return fmt.Sprintf("Moderate (%.0f mm/year)", mmPerYear)
+		return fmt.Sprintf("Moderately Precipitous (%.0f mm/year)", mmPerYear)
 	} else if normalizedRain < 0.75 {
 		return fmt.Sprintf("Wet (%.0f mm/year)", mmPerYear)
 	} else if normalizedRain < 0.9 {

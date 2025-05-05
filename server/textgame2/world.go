@@ -47,8 +47,8 @@ type Tile struct {
 	isDesert bool
 
 	// Climate factors (0.0 to 1.0 scale)
-	rainfall    float64 // 0.0 = extremely dry, 1.0 = extremely wet
-	temperature float64 // 0.0 = very cold, 1.0 = very hot
+	//rainfall    float64 // 0.0 = extremely dry, 1.0 = extremely wet
+	//temperature float64 // 0.0 = very cold, 1.0 = very hot
 
 	// Climate factors (0.0 to 1.0 scale)
 	climate Climate
@@ -3184,11 +3184,11 @@ func generateClimate(seed int64) {
 	// Define the equator position
 	equator := MapHeight / 2
 
-	// Track all water bodies for rainfall calculations
+	// Track all large water bodies for rainfall calculations
 	var waterBodies []struct{ x, y int }
 	var rivers []struct{ x, y int }
 
-	// Find all water bodies and rivers for rainfall influence
+	// Find all large water bodies and rivers for rainfall influence
 	for y := range MapHeight {
 		for x := range MapWidth {
 			if Map[y][x].altitude <= 0 {

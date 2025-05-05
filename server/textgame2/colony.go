@@ -50,30 +50,8 @@ func FindBeginnerTileLocation() (tileLocation TileLocation) {
 				continue
 			}
 
-			// Check if it's a warm or temperate biome
-			isWarmBiome := tile.biome == Biome_TropicalRainforest ||
-				tile.biome == Biome_TropicalSeasonalForest ||
-				tile.biome == Biome_TropicalMontaneForest ||
-				tile.biome == Biome_TropicalMoistForest ||
-				tile.biome == Biome_TropicalEvergreenForest ||
-				tile.biome == Biome_Savanna ||
-				tile.biome == Biome_TropicalSwampForest ||
-				tile.biome == Biome_TropicalSwamp ||
-				tile.biome == Biome_Mangrove
-
-			isTemperateBiome := tile.biome == Biome_TemperateDeciduousForest ||
-				tile.biome == Biome_TemperateMixedForest ||
-				tile.biome == Biome_TemperateRainforest ||
-				tile.biome == Biome_TemperateConiferousForest ||
-				tile.biome == Biome_TemperateSwamp ||
-				tile.biome == Biome_CypressSwamp ||
-				tile.biome == Biome_MangroveSwamp ||
-				tile.biome == Biome_Pampas ||
-				tile.biome == Biome_Veld ||
-				tile.biome == Biome_Prairie ||
-				tile.biome == Biome_TemperateFen
-
-			if isWarmBiome || isTemperateBiome {
+			// Mid-temperate or above
+			if tile.climate.avgTemp > .4 {
 				tileLocation = TileLocation{X: x, Y: y}
 				foundSuitableTile = true
 			}
