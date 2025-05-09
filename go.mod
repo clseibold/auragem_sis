@@ -1,6 +1,6 @@
 module gitlab.com/clseibold/auragem_sis
 
-go 1.23.6
+go 1.24.2
 
 require (
 	git.sr.ht/~adnano/go-gemini v0.2.4
@@ -18,7 +18,7 @@ require (
 	github.com/rs/zerolog v1.32.0
 	github.com/spf13/cobra v1.9.1
 	github.com/trietmn/go-wiki v1.0.3
-	gitlab.com/sis-suite/smallnetinformationservices v0.0.0-20250501032934-c55056ee6864
+	gitlab.com/sis-suite/smallnetinformationservices v0.0.0-20250501033459-bd6a962e1b96
 	golang.org/x/net v0.35.0
 	golang.org/x/oauth2 v0.25.0
 	golang.org/x/text v0.22.0
@@ -46,6 +46,7 @@ require (
 	github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3 // indirect
 	github.com/skeema/knownhosts v1.3.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
+	gitlab.com/clseibold/biomebound v0.0.0-20250509155926-35f14957fefa // indirect
 	gitlab.com/sis-suite/aurarepo v0.0.0-20250316035916-dff2565f4b21 // indirect
 	golang.org/x/exp v0.0.0-20250218142911-aa4b98e5adaa // indirect
 	golang.org/x/mod v0.23.0 // indirect
